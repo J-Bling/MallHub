@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: mall-portal
+  profiles: dev
+mybatis:
+  mapper-locations:
+    - classpath:mapper/*.xml
+    - classpath:com/mall/mbg/mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+jwt:
+  tokenHeader: Authorization #JWT存储的请求头
+  secret: mall-portal-secret #JWT加解密使用的密钥
+  expiration: 604800 #JWT的超期限时间(60*60*24*7)
+  tokenHead: 'Bearer '  #JWT负载中拿到开头
+
+secure:
+  ignored:
+    urls: #安全路径白名单
+
+redis:
+  database: mall
+  key:
+    authCode: 'ums:authCode'
+    orderId: 'oms:orderId'
+    member: 'ums:member'
+  expire:
+    authCode: 90 # 验证码超期时间
+    common: 86400 # 24小时
+
+#mongo:
+#  insert:
+#    sqlEnable: true
+
+rabbitmq:
+  queue:
+    name:
+      cancelOrder: cancelOrderQueue
+
+userRole:
+  consumer: consumer
+
+filterUrls:
+  allPortal: /portal/api/**
