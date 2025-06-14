@@ -18,7 +18,7 @@ public interface ConsumerService {
      */
     void updateIntegration(Long id,Integer integration);
     /**
-     * 获取用户信息
+     * 获取用户信息 userName -> userId
      */
     UserDetails loadUserByUsername(String username);
 

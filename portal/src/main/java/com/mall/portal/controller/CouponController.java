@@ -6,9 +6,8 @@ import com.mall.mbg.model.SmsCoupon;
 import com.mall.mbg.model.SmsCouponHistory;
 import com.mall.portal.domain.model.PromotionCartItem;
 import com.mall.portal.domain.model.CouponHistoryDetail;
-import com.mall.portal.service.CarItemService;
+import com.mall.portal.service.CartItemService;
 import com.mall.portal.service.CouponService;
-import com.mall.portal.service.ConsumerService;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,9 +20,8 @@ import java.util.List;
 @RequestMapping("/portal/api/member/coupon")
 @Tag(name = "优惠券管理")
 public class CouponController {
-    @Autowired private ConsumerService consumerService;
     @Autowired private CouponService couponService;
-    @Autowired private CarItemService carItemService;
+    @Autowired private CartItemService cartItemService;
 
     @PostMapping("/add/{couponId}")
     @ApiOperation("领取优惠券")
@@ -55,7 +53,7 @@ public class CouponController {
             defaultValue = "1", allowableValues = "0,1", paramType = "path", dataType = "integer")
     @GetMapping(value = "/list/cart/{type}")
     public ResponseResult<List<CouponHistoryDetail>> listCart(@PathVariable int type) {
-        List<PromotionCartItem> promotionCartItemList = carItemService.listPromotion(consumerService.getCurrentMember().getId(),null);
+        List<PromotionCartItem> promotionCartItemList = cartItemService.promotionList(null);
         List<CouponHistoryDetail> couponHistoryList = couponService.listCart(promotionCartItemList,type);
         return ResponseResult.success(couponHistoryList);
     }
