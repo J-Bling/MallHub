@@ -31,6 +31,10 @@ public class ConsumerDetail implements UserDetails {
         return this.member.getPassword();
     }
 
+    public String getSalt(){
+        return this.member.getSalt();
+    }
+
     @Override
     public String getUsername() {
         return this.member.getId().toString();

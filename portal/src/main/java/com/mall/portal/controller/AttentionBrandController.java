@@ -34,7 +34,7 @@ public class AttentionBrandController {
     @ApiOperation("分页获取收藏品牌列表 pageNum 页数 ， pageSize 条数")
     public ResponseResult<List<AttentionBrand>> list(@PathVariable("pageNum") int pageNum,@PathVariable("pageSize") int pageSize){
         if (pageNum < 0) {
-            Assert.fail("");
+            pageNum = 0;
         }
         if (pageSize < 10){
             pageSize = 10;

@@ -6,7 +6,7 @@ import com.mall.mbg.model.UmsMember;
 public interface ConsumerCacheService extends Cache {
     long CodeExpired = 300000L;
     String CodeKey = "code-key:";
-    String MemberKey = "find-member-key:";
+    String MemberKey = "member-key:";
     String MemberLockKey = "member-lock:";
     /**
      * 设置验证码缓存 有效时间5分钟

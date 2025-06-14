@@ -1,16 +1,24 @@
 package com.mall.portal.domain.model;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.util.Date;
 
+@Document
 public class AttentionBrand {
+    @Id
     private String id;
+    @Indexed
     private Long memberId;
     private String memberNickname;
     private String memberIcon;
+    @Indexed
     private Long brandId;
     private String brandName;
     private String brandLogo;
-    private String brandCity;
+    private String brandStory;
     private Date createTime;
 
     public Date getCreateTime() {
@@ -25,8 +33,8 @@ public class AttentionBrand {
         return memberId;
     }
 
-    public String getBrandCity() {
-        return brandCity;
+    public String getBrandStory() {
+        return brandStory;
     }
 
     public String getBrandLogo() {
@@ -53,8 +61,8 @@ public class AttentionBrand {
         this.id = id;
     }
 
-    public void setBrandCity(String brandCity) {
-        this.brandCity = brandCity;
+    public void setBrandStory(String brandStory) {
+        this.brandStory = brandStory;
     }
 
     public void setBrandId(Long brandId) {

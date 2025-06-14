@@ -16,7 +16,7 @@ public interface ConsumerService {
     /**
      * 根据会员id修改会员积分
      */
-    void updateIntegration(Long id,Integer integration);
+    void increaseIntegration(Long id,Integer incrementIntegration);
     /**
      * 获取用户信息 userName -> userId
      */

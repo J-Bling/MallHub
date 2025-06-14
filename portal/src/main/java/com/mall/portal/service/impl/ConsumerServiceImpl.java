@@ -11,6 +11,7 @@ import com.mall.mbg.model.UmsMemberExample;
 import com.mall.mbg.model.UmsMemberLevel;
 import com.mall.mbg.model.UmsMemberLevelExample;
 import com.mall.portal.cache.ConsumerCacheService;
+import com.mall.portal.dao.ConsumerDao;
 import com.mall.portal.domain.model.ConsumerDetail;
 import com.mall.portal.service.ConsumerService;
 import com.mall.security.util.JwtUtil;
@@ -34,6 +35,7 @@ public class ConsumerServiceImpl implements ConsumerService {
     @Autowired private JwtUtil jwtUtil;
     @Autowired private SmsUtil smsUtil;
     @Autowired private UmsMemberMapper memberMapper;
+    @Autowired private ConsumerDao consumerDao;
     @Autowired private UmsMemberLevelMapper levelMapper;
     @Autowired private ConsumerCacheService consumerCacheService;
 
@@ -46,7 +48,12 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     public UmsMember getMemberById(Long id) {
-        return this.getMemberByIdWithRetry(id,0);
+        try {
+            return this.getMemberByIdWithRetry(id, 0);
+        }catch (Exception e){
+            logger.error("获取用户信息失败 : {}",e.getMessage());
+            return null;
+        }
     }
 
     private UmsMember getMemberByIdWithRetry(Long id,int retryCount){
@@ -81,11 +88,8 @@ public class ConsumerServiceImpl implements ConsumerService {
     }
 
     @Override
-    public void updateIntegration(Long id, Integer integration) {
-        UmsMember member = new UmsMember();
-        member.setId(id);
-        member.setIntegration(integration);
-        memberMapper.updateByPrimaryKeySelective(member);
+    public void increaseIntegration(Long id, Integer incrementIntegration) {
+        consumerDao.increaseIntegration(id,incrementIntegration);
         consumerCacheService.delMember(id); //删除缓存防止脏读
     }
 
@@ -94,7 +98,7 @@ public class ConsumerServiceImpl implements ConsumerService {
      */
     @Override
     public UserDetails loadUserByUsername(String username) {
-        UmsMember member = this.getById(Long.parseLong(username));
+        UmsMember member = this.getMemberById(Long.parseLong(username));
         if (member!=null) {
             return new ConsumerDetail(member);
         }
@@ -103,32 +107,39 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     public void register(String username, String password, String telephone, String authCode) {
-        UmsMemberExample example = new UmsMemberExample();
-        example.createCriteria().andPhoneEqualTo(telephone);
-        long count = memberMapper.countByExample(example);
-        if (count > 0){
-            throw new ApiException("该账号已经注册",ResultCode.BAD_REQUEST);
-        }
-        if (!isValidCode(authCode, telephone)){
-            throw new ApiException("验证码无效",ResultCode.BAD_REQUEST);
-        }
-        String salt = EncryptionUtil.generateSalt();
-        String pass = EncryptionUtil.encryption(salt,password);
+        try {
+            UmsMemberExample example = new UmsMemberExample();
+            example.createCriteria().andPhoneEqualTo(telephone);
+            long count = memberMapper.countByExample(example);
+            if (count > 0) {
+                throw new ApiException("该账号已经注册", ResultCode.BAD_REQUEST);
+            }
+            if (!isValidCode(authCode, telephone)) {
+                throw new ApiException("验证码无效", ResultCode.BAD_REQUEST);
+            }
+            String salt = EncryptionUtil.generateSalt();
+            String pass = EncryptionUtil.encryption(salt, password);
 
-        UmsMember member = new UmsMember();
-        member.setUsername(username);
-        member.setPassword(pass);
-        member.setPhone(telephone);
-        member.setSalt(salt);
-        member.setCreateTime(new Date());
-        member.setStatus(1);
-        UmsMemberLevelExample levelExample = new UmsMemberLevelExample();
-        levelExample.createCriteria().andDefaultStatusEqualTo(1);
-        List<UmsMemberLevel> memberLevels = levelMapper.selectByExample(levelExample);
-        if (memberLevels!=null && !memberLevels.isEmpty()){
-            member.setMemberLevelId(memberLevels.get(0).getId());
+            UmsMember member = new UmsMember();
+            member.setUsername(username);
+            member.setPassword(pass);
+            member.setPhone(telephone);
+            member.setSalt(salt);
+            member.setCreateTime(new Date());
+            member.setStatus(1);
+            UmsMemberLevelExample levelExample = new UmsMemberLevelExample();
+            levelExample.createCriteria().andDefaultStatusEqualTo(1);
+            List<UmsMemberLevel> memberLevels = levelMapper.selectByExample(levelExample);
+            if (memberLevels != null && !memberLevels.isEmpty()) {
+                member.setMemberLevelId(memberLevels.get(0).getId());
+            }
+            memberMapper.insert(member);
+        }catch (ApiException apiException){
+            throw apiException;
+        } catch (Exception e){
+            logger.error("注册用户发送错误 : {}",e.getMessage());
+            throw new ApiException("注册失败",ResultCode.INTERNAL_SERVER_ERROR);
         }
-        memberMapper.insert(member);
     }
 
     @Override
@@ -147,25 +158,32 @@ public class ConsumerServiceImpl implements ConsumerService {
 
     @Override
     public void updatePassword(String telephone, String password, String authCode) {
-        UmsMemberExample example=  new UmsMemberExample();
-        example.createCriteria().andPhoneEqualTo(telephone);
-        List<UmsMember> members = memberMapper.selectByExample(example);
-        if (members==null || members.isEmpty()) {
-            throw new ApiException("没有该用户", ResultCode.BAD_REQUEST);
-        }
+        try {
+            UmsMemberExample example = new UmsMemberExample();
+            example.createCriteria().andPhoneEqualTo(telephone);
+            List<UmsMember> members = memberMapper.selectByExample(example);
+            if (members == null || members.isEmpty()) {
+                throw new ApiException("没有该用户", ResultCode.BAD_REQUEST);
+            }
 
-        if (!isValidCode(authCode, telephone)){
-            throw new ApiException("验证码无效",ResultCode.BAD_REQUEST);
-        }
+            if (!isValidCode(authCode, telephone)) {
+                throw new ApiException("验证码无效", ResultCode.BAD_REQUEST);
+            }
 
-        UmsMember member = members.get(0);
-        String salt = member.getSalt();
-        String newPass = EncryptionUtil.encryption(salt,password);
-        UmsMember member1 = new UmsMember();
-        member1.setId(member.getId());
-        member1.setPassword(newPass);
-        memberMapper.updateByPrimaryKeySelective(member1);
-        consumerCacheService.setMember(member);
+            UmsMember member = members.get(0);
+            String salt = member.getSalt();
+            String newPass = EncryptionUtil.encryption(salt, password);
+            UmsMember member1 = new UmsMember();
+            member1.setId(member.getId());
+            member1.setPassword(newPass);
+            memberMapper.updateByPrimaryKeySelective(member1);
+            consumerCacheService.setMember(member);
+        }catch (ApiException apiException){
+            throw apiException;
+        }catch (Exception e){
+            logger.error("修改密码失败 : {}",e.getMessage());
+            throw new ApiException("修改密码失败",ResultCode.INTERNAL_SERVER_ERROR);
+        }
     }
 
 

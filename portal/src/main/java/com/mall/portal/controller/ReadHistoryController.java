@@ -34,8 +34,8 @@ public class ReadHistoryController {
 
     @PostMapping("/delete")
     @ApiOperation("批量清空浏览记录")
-    public ResponseResult<String> delete(@RequestBody long[] productIds){
-        readHistoryService.delete(productIds);
+    public ResponseResult<String> delete(@RequestBody List<String> readHistoryIds){
+        readHistoryService.delete(readHistoryIds);
         return ResponseResult.success("删除成功");
     }
 
@@ -43,7 +43,7 @@ public class ReadHistoryController {
     @ApiOperation("分页获取浏览记录")
     public ResponseResult<List<ReadHistory>> list(@PathVariable("pageNum") int pageNum,@PathVariable("pageSize") int pageSize){
         if (pageNum < 0) {
-            Assert.fail("");
+            pageNum = 0;
         }
         if (pageSize < 10){
             pageSize = 10;

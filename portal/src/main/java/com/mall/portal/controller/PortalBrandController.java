@@ -24,7 +24,7 @@ public class PortalBrandController {
     @ApiOperation("分页获取品牌")
     public ResponseResult<List<PmsBrand>> list(@PathVariable("pageNum") int pageNum,@PathVariable("pageSize") int pageSize){
         if (pageNum < 0){
-            Assert.fail("");
+            pageNum = 0;
         }
         if (pageSize < 10){
             pageSize = 10;

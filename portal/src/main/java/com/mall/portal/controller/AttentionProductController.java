@@ -35,7 +35,7 @@ public class AttentionProductController {
     @ApiOperation("根据分页获取收藏视频的列表")
     public ResponseResult<List<AttentionProduct>> list(@PathVariable("pageNum") int pageNum,@PathVariable("pageSize") int pageSize){
         if (pageNum < 0) {
-            Assert.fail("");
+            pageNum = 0;
         }
         if (pageSize < 10){
             pageSize = 10;

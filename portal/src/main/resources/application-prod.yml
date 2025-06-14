@@ -21,6 +21,7 @@ spring:
       host: mongo
       port: 27017
       database: portal
+      auto-index-creation: true # 自动创建索引
 
   redis:
     host: redis # Redis服务器地址

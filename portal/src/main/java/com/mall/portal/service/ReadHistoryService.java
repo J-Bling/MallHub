@@ -12,7 +12,7 @@ public interface ReadHistoryService {
     /**
      * 批量删除浏览记录
      */
-    void delete(long[] productId);
+    void delete(List<String> ids);
     /**
      * 分页查看浏览记录
      */

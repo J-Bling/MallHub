@@ -43,3 +43,7 @@ userRole:
 
 filterUrls:
   allPortal: /portal/api/**
+
+mongodb:
+  insert:
+    SqlEnable: false
