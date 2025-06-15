@@ -5,11 +5,9 @@ import com.mall.common.constant.enums.UseCouponStatusEnum;
 import com.mall.common.exception.ApiException;
 import com.mall.common.exception.Assert;
 import com.mall.mbg.mapper.SmsCouponHistoryMapper;
-import com.mall.mbg.mapper.SmsCouponMapper ;
-import com.mall.mbg.mapper.SmsCouponProductCategoryRelationMapper;
-import com.mall.mbg.mapper.SmsCouponProductRelationMapper;
 import com.mall.mbg.mapper.PmsProductMapper;
 import com.mall.mbg.model.*;
+import com.mall.portal.cache.CouponCacheService;
 import com.mall.portal.dao.CouponDao;
 import com.mall.common.constant.enums.CouponRedemptionMethodEnum;
 import com.mall.portal.domain.model.PromotionCartItem;
@@ -30,12 +28,10 @@ import java.util.stream.Collectors;
 public class CouponServiceImpl implements CouponService {
 
     @Autowired private ConsumerService consumerService;
-    @Autowired private SmsCouponMapper couponMapper;
     @Autowired private SmsCouponHistoryMapper couponHistoryMapper;
-    @Autowired private SmsCouponProductRelationMapper productRelationMapper;
-    @Autowired private SmsCouponProductCategoryRelationMapper productCategoryRelationMapper;
     @Autowired private PmsProductMapper productMapper;
     @Autowired private CouponDao couponDao;
+    @Autowired private CouponCacheService couponCacheService;
 
     private final Logger logger = LoggerFactory.getLogger(CouponServiceImpl.class);
 
@@ -43,7 +39,7 @@ public class CouponServiceImpl implements CouponService {
     @Transactional
     public void add(Long couponId) {
         UmsMember member = consumerService.getCurrentMember();
-        SmsCoupon coupon = couponMapper.selectByPrimaryKey(couponId);
+        SmsCoupon coupon = couponCacheService.get(couponId);
         if (coupon==null){
             Assert.fail("优惠券不存在");
         }
@@ -78,6 +74,8 @@ public class CouponServiceImpl implements CouponService {
                 Assert.fail("领取优惠券失败");
             }
             couponDao.updateCouponCountReceiveCount(couponId,-1,1);
+            couponCacheService.incrementCount(couponId,-1);
+            couponCacheService.incrementReceiveCount(couponId,1);
         }catch (ApiException apiException){
             throw apiException;
         }catch (Exception e){
@@ -179,39 +177,35 @@ public class CouponServiceImpl implements CouponService {
         if (product==null){
             return null;
         }
+        Long categoryId = product.getProductCategoryId();
+        return this.getCoupons(productId,categoryId);
+    }
+
+    private List<SmsCoupon> getCoupons(long productId,long categoryId){
         List<Long> coupons = new ArrayList<>();
         //获取指定商品优惠券
-        SmsCouponProductRelationExample relationExample = new SmsCouponProductRelationExample();
-        relationExample.createCriteria().andProductIdEqualTo(productId);
-        List<SmsCouponProductRelation> productRelationList = productRelationMapper.selectByExample(relationExample);
+        List<SmsCouponProductRelation> productRelationList = couponCacheService.getCouponProductRelationList(productId);
+
         if (productRelationList!=null && !productRelationList.isEmpty()){
             List<Long> coupons1= productRelationList.stream().map(SmsCouponProductRelation::getCouponId).collect(Collectors.toList());
             coupons.addAll(coupons1);
         }
         //获取指定分类优惠券
-        Long categoryId = product.getProductCategoryId();
-        SmsCouponProductCategoryRelationExample productCategoryRelationExample = new SmsCouponProductCategoryRelationExample();
-        productCategoryRelationExample.createCriteria().andProductCategoryIdEqualTo(categoryId);
-        List<SmsCouponProductCategoryRelation> productCategoryRelationList = productCategoryRelationMapper.selectByExample(productCategoryRelationExample);
+        List<SmsCouponProductCategoryRelation> productCategoryRelationList = couponCacheService.getCouponProductCategoryRelationList(categoryId);
         if (productCategoryRelationList!=null && !productCategoryRelationList.isEmpty()){
             List<Long> coupons2 = productCategoryRelationList.stream().map(SmsCouponProductCategoryRelation::getCouponId).collect(Collectors.toList());
             coupons.addAll(coupons2);
         }
 
-        SmsCouponExample example = new SmsCouponExample();
-        Date date = new Date();
-        example.createCriteria().andEndTimeGreaterThan(date)
-                .andStartTimeLessThan(date)
-                .andUseTypeEqualTo(CouponUseTypeEnum.ALL.getCode());
-        if (!coupons.isEmpty()){
-            example.or(example.createCriteria()
-                    .andStartTimeLessThan(date)
-                    .andEndTimeGreaterThan(date)
-                    .andUseTypeNotEqualTo(CouponUseTypeEnum.ALL.getCode())
-                    .andIdIn(coupons)
-            );
+        List<Long> allUseTypeIds = couponCacheService.getAllUseTypeCouponIds();
+        if (allUseTypeIds !=null && !allUseTypeIds.isEmpty()){
+            coupons.addAll(allUseTypeIds);
         }
-        return couponMapper.selectByExample(example);
+
+        if (coupons.isEmpty()){
+            return null;
+        }
+        return couponCacheService.get(coupons);
     }
 
     @Override

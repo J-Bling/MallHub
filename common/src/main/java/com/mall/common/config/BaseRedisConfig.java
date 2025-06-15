@@ -3,32 +3,55 @@ package com.mall.common.config;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import com.mall.common.service.CounterRedisService;
 import com.mall.common.service.RedisService;
+import com.mall.common.service.impl.CounterRedisServiceImpl;
 import com.mall.common.service.impl.RedisServiceImpl;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.*;
 import java.time.Duration;
 
 @Configuration
 public class BaseRedisConfig {
+    @Bean
+    public StringRedisSerializer stringRedisSerializer(){
+        return new StringRedisSerializer();
+    }
 
     @Bean
+    @Primary
     public RedisTemplate<String,Object> redisTemplate(RedisConnectionFactory factory ,
-                                                      KryoRedisSerializer kryoRedisSerializer){
+                                                      KryoRedisSerializer kryoRedisSerializer,
+                                                      StringRedisSerializer stringRedisSerializer ){
         RedisTemplate<String , Object> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
-        template.setKeySerializer(new StringRedisSerializer());
+        template.setKeySerializer(stringRedisSerializer);
         template.setValueSerializer(kryoRedisSerializer);
-        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(stringRedisSerializer);
         template.setHashValueSerializer(kryoRedisSerializer);
-        template.afterPropertiesSet();
         return template;
+    }
+
+    @Bean("stringRedisTemplate")
+    public RedisTemplate<String,String> stringRedisTemplate(RedisConnectionFactory factory,
+                                                            StringRedisSerializer stringRedisSerializer){
+        RedisTemplate<String,String> template = new RedisTemplate<>();
+        template.setDefaultSerializer(stringRedisSerializer);
+        return template;
+    }
+
+    @Bean
+    public HashOperations<String,String,String> counterHashTemplate(@Qualifier("stringRedisTemplate") RedisTemplate<String,String> redisTemplate){
+        return redisTemplate.opsForHash();
     }
 
     static public class KryoRedisSerializer implements RedisSerializer<Object>{
@@ -87,4 +110,8 @@ public class BaseRedisConfig {
         return new RedisServiceImpl();
     }
 
+    @Bean
+    public CounterRedisService counterRedisService(){
+        return new CounterRedisServiceImpl();
+    }
 }

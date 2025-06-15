@@ -3,12 +3,13 @@ package com.mall.common.service;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Redis操作Service
  */
 public interface RedisService {
-
+    TimeUnit timeUnit = TimeUnit.MILLISECONDS;
     /**
      * 保存属性
      */
@@ -40,6 +41,10 @@ public interface RedisService {
      * 设置过期时间
      */
     Boolean expire(String key, long time);
+    /**
+     * 尝试设置过期时间
+     */
+    void tryExpire(String key);
 
     /**
      * 获取过期时间
@@ -80,6 +85,10 @@ public interface RedisService {
      * 直接获取整个Hash结构
      */
     Map<Object, Object> hGetAll(String key);
+    /**
+     * 获取多个字段值
+     */
+    List<Object> hGetAll(String key,List<String> ids);
 
     /**
      * 直接设置整个Hash结构

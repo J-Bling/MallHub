@@ -16,7 +16,7 @@ public interface CouponService {
      */
     List<SmsCouponHistory> listHistory(Integer useStatus);
     /**
-     * 根据购物车信息获取可用优惠券
+     * 根据购物车信息获取可用优惠券 使用可用:0->不可用；1->可用
      */
     List<CouponHistoryDetail> listCart(List<PromotionCartItem> cartItemList, Integer type);
 
