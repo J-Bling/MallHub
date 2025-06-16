@@ -4,6 +4,7 @@ import com.mall.common.service.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 
 import java.util.Collections;
 import java.util.List;
@@ -244,5 +245,84 @@ public class RedisServiceImpl implements RedisService {
             this.expire(key,expired);
         }
         return len;
+    }
+
+    @Override
+    public Boolean zAdd(String key, Object value, double score) {
+        Boolean isAdd = redisTemplate.opsForZSet().add(key, value, score);
+        this.expire(key,expired);
+        return isAdd;
+    }
+
+    @Override
+    public Long zAdd(String key, Set<ZSetOperations.TypedTuple<Object>> tuples) {
+        Long len =redisTemplate.opsForZSet().add(key, tuples);
+        this.expire(key,expired);
+        return len;
+    }
+
+    @Override
+    public Long zRemove(String key, Object... values) {
+        return redisTemplate.opsForZSet().remove(key, values);
+    }
+
+    @Override
+    public Double zIncrementScore(String key, Object value, double delta) {
+        return redisTemplate.opsForZSet().incrementScore(key, value, delta);
+    }
+
+    @Override
+    public Double zScore(String key, Object value) {
+        return redisTemplate.opsForZSet().score(key, value);
+    }
+
+    @Override
+    public Long zRank(String key, Object value) {
+        return redisTemplate.opsForZSet().rank(key, value);
+    }
+
+    @Override
+    public Long zReverseRank(String key, Object value) {
+        return redisTemplate.opsForZSet().reverseRank(key, value);
+    }
+
+    @Override
+    public Set<Object> zRange(String key, long start, long end) {
+        return redisTemplate.opsForZSet().range(key, start, end);
+    }
+
+    @Override
+    public Set<Object> zReverseRange(String key, long start, long end) {
+        return redisTemplate.opsForZSet().reverseRange(key, start, end);
+    }
+
+    @Override
+    public Set<Object> zRangeByScore(String key, double min, double max) {
+        return redisTemplate.opsForZSet().rangeByScore(key, min, max);
+    }
+
+    @Override
+    public Set<ZSetOperations.TypedTuple<Object>> zRangeByScoreWithScores(String key, double min, double max) {
+        return redisTemplate.opsForZSet().rangeByScoreWithScores(key, min, max);
+    }
+
+    @Override
+    public Long zCard(String key) {
+        return redisTemplate.opsForZSet().zCard(key);
+    }
+
+    @Override
+    public Long zCount(String key, double min, double max) {
+        return redisTemplate.opsForZSet().count(key, min, max);
+    }
+
+    @Override
+    public Long zRemoveRange(String key, long start, long end) {
+        return redisTemplate.opsForZSet().removeRange(key, start, end);
+    }
+
+    @Override
+    public Long zRemoveRangeByScore(String key, double min, double max) {
+        return redisTemplate.opsForZSet().removeRangeByScore(key, min, max);
     }
 }

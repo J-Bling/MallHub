@@ -5,7 +5,7 @@
     <id column="id" jdbcType="BIGINT" property="id" />
     <result column="brand_id" jdbcType="BIGINT" property="brandId" />
     <result column="product_category_id" jdbcType="BIGINT" property="productCategoryId" />
-    <result column="feight_template_id" jdbcType="BIGINT" property="feightTemplateId" />
+    <result column="freight_template_id" jdbcType="BIGINT" property="freightTemplateId" />
     <result column="product_attribute_category_id" jdbcType="BIGINT" property="productAttributeCategoryId" />
     <result column="name" jdbcType="VARCHAR" property="name" />
     <result column="pic" jdbcType="VARCHAR" property="pic" />
@@ -106,7 +106,7 @@
     </where>
   </sql>
   <sql id="Base_Column_List">
-    id, brand_id, product_category_id, feight_template_id, product_attribute_category_id, 
+    id, brand_id, product_category_id, freight_template_id, product_attribute_category_id, 
     name, pic, product_sn, delete_status, publish_status, new_status, recommand_status, 
     verify_status, sort, sale, price, promotion_price, gift_growth, gift_point, use_point_limit, 
     sub_title, original_price, stock, low_stock, unit, weight, preview_status, service_ids, 
@@ -168,7 +168,7 @@
     <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
       SELECT LAST_INSERT_ID()
     </selectKey>
-    insert into pms_product (brand_id, product_category_id, feight_template_id, 
+    insert into pms_product (brand_id, product_category_id, freight_template_id, 
       product_attribute_category_id, name, pic, 
       product_sn, delete_status, publish_status, 
       new_status, recommand_status, verify_status, 
@@ -182,7 +182,7 @@
       promotion_per_limit, promotion_type, brand_name, 
       product_category_name, description, detail_desc, 
       detail_html, detail_mobile_html)
-    values (#{brandId,jdbcType=BIGINT}, #{productCategoryId,jdbcType=BIGINT}, #{feightTemplateId,jdbcType=BIGINT}, 
+    values (#{brandId,jdbcType=BIGINT}, #{productCategoryId,jdbcType=BIGINT}, #{freightTemplateId,jdbcType=BIGINT}, 
       #{productAttributeCategoryId,jdbcType=BIGINT}, #{name,jdbcType=VARCHAR}, #{pic,jdbcType=VARCHAR}, 
       #{productSn,jdbcType=VARCHAR}, #{deleteStatus,jdbcType=INTEGER}, #{publishStatus,jdbcType=INTEGER}, 
       #{newStatus,jdbcType=INTEGER}, #{recommandStatus,jdbcType=INTEGER}, #{verifyStatus,jdbcType=INTEGER}, 
@@ -209,8 +209,8 @@
       <if test="productCategoryId != null">
         product_category_id,
       </if>
-      <if test="feightTemplateId != null">
-        feight_template_id,
+      <if test="freightTemplateId != null">
+        freight_template_id,
       </if>
       <if test="productAttributeCategoryId != null">
         product_attribute_category_id,
@@ -334,8 +334,8 @@
       <if test="productCategoryId != null">
         #{productCategoryId,jdbcType=BIGINT},
       </if>
-      <if test="feightTemplateId != null">
-        #{feightTemplateId,jdbcType=BIGINT},
+      <if test="freightTemplateId != null">
+        #{freightTemplateId,jdbcType=BIGINT},
       </if>
       <if test="productAttributeCategoryId != null">
         #{productAttributeCategoryId,jdbcType=BIGINT},
@@ -471,8 +471,8 @@
       <if test="row.productCategoryId != null">
         product_category_id = #{row.productCategoryId,jdbcType=BIGINT},
       </if>
-      <if test="row.feightTemplateId != null">
-        feight_template_id = #{row.feightTemplateId,jdbcType=BIGINT},
+      <if test="row.freightTemplateId != null">
+        freight_template_id = #{row.freightTemplateId,jdbcType=BIGINT},
       </if>
       <if test="row.productAttributeCategoryId != null">
         product_attribute_category_id = #{row.productAttributeCategoryId,jdbcType=BIGINT},
@@ -598,7 +598,7 @@
     set id = #{row.id,jdbcType=BIGINT},
       brand_id = #{row.brandId,jdbcType=BIGINT},
       product_category_id = #{row.productCategoryId,jdbcType=BIGINT},
-      feight_template_id = #{row.feightTemplateId,jdbcType=BIGINT},
+      freight_template_id = #{row.freightTemplateId,jdbcType=BIGINT},
       product_attribute_category_id = #{row.productAttributeCategoryId,jdbcType=BIGINT},
       name = #{row.name,jdbcType=VARCHAR},
       pic = #{row.pic,jdbcType=VARCHAR},
@@ -646,7 +646,7 @@
     set id = #{row.id,jdbcType=BIGINT},
       brand_id = #{row.brandId,jdbcType=BIGINT},
       product_category_id = #{row.productCategoryId,jdbcType=BIGINT},
-      feight_template_id = #{row.feightTemplateId,jdbcType=BIGINT},
+      freight_template_id = #{row.freightTemplateId,jdbcType=BIGINT},
       product_attribute_category_id = #{row.productAttributeCategoryId,jdbcType=BIGINT},
       name = #{row.name,jdbcType=VARCHAR},
       pic = #{row.pic,jdbcType=VARCHAR},
@@ -694,8 +694,8 @@
       <if test="productCategoryId != null">
         product_category_id = #{productCategoryId,jdbcType=BIGINT},
       </if>
-      <if test="feightTemplateId != null">
-        feight_template_id = #{feightTemplateId,jdbcType=BIGINT},
+      <if test="freightTemplateId != null">
+        freight_template_id = #{freightTemplateId,jdbcType=BIGINT},
       </if>
       <if test="productAttributeCategoryId != null">
         product_attribute_category_id = #{productAttributeCategoryId,jdbcType=BIGINT},
@@ -818,7 +818,7 @@
     update pms_product
     set brand_id = #{brandId,jdbcType=BIGINT},
       product_category_id = #{productCategoryId,jdbcType=BIGINT},
-      feight_template_id = #{feightTemplateId,jdbcType=BIGINT},
+      freight_template_id = #{freightTemplateId,jdbcType=BIGINT},
       product_attribute_category_id = #{productAttributeCategoryId,jdbcType=BIGINT},
       name = #{name,jdbcType=VARCHAR},
       pic = #{pic,jdbcType=VARCHAR},
@@ -863,7 +863,7 @@
     update pms_product
     set brand_id = #{brandId,jdbcType=BIGINT},
       product_category_id = #{productCategoryId,jdbcType=BIGINT},
-      feight_template_id = #{feightTemplateId,jdbcType=BIGINT},
+      freight_template_id = #{freightTemplateId,jdbcType=BIGINT},
       product_attribute_category_id = #{productAttributeCategoryId,jdbcType=BIGINT},
       name = #{name,jdbcType=VARCHAR},
       pic = #{pic,jdbcType=VARCHAR},

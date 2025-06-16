@@ -1,6 +1,5 @@
 package com.mall.portal.service;
 
-import com.mall.common.api.ResponsePage;
 import com.mall.mbg.model.PmsBrand;
 import com.mall.mbg.model.PmsProduct;
 
@@ -18,5 +17,5 @@ public interface PortalBrandService {
     /**
      * 分页获取品牌相关商品
      */
-    ResponsePage<PmsProduct> productPage(long brandId,int pageNum,int pageSize);
+    List<PmsProduct> productPage(long brandId,int offset,int limit);
 }

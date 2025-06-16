@@ -2,7 +2,6 @@ package com.mall.portal.controller;
 
 import com.mall.common.api.ResponsePage;
 import com.mall.common.api.ResponseResult;
-import com.mall.common.exception.Assert;
 import com.mall.mbg.model.PmsBrand;
 import com.mall.mbg.model.PmsProduct;
 import com.mall.portal.service.PortalBrandService;
@@ -20,16 +19,10 @@ import java.util.List;
 public class PortalBrandController {
     @Autowired private PortalBrandService brandService;
 
-    @GetMapping("/brand.list/{pageNum}/{pageSize}")
+    @GetMapping("/brand.list/{offset/{limit}")
     @ApiOperation("分页获取品牌")
-    public ResponseResult<List<PmsBrand>> list(@PathVariable("pageNum") int pageNum,@PathVariable("pageSize") int pageSize){
-        if (pageNum < 0){
-            pageNum = 0;
-        }
-        if (pageSize < 10){
-            pageSize = 10;
-        }
-        return ResponseResult.success(brandService.brandList(pageNum,pageSize));
+    public ResponseResult<List<PmsBrand>> list(@PathVariable("offset") int offset,@PathVariable("limit") int limit){
+        return ResponseResult.success(brandService.brandList(offset,limit));
     }
 
 
@@ -40,19 +33,13 @@ public class PortalBrandController {
     }
 
 
-    @GetMapping("/products/{brandId}/{pageNum}/{pageSize}")
+    @GetMapping("/products/{brandId}/{offset}/{limit}")
     @ApiOperation("获取品牌相关商品")
-    public ResponseResult<ResponsePage<PmsProduct>> productPage(
+    public ResponseResult<List<PmsProduct>> productPage(
             @PathVariable("brandId") long brandId,
-            @PathVariable("pageNum") int pageNum,
-            @PathVariable("pageSize") int pageSize
+            @PathVariable("offset") int offset,
+            @PathVariable("limit") int limit
     ){
-        if (pageNum < 0){
-            pageNum = 0;
-        }
-        if (pageSize < 10){
-            pageSize=10;
-        }
-        return ResponseResult.success(brandService.productPage(brandId,pageNum,pageSize));
+        return ResponseResult.success(brandService.productPage(brandId,offset,limit));
     }
 }

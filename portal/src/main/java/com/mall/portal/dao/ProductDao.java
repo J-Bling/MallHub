@@ -1,9 +1,11 @@
 package com.mall.portal.dao;
 
+import com.mall.mbg.model.PmsProduct;
 import com.mall.mbg.model.SmsCoupon;
 import com.mall.portal.domain.model.CartProduct;
 import com.mall.portal.domain.model.PromotionProduct;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
@@ -25,4 +27,9 @@ public interface ProductDao {
      * 获取可用优惠券列表
      */
     List<SmsCoupon> getAvailableCouponList(@Param("productId") Long productId, @Param("productCategoryId") Long productCategoryId);
+    /**
+     * 根据品牌获取相关商品
+     */
+    @Select("select * from pms_product where brand_id = #{brandId} order id asc limit #{offset},#{limit}")
+    List<PmsProduct> getProductByBrandId(@Param("brandId") long brandId,@Param("offset") int offset,@Param("limit") int limit);
 }
