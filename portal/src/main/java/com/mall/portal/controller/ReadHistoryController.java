@@ -6,9 +6,11 @@ import com.mall.portal.domain.model.ReadHistory;
 import com.mall.portal.service.ReadHistoryService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.hibernate.validator.constraints.Range;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
@@ -41,13 +43,8 @@ public class ReadHistoryController {
 
     @GetMapping("/list/{pageNum}/{pageSize}")
     @ApiOperation("分页获取浏览记录")
-    public ResponseResult<List<ReadHistory>> list(@PathVariable("pageNum") int pageNum,@PathVariable("pageSize") int pageSize){
-        if (pageNum < 0) {
-            pageNum = 0;
-        }
-        if (pageSize < 10){
-            pageSize = 10;
-        }
+    public ResponseResult<List<ReadHistory>> list(
+            @PathVariable("pageNum") @Min(0) int pageNum, @PathVariable("pageSize") @Range(min = 5,max = 50) int pageSize){
         return ResponseResult.success(readHistoryService.list(pageNum,pageSize));
     }
 }

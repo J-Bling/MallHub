@@ -8,12 +8,14 @@ import com.mall.mbg.model.PmsProductCategory;
 import com.mall.portal.domain.model.HomeContent;
 import com.mall.portal.service.HomeService;
 import io.swagger.annotations.ApiOperation;
+import org.hibernate.validator.constraints.Range;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
@@ -31,13 +33,7 @@ public class HomeController {
 
     @GetMapping("/recommend.product/{pageNum}/{pageSize}}")
     @ApiOperation("分页获取推荐商品")
-    public ResponseResult<List<PmsProduct>> recommendProductList(@PathVariable("pageNum") int pageNum,@PathVariable("pageSize") int pageSize){
-        if (pageNum < 0){
-            pageNum = 0;
-        }
-        if (pageSize < 10){
-            pageSize = 10;
-        }
+    public ResponseResult<List<PmsProduct>> recommendProductList(@PathVariable("pageNum") @Min(0) int pageNum, @PathVariable("pageSize") @Range(min = 5,max = 50) int pageSize){
         return ResponseResult.success(homeService.recommendProductList(pageNum,pageSize));
     }
 
@@ -68,7 +64,7 @@ public class HomeController {
 
     @GetMapping("/getHotProductList/{pageNum}/{pageSize}")
     @ApiOperation("分页获取人气商品")
-    public ResponseResult<List<PmsProduct>> getHotProductList(@PathVariable("pageNum") int pageNum,@PathVariable("pageSize") int pageSize){
+    public ResponseResult<List<PmsProduct>> getHotProductList(@PathVariable("pageNum") @Min(0) int pageNum,@PathVariable("pageSize") @Range(min = 5,max=50) int pageSize){
         if (pageNum < 0) {
             pageNum = 0;
         }
@@ -80,7 +76,7 @@ public class HomeController {
 
     @GetMapping("/getNewProductList/{pageNum}/{pageSize}")
     @ApiOperation("分页获取新品商品")
-    public ResponseResult<List<PmsProduct>> getNewProductList(@PathVariable("pageNum") int pageNum,@PathVariable("pageSize") int pageSize){
+    public ResponseResult<List<PmsProduct>> getNewProductList(@PathVariable("pageNum") @Min(0) int pageNum,@PathVariable("pageSize") @Range(min = 5,max = 50) int pageSize){
         if (pageNum < 0) {
             pageNum = 0;
         }

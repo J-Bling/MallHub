@@ -4,9 +4,11 @@ import com.mall.common.api.ResponseResult;
 import com.mall.portal.domain.model.AttentionProduct;
 import com.mall.portal.service.AttentionProductService;
 import io.swagger.annotations.ApiOperation;
+import org.hibernate.validator.constraints.Range;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
@@ -32,13 +34,7 @@ public class AttentionProductController {
 
     @GetMapping("/list/{pageNum}/{pageSize}")
     @ApiOperation("根据分页获取收藏视频的列表")
-    public ResponseResult<List<AttentionProduct>> list(@PathVariable("pageNum") int pageNum,@PathVariable("pageSize") int pageSize){
-        if (pageNum < 0) {
-            pageNum = 0;
-        }
-        if (pageSize < 10){
-            pageSize = 10;
-        }
+    public ResponseResult<List<AttentionProduct>> list(@PathVariable("pageNum") @Min(0) int pageNum, @PathVariable("pageSize") @Range(min = 5,max = 50) int pageSize){
         return ResponseResult.success(attentionProductService.list(pageNum,pageSize));
     }
 

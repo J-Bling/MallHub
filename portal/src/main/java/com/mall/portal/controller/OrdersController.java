@@ -10,9 +10,11 @@ import com.mall.portal.domain.model.OrdersParma;
 import com.mall.portal.service.OrdersService;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
+import org.hibernate.validator.constraints.Range;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
@@ -91,8 +93,8 @@ public class OrdersController {
             defaultValue = "-1", allowableValues = "-1,0,1,2,3,4", paramType = "query", dataType = "int")
     public ResponseResult<List<OrderDetail>> orderDetailList(
             @PathVariable("status") int status,
-            @PathVariable("pageNum") int pageNum,
-            @PathVariable("pageSize") int pageSize
+            @PathVariable("pageNum") @Min(0) int pageNum,
+            @PathVariable("pageSize") @Range(min = 5,max = 50) int pageSize
     ){
         if (!OrderStatusEnum.isValidCode(status)){
             Assert.fail("错误请求");

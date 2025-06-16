@@ -1,13 +1,14 @@
 package com.mall.portal.controller;
 
 import com.mall.common.api.ResponseResult;
-import com.mall.common.exception.Assert;
 import com.mall.portal.domain.model.AttentionBrand;
 import com.mall.portal.service.AttentionBrandService;
 import io.swagger.annotations.ApiOperation;
+import org.hibernate.validator.constraints.Range;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
@@ -32,13 +33,7 @@ public class AttentionBrandController {
 
     @GetMapping("/list/{pageNum}/{pageSize}")
     @ApiOperation("分页获取收藏品牌列表 pageNum 页数 ， pageSize 条数")
-    public ResponseResult<List<AttentionBrand>> list(@PathVariable("pageNum") int pageNum,@PathVariable("pageSize") int pageSize){
-        if (pageNum < 0) {
-            pageNum = 0;
-        }
-        if (pageSize < 10){
-            pageSize = 10;
-        }
+    public ResponseResult<List<AttentionBrand>> list(@PathVariable("pageNum") @Min(0) int pageNum, @PathVariable("pageSize") @Range(min=5,max=50) int pageSize){
         return ResponseResult.success(attentionBrandService.list(pageNum,pageSize));
     }
 

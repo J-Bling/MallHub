@@ -2,6 +2,7 @@ package com.mall.portal.controller;
 
 import com.mall.common.api.ResponseResult;
 import com.mall.mbg.model.PmsProduct;
+import com.mall.portal.domain.enums.SortTypeEnum;
 import com.mall.portal.domain.model.ProductCategory;
 import com.mall.portal.domain.model.ProductDetail;
 import com.mall.portal.service.PortalProductService;
@@ -28,7 +29,7 @@ public class PortalProductController {
                                                            @RequestParam(required = false, defaultValue = "5") Integer pageSize,
                                                            @RequestParam(required = false, defaultValue = "0") Integer sort)
     {
-         return ResponseResult.success(productService.search(keyword, brandId, productCategoryId, pageNum, pageSize, sort));
+         return ResponseResult.success(productService.search(keyword, brandId, productCategoryId, pageNum, pageSize, SortTypeEnum.fromCode(sort)));
     }
 
     @GetMapping("/categoryTreeList")

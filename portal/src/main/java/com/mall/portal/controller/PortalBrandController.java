@@ -6,12 +6,14 @@ import com.mall.mbg.model.PmsBrand;
 import com.mall.mbg.model.PmsProduct;
 import com.mall.portal.service.PortalBrandService;
 import io.swagger.annotations.ApiOperation;
+import org.hibernate.validator.constraints.Range;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
@@ -21,7 +23,8 @@ public class PortalBrandController {
 
     @GetMapping("/brand.list/{offset/{limit}")
     @ApiOperation("分页获取品牌")
-    public ResponseResult<List<PmsBrand>> list(@PathVariable("offset") int offset,@PathVariable("limit") int limit){
+    public ResponseResult<List<PmsBrand>> list(
+            @PathVariable("offset") @Min(0) int offset, @PathVariable("limit") @Range(min = 5,max = 50) int limit){
         return ResponseResult.success(brandService.brandList(offset,limit));
     }
 
@@ -37,8 +40,8 @@ public class PortalBrandController {
     @ApiOperation("获取品牌相关商品")
     public ResponseResult<List<PmsProduct>> productPage(
             @PathVariable("brandId") long brandId,
-            @PathVariable("offset") int offset,
-            @PathVariable("limit") int limit
+            @PathVariable("offset") @Min(0) int offset,
+            @PathVariable("limit") @Range(min = 5,max = 50) int limit
     ){
         return ResponseResult.success(brandService.productPage(brandId,offset,limit));
     }
