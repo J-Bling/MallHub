@@ -9,9 +9,6 @@ import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
-/**
- * 购物车管理dao
- */
 public interface ProductDao {
     /**
      * 获取购物车商品信息
@@ -32,4 +29,14 @@ public interface ProductDao {
      */
     @Select("select * from pms_product where brand_id = #{brandId} order id asc limit #{offset},#{limit}")
     List<PmsProduct> getProductByBrandId(@Param("brandId") long brandId,@Param("offset") int offset,@Param("limit") int limit);
+    /**
+     * 根据销量降序分页获取 product
+     */
+    @Select("select * from pms_product order by sale desc limit #{offset},#{limit}")
+    List<PmsProduct> getProductOfSale(@Param("offset") int offset,@Param("limit") int limit);
+    /**
+     * 根据新品(3天前)排行分页获取 product
+     */
+    @Select("select * from pms_product where create_at > #{created} order by create_at desc limit #{offset},#{limit}")
+    List<PmsProduct> getProductOfCreate(@Param("offset") int offset, @Param("limit") int limit, @Param("created") long created);
 }

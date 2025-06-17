@@ -25,12 +25,15 @@ public interface ProductAttributeCacheService extends Cache {
     List<PmsProductAttribute> getAttributeList(long categoryId);
 
     void delAttributeByCategory(long categoryId);
-    void delAttributeById(long id);
+    void delAttributeById(long id,long categoryId);
     void delAttributeCategoryById(long id);
+    void delAttributeCategoryAll();
 
     class CacheKeys{
         public static String Field(long id){return ""+id;}
         public static String ProductAttributeHashKey(long categoryId){return "product-attribute-hash-key:"+categoryId;}
+        public static String ProductAttributeKey(long id){return "product-attribute-key:"+id;}
         public static String ProductAttributeCategoryHashKey = "product-attribute-category-hash-key";
+        public static String CategoryLock(long categoryId){return "attribute-category-lock:"+categoryId;}
     }
 }
