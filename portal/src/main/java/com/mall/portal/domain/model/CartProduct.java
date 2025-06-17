@@ -4,9 +4,10 @@ import com.mall.mbg.model.PmsProduct;
 import com.mall.mbg.model.PmsProductAttribute;
 import com.mall.mbg.model.PmsSkuStock;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class CartProduct extends PmsProduct {
+public class CartProduct extends PmsProduct{
     //商品属性列表
     private List<PmsProductAttribute> productAttributeList;
     //商品SKU库存列表

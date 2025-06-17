@@ -50,7 +50,7 @@ public class BaseRedisConfig {
     }
 
     @Bean
-    public HashOperations<String,String,String> counterHashTemplate(@Qualifier("stringRedisTemplate") RedisTemplate<String,String> redisTemplate){
+    public HashOperations<String,String,String> hashOperations(@Qualifier("stringRedisTemplate") RedisTemplate<String,String> redisTemplate){
         return redisTemplate.opsForHash();
     }
 

@@ -2,9 +2,10 @@ package com.mall.portal.domain.model;
 
 import io.swagger.annotations.ApiModelProperty;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
-public class OrderReturnApplyParam {
+public class OrderReturnApplyParam implements Serializable {
     @ApiModelProperty("订单id")
     private Long orderId;
     @ApiModelProperty("退货商品id")

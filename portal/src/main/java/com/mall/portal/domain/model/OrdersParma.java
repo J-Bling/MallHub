@@ -1,8 +1,9 @@
 package com.mall.portal.domain.model;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class OrdersParma {
+public class OrdersParma implements Serializable {
     //"收货地址ID"
     private Long memberReceiveAddressId;
     //"优惠券ID"

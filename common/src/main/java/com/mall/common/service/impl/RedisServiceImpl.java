@@ -29,12 +29,12 @@ public class RedisServiceImpl implements RedisService {
     @Override
     public void set(String key, Object value) {
         redisTemplate.opsForValue().set(key, value);
-        this.expire(key,expired);
+        this.expire(key, expired);
     }
 
     @Override
     public Boolean setNX(String key, String value, long time) {
-        return redisTemplate.opsForValue().setIfAbsent(key,value,time,timeUnit);
+        return redisTemplate.opsForValue().setIfAbsent(key, value, time, timeUnit);
     }
 
     @Override
@@ -58,10 +58,10 @@ public class RedisServiceImpl implements RedisService {
     }
 
     @Override
-    public void tryExpire(String key){
+    public void tryExpire(String key) {
         Long expire = redisTemplate.getExpire(key);
-        if (expire !=null && expire >0){
-            this.expire(key,expired);
+        if (expire != null && expire > 0) {
+            this.expire(key, expired);
         }
     }
 
@@ -100,8 +100,8 @@ public class RedisServiceImpl implements RedisService {
     public void hSet(String key, String hashKey, Object value) {
         redisTemplate.opsForHash().put(key, hashKey, value);
         Long Exipred = redisTemplate.getExpire(key);
-        if (Exipred!=null && Exipred > 0){
-            this.expire(key,expired);
+        if (Exipred != null && Exipred > 0) {
+            this.expire(key, expired);
         }
     }
 
@@ -112,8 +112,8 @@ public class RedisServiceImpl implements RedisService {
 
     @Override
     public List<Object> hGetAll(String key, List<String> ids) {
-        HashOperations<String,String,Object> hashOperations = redisTemplate.opsForHash();
-        return hashOperations.multiGet(key,ids);
+        HashOperations<String, String, Object> hashOperations = redisTemplate.opsForHash();
+        return hashOperations.multiGet(key, ids);
     }
 
     @Override
@@ -126,8 +126,8 @@ public class RedisServiceImpl implements RedisService {
     public void hSetAll(String key, Map<String, ?> map) {
         redisTemplate.opsForHash().putAll(key, map);
         Long Exipred = redisTemplate.getExpire(key);
-        if (Exipred!=null && Exipred > 0){
-            this.expire(key,expired);
+        if (Exipred != null && Exipred > 0) {
+            this.expire(key, expired);
         }
     }
 
@@ -160,8 +160,8 @@ public class RedisServiceImpl implements RedisService {
     public Long sAdd(String key, Object... values) {
         Long len = redisTemplate.opsForSet().add(key, values);
         Long Exipred = redisTemplate.getExpire(key);
-        if (Exipred!=null && Exipred > 0){
-            this.expire(key,expired);
+        if (Exipred != null && Exipred > 0) {
+            this.expire(key, expired);
         }
         return len;
     }
@@ -207,8 +207,8 @@ public class RedisServiceImpl implements RedisService {
     public Long lPush(String key, Object value) {
         Long len = redisTemplate.opsForList().rightPush(key, value);
         Long Exipred = redisTemplate.getExpire(key);
-        if (Exipred!=null && Exipred > 0){
-            this.expire(key,expired);
+        if (Exipred != null && Exipred > 0) {
+            this.expire(key, expired);
         }
         return len;
     }
@@ -224,8 +224,8 @@ public class RedisServiceImpl implements RedisService {
     public Long lPushAll(String key, Object... values) {
         Long len = redisTemplate.opsForList().rightPushAll(key, values);
         Long Exipred = redisTemplate.getExpire(key);
-        if (Exipred!=null && Exipred > 0){
-            this.expire(key,expired);
+        if (Exipred != null && Exipred > 0) {
+            this.expire(key, expired);
         }
         return len;
     }
@@ -239,90 +239,11 @@ public class RedisServiceImpl implements RedisService {
 
     @Override
     public Long lRemove(String key, long count, Object value) {
-        Long len =redisTemplate.opsForList().remove(key, count, value);
+        Long len = redisTemplate.opsForList().remove(key, count, value);
         Long Exipred = redisTemplate.getExpire(key);
-        if (Exipred!=null && Exipred > 0){
-            this.expire(key,expired);
+        if (Exipred != null && Exipred > 0) {
+            this.expire(key, expired);
         }
         return len;
-    }
-
-    @Override
-    public Boolean zAdd(String key, Object value, double score) {
-        Boolean isAdd = redisTemplate.opsForZSet().add(key, value, score);
-        this.expire(key,expired);
-        return isAdd;
-    }
-
-    @Override
-    public Long zAdd(String key, Set<ZSetOperations.TypedTuple<Object>> tuples) {
-        Long len =redisTemplate.opsForZSet().add(key, tuples);
-        this.expire(key,expired);
-        return len;
-    }
-
-    @Override
-    public Long zRemove(String key, Object... values) {
-        return redisTemplate.opsForZSet().remove(key, values);
-    }
-
-    @Override
-    public Double zIncrementScore(String key, Object value, double delta) {
-        return redisTemplate.opsForZSet().incrementScore(key, value, delta);
-    }
-
-    @Override
-    public Double zScore(String key, Object value) {
-        return redisTemplate.opsForZSet().score(key, value);
-    }
-
-    @Override
-    public Long zRank(String key, Object value) {
-        return redisTemplate.opsForZSet().rank(key, value);
-    }
-
-    @Override
-    public Long zReverseRank(String key, Object value) {
-        return redisTemplate.opsForZSet().reverseRank(key, value);
-    }
-
-    @Override
-    public Set<Object> zRange(String key, long start, long end) {
-        return redisTemplate.opsForZSet().range(key, start, end);
-    }
-
-    @Override
-    public Set<Object> zReverseRange(String key, long start, long end) {
-        return redisTemplate.opsForZSet().reverseRange(key, start, end);
-    }
-
-    @Override
-    public Set<Object> zRangeByScore(String key, double min, double max) {
-        return redisTemplate.opsForZSet().rangeByScore(key, min, max);
-    }
-
-    @Override
-    public Set<ZSetOperations.TypedTuple<Object>> zRangeByScoreWithScores(String key, double min, double max) {
-        return redisTemplate.opsForZSet().rangeByScoreWithScores(key, min, max);
-    }
-
-    @Override
-    public Long zCard(String key) {
-        return redisTemplate.opsForZSet().zCard(key);
-    }
-
-    @Override
-    public Long zCount(String key, double min, double max) {
-        return redisTemplate.opsForZSet().count(key, min, max);
-    }
-
-    @Override
-    public Long zRemoveRange(String key, long start, long end) {
-        return redisTemplate.opsForZSet().removeRange(key, start, end);
-    }
-
-    @Override
-    public Long zRemoveRangeByScore(String key, double min, double max) {
-        return redisTemplate.opsForZSet().removeRangeByScore(key, min, max);
     }
 }

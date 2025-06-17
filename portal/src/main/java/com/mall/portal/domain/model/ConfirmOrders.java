@@ -3,10 +3,11 @@ package com.mall.portal.domain.model;
 import com.mall.mbg.model.UmsIntegrationConsumeSetting;
 import com.mall.mbg.model.UmsMemberReceiveAddress;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
 
-public class ConfirmOrders {
+public class ConfirmOrders implements Serializable {
     //"包含优惠信息的购物车信息"
     private List<CartPromotionItem> cartPromotionItemList;
     //"用户收货地址列表"

@@ -1,9 +1,10 @@
 package com.mall.portal.domain.model;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
-public class FlashPromotion {
+public class FlashPromotion implements Serializable {
     //本场开始时间
     private Date startTime;
     //本场结束时间

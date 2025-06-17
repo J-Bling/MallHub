@@ -9,13 +9,12 @@ import com.mall.mbg.model.PmsProductFullReduction;
 import com.mall.mbg.model.PmsProductLadder;
 import com.mall.mbg.model.PmsSkuStock;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class ProductDetail {
+public class ProductDetail implements Serializable {
     //"商品信息"
     private PmsProduct product;
-    //"商品品牌"
-    private PmsBrand brand;
     //"商品属性与参数"
     private List<PmsProductAttribute> productAttributeList;
     //"手动录入的商品属性与参数值"
@@ -26,6 +25,10 @@ public class ProductDetail {
     private List<PmsProductLadder> productLadderList;
     //"商品满减价格设置"
     private List<PmsProductFullReduction> productFullReductionList;
+    //商品相册集
+    private ProductAlbums productAlbums;
+    //"商品品牌"
+    private PmsBrand brand;
     //"商品可用优惠券"
     private List<SmsCoupon> couponList;
 
@@ -65,6 +68,10 @@ public class ProductDetail {
         return productAttributeValueList;
     }
 
+    public ProductAlbums getProductAlbums() {
+        return productAlbums;
+    }
+
     public void setSkuStockList(List<PmsSkuStock> skuStockList) {
         this.skuStockList = skuStockList;
     }
@@ -91,5 +98,9 @@ public class ProductDetail {
 
     public void setProductAttributeValueList(List<PmsProductAttributeValue> productAttributeValueList) {
         this.productAttributeValueList = productAttributeValueList;
+    }
+
+    public void setProductAlbums(ProductAlbums productAlbums) {
+        this.productAlbums = productAlbums;
     }
 }

@@ -1,8 +1,8 @@
 package com.mall.portal.service;
 
 import com.mall.mbg.model.PmsProduct;
+import com.mall.mbg.model.PmsProductCategory;
 import com.mall.portal.domain.enums.SortTypeEnum;
-import com.mall.portal.domain.model.ProductCategory;
 import com.mall.portal.domain.model.ProductDetail;
 
 import java.util.List;
@@ -15,7 +15,7 @@ public interface PortalProductService {
     /**
      * 以树形结构获取所有商品分类
      */
-    List<ProductCategory> categoryTreeList();
+    List<PmsProductCategory> categoryTreeList();
     /**
      * 获取前台商品详情
      */

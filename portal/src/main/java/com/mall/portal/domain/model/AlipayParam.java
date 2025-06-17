@@ -1,8 +1,9 @@
 package com.mall.portal.domain.model;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
-public class AlipayParam {
+public class AlipayParam implements Serializable {
     /**
      * 商户订单号，商家自定义，保持唯一性
      */

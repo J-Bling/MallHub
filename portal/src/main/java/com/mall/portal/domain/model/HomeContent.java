@@ -4,9 +4,11 @@ import com.mall.mbg.model.CmsSubject;
 import com.mall.mbg.model.PmsProduct;
 import com.mall.mbg.model.PmsBrand;
 import com.mall.mbg.model.SmsHomeAdvertise;
+
+import java.io.Serializable;
 import java.util.List;
 
-public class HomeContent {
+public class HomeContent implements Serializable {
     //轮播广告
     private List<SmsHomeAdvertise> advertiseList;
     //推荐品牌

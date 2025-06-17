@@ -2,8 +2,8 @@ package com.mall.portal.controller;
 
 import com.mall.common.api.ResponseResult;
 import com.mall.mbg.model.PmsProduct;
+import com.mall.mbg.model.PmsProductCategory;
 import com.mall.portal.domain.enums.SortTypeEnum;
-import com.mall.portal.domain.model.ProductCategory;
 import com.mall.portal.domain.model.ProductDetail;
 import com.mall.portal.service.PortalProductService;
 import io.swagger.annotations.ApiImplicitParam;
@@ -34,7 +34,7 @@ public class PortalProductController {
 
     @GetMapping("/categoryTreeList")
     @ApiOperation("以树形结构获取所有商品分类")
-    public ResponseResult<List<ProductCategory>> categoryTreeList(){
+    public ResponseResult<List<PmsProductCategory>> categoryTreeList(){
         return ResponseResult.success(productService.categoryTreeList());
     }
 

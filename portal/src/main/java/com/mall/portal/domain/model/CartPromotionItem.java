@@ -4,7 +4,7 @@ import com.mall.mbg.model.OmsCartItem;
 
 import java.math.BigDecimal;
 
-public class CartPromotionItem extends OmsCartItem {
+public class CartPromotionItem extends OmsCartItem{
     //"促销活动信息"
     private String promotionMessage;
     //"促销活动减去的金额，针对每个商品"
