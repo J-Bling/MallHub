@@ -27,7 +27,7 @@ public class ProductAttributeCacheServiceImpl implements ProductAttributeCacheSe
     private final Logger logger = LoggerFactory.getLogger(ProductAttributeCacheServiceImpl.class);
 
     @Override
-    public PmsProductAttributeCategory getCategory(long categoryId) {
+    public PmsProductAttributeCategory getAttributeCategory(long categoryId) {
         return this.getCategoryCache(categoryId,1);
     }
 

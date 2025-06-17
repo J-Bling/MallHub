@@ -33,9 +33,25 @@ public interface ProductCacheService extends Cache {
      */
     ProductModel getProductModel(long productId);
     /**
+     * 获取单个 sku 库存
+     */
+    PmsSkuStock getSkuStock(long productId,long skuId);
+    /**
+     * 获取该商品所有 sku 库存信息
+     */
+    List<PmsSkuStock> getSkuStockList(long productId);
+    /**
      * 删除单个缓存 不删排行榜
      */
     void delProductCache(long id);
+    /**
+     * 删除 productMode 缓存 -> 修改了 productLadder价格阶梯  productFullReduction减满 productAlbum相册 productAttributeValueList商品属性值
+     */
+    void delProductModelCache(long productId);
+    /**
+     * 根据 productId 删除 该商品skuStock 全部缓存
+     */
+    void delSkuStock(long productId);
     /**
      * 增加销售额
      */
@@ -44,7 +60,6 @@ public interface ProductCacheService extends Cache {
 
     class ProductModel implements Serializable {
         private Long productId;
-        private List<PmsSkuStock> skuStockList;
         private List<PmsProductLadder> productLadderList;
         private List<PmsProductFullReduction> productFullReductionList;
         private ProductAlbums productAlbums;
@@ -56,9 +71,6 @@ public interface ProductCacheService extends Cache {
             return productId;
         }
 
-        public List<PmsSkuStock> getSkuStockList() {
-            return skuStockList;
-        }
 
         public ProductAlbums getProductAlbums() {
             return productAlbums;
@@ -84,9 +96,6 @@ public interface ProductCacheService extends Cache {
             this.productAlbums = productAlbums;
         }
 
-        public void setSkuStockList(List<PmsSkuStock> skuStockList) {
-            this.skuStockList = skuStockList;
-        }
 
         public void setProductFullReductionList(List<PmsProductFullReduction> productFullReductionList) {
             this.productFullReductionList = productFullReductionList;
@@ -106,6 +115,7 @@ public interface ProductCacheService extends Cache {
         public static String ProductModelKey(long productId){return "product-model-key:"+productId;}
         public static String ProductKeyLock(long id){return "product-lock-key:"+id;}
         public static String ProductModelKeyLock(long productId){return "product-model-lock-key:"+productId;}
+        public static String SkuStockHashKey(long productId){return "sku-stock-hash-key:"+productId;}
         public static String Field(long id){return ""+id;}
         public static String ProductNewRank = "product-new-rank";
         public static String ProductSaleRank = "product-sale-rank";

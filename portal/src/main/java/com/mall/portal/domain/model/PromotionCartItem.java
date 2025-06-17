@@ -3,12 +3,14 @@ package com.mall.portal.domain.model;
 import com.mall.mbg.model.OmsCartItem;
 import io.swagger.annotations.ApiModelProperty;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
  * 购物车促销项目
  */
-public class PromotionCartItem extends OmsCartItem {
+public class PromotionCartItem implements Serializable {
+    private Long cartId;
     //促销活动信息
     private String promotionMessage;
     //促销活动减去的金额，针对每个商品
@@ -19,6 +21,10 @@ public class PromotionCartItem extends OmsCartItem {
     private Integer integration;
     //购买商品赠送成长值
     private Integer growth;
+
+    public Long getCartId() {
+        return cartId;
+    }
 
     public String getPromotionMessage() {
         return promotionMessage;
@@ -54,5 +60,13 @@ public class PromotionCartItem extends OmsCartItem {
 
     public void setGrowth(Integer growth) {
         this.growth = growth;
+    }
+
+    public void setCartId(Long cartId) {
+        this.cartId = cartId;
+    }
+
+    public void setReduceAmount(BigDecimal reduceAmount) {
+        this.reduceAmount = reduceAmount;
     }
 }

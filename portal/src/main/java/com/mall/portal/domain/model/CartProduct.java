@@ -4,7 +4,6 @@ import com.mall.mbg.model.PmsProduct;
 import com.mall.mbg.model.PmsProductAttribute;
 import com.mall.mbg.model.PmsSkuStock;
 
-import java.io.Serializable;
 import java.util.List;
 
 public class CartProduct extends PmsProduct{

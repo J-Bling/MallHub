@@ -1,12 +1,14 @@
 package com.mall.portal.service.impl;
 
 import com.mall.mbg.mapper.*;
-import com.mall.mbg.model.PmsProduct;
-import com.mall.mbg.model.PmsProductCategory;
-import com.mall.mbg.model.PmsProductExample;
+import com.mall.mbg.model.*;
+import com.mall.portal.cache.BrandCacheService;
+import com.mall.portal.cache.ProductAttributeCacheService;
+import com.mall.portal.cache.ProductCacheService;
 import com.mall.portal.cache.ProductCategoryCacheService;
 import com.mall.portal.domain.enums.SortTypeEnum;
 import com.mall.portal.domain.model.ProductDetail;
+import com.mall.portal.service.CouponService;
 import com.mall.portal.service.PortalProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,11 @@ public class PortalProductServiceImpl implements PortalProductService {
 
     @Autowired private PmsProductMapper productMapper;
     @Autowired private ProductCategoryCacheService categoryCacheService;
+    @Autowired private ProductCacheService productCacheService;
+    @Autowired private ProductAttributeCacheService productAttributeCacheService;
+    @Autowired private BrandCacheService brandCacheService;
+    @Autowired private CouponService couponService;
+
 
 
     @Override
@@ -49,6 +56,49 @@ public class PortalProductServiceImpl implements PortalProductService {
 
     @Override
     public ProductDetail detail(Long id) {
-        return null;
+        ProductDetail productDetail = new ProductDetail();
+        //获取商品
+        PmsProduct product = productCacheService.getProduct(id);
+        productDetail.setProduct(product);
+        //获取 商品品牌
+        PmsBrand brand = brandCacheService.getBrand(product.getBrandId());
+        productDetail.setBrand(brand);
+        //获取商品可用优惠券
+        List<SmsCoupon> couponList =couponService.listByProduct(product.getId());
+        productDetail.setCouponList(couponList);
+        //获取商品属性分类
+        PmsProductAttributeCategory category = productAttributeCacheService.getAttributeCategory(product.getProductAttributeCategoryId());
+        //获取商品属性
+        List<PmsProductAttribute> productAttributeList = productAttributeCacheService.getAttributeList(category.getId());
+        productDetail.setProductAttributeList(productAttributeList);
+        //获取商品所有 sku 库存信息
+        List<PmsSkuStock> skuStockList = productCacheService.getSkuStockList(product.getId());
+        productDetail.setSkuStockList(skuStockList);
+        //获取 productModel
+        ProductCacheService.ProductModel productModel = productCacheService.getProductModel(id);
+        //获取 相册集
+        productDetail.setProductAlbums(productModel.getProductAlbums());
+        //获取商品减满
+        productDetail.setProductFullReductionList(productModel.getProductFullReductionList());
+        //获取商品价格阶梯
+        productDetail.setProductLadderList(productModel.getProductLadderList());
+        //获取商品属性参数值
+        productDetail.setProductAttributeValueList(productModel.getProductAttributeValueList());
+        return productDetail;
+    }
+
+    @Override
+    public PmsProduct getProduct(long productId) {
+        return this.productCacheService.getProduct(productId);
+    }
+
+    @Override
+    public List<PmsSkuStock> getSkuStock(long productId) {
+        return this.productCacheService.getSkuStockList(productId);
+    }
+
+    @Override
+    public List<PmsProductAttribute> getProductAttribute(long productId) {
+        return this.productAttributeCacheService.getAttributeList(productId);
     }
 }

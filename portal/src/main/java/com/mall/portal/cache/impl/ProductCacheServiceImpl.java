@@ -161,6 +161,62 @@ public class ProductCacheServiceImpl implements ProductCacheService {
         return this.getProductModelCache(productId,1);
     }
 
+    @Override
+    public PmsSkuStock getSkuStock(long productId, long skuId) {
+        try {
+            PmsSkuStock skuStock = (PmsSkuStock) redisService.hGet(CacheKeys.SkuStockHashKey(productId), CacheKeys.Field(skuId));
+            if (skuStock != null) {
+                return skuStock;
+            }
+            PmsSkuStockExample example = new PmsSkuStockExample();
+            example.createCriteria().andProductIdEqualTo(productId);
+            List<PmsSkuStock> skuStockList = skuStockMapper.selectByExample(example);
+            if (skuStockList != null && !skuStockList.isEmpty()) {
+                Map<String, PmsSkuStock> stringPmsSkuStockMap = new HashMap<>();
+                for (PmsSkuStock stock : skuStockList) {
+                    stringPmsSkuStockMap.put(CacheKeys.Field(stock.getId()), stock);
+                }
+                redisService.hSetAll(CacheKeys.SkuStockHashKey(productId), stringPmsSkuStockMap);
+                for (PmsSkuStock stock : skuStockList) {
+                    if (stock.getId().equals(skuId)) {
+                        return stock;
+                    }
+                }
+            }
+        }catch (Exception e){
+            logger.error("获取 库存信息失败 productId:{},skuId:{},{}",productId,skuId,e.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    public List<PmsSkuStock> getSkuStockList(long productId) {
+        List<PmsSkuStock> skuStockList = new ArrayList<>();
+        try {
+            Map<Object, Object> map = redisService.hGetAll(CacheKeys.SkuStockHashKey(productId));
+            if (map != null && !map.isEmpty()) {
+                for (Map.Entry<Object, Object> entry : map.entrySet()) {
+                    skuStockList.add((PmsSkuStock) entry.getValue());
+                }
+                return skuStockList;
+            }
+
+            PmsSkuStockExample example = new PmsSkuStockExample();
+            example.createCriteria().andProductIdEqualTo(productId);
+            skuStockList = skuStockMapper.selectByExample(example);
+            if (skuStockList != null && !skuStockList.isEmpty()) {
+                Map<String, PmsSkuStock> skuStockMap = new HashMap<>();
+                for (PmsSkuStock stock : skuStockList) {
+                    skuStockMap.put("" + stock.getId(), stock);
+                }
+                redisService.hSetAll(CacheKeys.SkuStockHashKey(productId), skuStockMap);
+            }
+        }catch (Exception e){
+            logger.error("获取库存信息失败:productId:{},{}",productId,e.getMessage());
+        }
+        return skuStockList;
+    }
+
     private ProductModel getProductModelCache(long productId,int tryCount){
         if (tryCount>=retryCount){
             return null;
@@ -194,11 +250,6 @@ public class ProductCacheServiceImpl implements ProductCacheService {
             attributeValueExample.createCriteria().andProductIdEqualTo(productId);
             List<PmsProductAttributeValue> attributeValueList = attributeValueMapper.selectByExample(attributeValueExample);
             productModel.setProductAttributeValueList(attributeValueList);
-            //获取商品库存
-            PmsSkuStockExample skuStockExample = new PmsSkuStockExample();
-            skuStockExample.createCriteria().andProductIdEqualTo(productId);
-            List<PmsSkuStock> skuStockList = skuStockMapper.selectByExample(skuStockExample);
-            productModel.setSkuStockList(skuStockList);
             //获取商品价格阶梯
             PmsProductLadderExample ladderExample = new PmsProductLadderExample();
             ladderExample.createCriteria().andProductIdEqualTo(productId);
@@ -244,14 +295,30 @@ public class ProductCacheServiceImpl implements ProductCacheService {
 
 
 
-
     @Override
     public void delProductCache(long id) {
         try {
             redisService.del(CacheKeys.ProductKey(id));
-            redisService.del(CacheKeys.ProductModelKey(id));
         }catch (Exception e){
-            logger.error("删除失败:{}",e.getMessage());
+            logger.error("删除 product 失败:{}",e.getMessage());
+        }
+    }
+
+    @Override
+    public void delProductModelCache(long productId) {
+        try {
+            redisService.del(CacheKeys.ProductModelKey(productId));
+        }catch (Exception e){
+            logger.error("删除 productModel 失败:{}",e.getMessage());
+        }
+    }
+
+    @Override
+    public void delSkuStock(long productId) {
+        try {
+            redisService.del(CacheKeys.SkuStockHashKey(productId));
+        }catch (Exception e){
+            logger.error("删除 skuStock 缓存失败:{}",e.getMessage());
         }
     }
 

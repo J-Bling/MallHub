@@ -34,7 +34,7 @@ public interface CouponCacheService extends Cache {
      */
     List<SmsCouponProductRelation> getCouponProductRelationList(long productId);
     /**
-     * 根据商品id获取商品类型对优惠券的关联列表
+     * 根据商品类型id获取商品类型对优惠券的关联列表
      */
     List<SmsCouponProductCategoryRelation> getCouponProductCategoryRelationList(long productCategoryId);
 

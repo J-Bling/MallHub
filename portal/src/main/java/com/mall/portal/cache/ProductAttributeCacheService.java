@@ -10,7 +10,7 @@ public interface ProductAttributeCacheService extends Cache {
     /**
      * 获取商品属性分类
      */
-    PmsProductAttributeCategory getCategory(long categoryId);
+    PmsProductAttributeCategory getAttributeCategory(long categoryId);
     /**
      * 获取所有商品属性分类
      */
