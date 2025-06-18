@@ -17,17 +17,17 @@ public interface ProductCacheService extends Cache {
      */
     Boolean addProductNewRank(long id);
     /**
+     * 按销量排行降序分页获取 productList
+     */
+    List<Long> geSaleRankList(int offset, int limit);
+    /**
+     * 按新品排行榜降序 分页获取productIdsList
+     */
+    List<Long> getNewRankList(int offset,int limit);
+    /**
      * 获取 product 缓存
      */
     PmsProduct getProduct(long id);
-    /**
-     * 按销量排行降序分页获取 productList
-     */
-    List<PmsProduct> geSaleRanktList(int offset,int limit);
-    /**
-     * 按新品排行榜降序 分页获取productList
-     */
-    List<PmsProduct> getNewRankList(int offset,int limit);
     /**
      * 获取 ProductModel
      */
@@ -43,9 +43,9 @@ public interface ProductCacheService extends Cache {
     /**
      * 获取单个sku 库存
      */
-    Integer getSkuStock(long skuId);
+    ProductStats getSkuStockStats(long skuId);
     /**
-     * 获取单个 productStats
+     * 获取商品总库存 和 总销量
      */
     ProductStats getProductStats(long productId);
     /**
@@ -60,6 +60,10 @@ public interface ProductCacheService extends Cache {
      * 增加或者减少sku库存
      */
     void incrementSkuStock(long skuId,int delta);
+    /**
+     * 增加或者减少该sku的销量
+     */
+    void incrementSkuSale(long skuId,int delta);
     /**
      * 对排行榜 增加销售额
      */
@@ -91,8 +95,6 @@ public interface ProductCacheService extends Cache {
         private List<PmsProductFullReduction> productFullReductionList;
         private ProductAlbums productAlbums;
         private List<PmsProductAttributeValue> productAttributeValueList;
-
-
 
         public Long getProductId() {
             return productId;
@@ -172,10 +174,10 @@ public interface ProductCacheService extends Cache {
         public static String SkuStockHashKey(long productId){return "sku-stock-hash-key:"+productId;}
         public static String Field(long id){return ""+id;}
         public static String ProductStats(long productId){return "product-stats-hash:"+productId;}
+        public static String SkuStockStats(long skuId) {return  "sku-stock-stats-hash:"+skuId;}
 
         public static String ProductNewRank = "product-new-rank";
         public static String ProductSaleRank = "product-sale-rank";
-        public static String SkuStockCount = "sku-stock-count-hash";
         public static String Sale = "sale";
         public static String Stock = "stock";
     }

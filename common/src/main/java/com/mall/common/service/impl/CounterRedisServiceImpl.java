@@ -89,6 +89,7 @@ public class CounterRedisServiceImpl implements CounterRedisService {
 
     @Override
     public Boolean zAdd(String key, String value, double score) {
+        redisService.tryExpire(key);
         return stringRedisTemplate.opsForZSet().add(key,value,score);
     }
 
@@ -97,6 +98,7 @@ public class CounterRedisServiceImpl implements CounterRedisService {
         if (values==null||values.isEmpty()){
             return 0L;
         }
+        redisService.tryExpire(key);
         return stringRedisTemplate.opsForZSet().add(key,values.entrySet()
                 .stream()
                 .map(e->new DefaultTypedTuple<>(e.getKey(),e.getValue()))

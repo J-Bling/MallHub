@@ -18,8 +18,13 @@ public interface ProductDao {
     @Select("select * from pms_product order by sale desc limit #{offset},#{limit}")
     List<PmsProduct> getProductOfSale(@Param("offset") int offset,@Param("limit") int limit);
     /**
-     * 根据新品(3天前)排行分页获取 product
+     * 根据新品排行获取前 n个 product
      */
-    @Select("select * from pms_product where create_at > #{created} order by create_at desc limit #{offset},#{limit}")
-    List<PmsProduct> getProductOfCreate(@Param("offset") int offset, @Param("limit") int limit, @Param("created") long created);
+    @Select("select id,create_at from pms_product where new_status = 1 and verify_status =1 order by create_at desc limit #{limit}")
+    List<PmsProduct> getMaxCreateProduct(@Param("limit") int limit);
+    /**
+     * 获取按销量排行前 n个 个商品
+     */
+    @Select("select id,sale from pms_product order by sale desc limit #{limit}")
+    List<PmsProduct> getMaxSaleProduct(@Param("limit") int limit);
 }

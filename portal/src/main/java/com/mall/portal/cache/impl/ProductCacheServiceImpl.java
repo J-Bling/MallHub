@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -33,10 +34,11 @@ public class ProductCacheServiceImpl implements ProductCacheService {
     @Autowired private PmsProductFullReductionMapper fullReductionMapper;
     @Autowired private ProductDao productDao;
 
+    @Value("${cache.allow.product}")
+    private Boolean allowProductCache;
     private final Lock ProductSaleLock = new ReentrantLock();
     private final Lock ProductStockLock = new ReentrantLock();
-    private final static int dividend = 1000;
-    private final static int newProductExpired = 259200;
+    private final int ProductLimit = 500;
     private final Logger logger = LoggerFactory.getLogger(ProductCacheServiceImpl.class);
 
     @Override
@@ -47,12 +49,16 @@ public class ProductCacheServiceImpl implements ProductCacheService {
     @Override
     public Boolean addProductNewRank(long id) {
         this.addProductInSaleRank(id,0.0);
-        return counterRedisService.zAdd(CacheKeys.ProductNewRank,CacheKeys.ProductKey(id), (double) System.currentTimeMillis() /dividend);
+        return counterRedisService.zAdd(CacheKeys.ProductNewRank,CacheKeys.ProductKey(id), (double) System.currentTimeMillis());
     }
 
     @Override
     public PmsProduct getProduct(long id) {
-        return this.getProductInCache(id,1);
+        return allowProductCache==null || !allowProductCache ? this.getProductInDb(id) : this.getProductInCache(id,1);
+    }
+
+    private PmsProduct getProductInDb(long id){
+        return productMapper.selectByPrimaryKey(id);
     }
 
     private PmsProduct getProductInCache(long id ,int tryCount){
@@ -94,157 +100,98 @@ public class ProductCacheServiceImpl implements ProductCacheService {
     }
 
     @Override
-    public List<PmsProduct> geSaleRanktList(int offset, int limit) {
-        List<PmsProduct> productList = new ArrayList<>();
-        try {
-            Set<String> productIds = counterRedisService.zReverseRange(CacheKeys.ProductSaleRank, offset, offset + limit - 1);
-            if (productIds == null || productIds.isEmpty()) {
-                productList = productDao.getProductOfSale(offset, limit);
-                if (productIds != null && !productIds.isEmpty()) {
-                    Map<String, Double> setMap = new HashMap<>();
-                    for (PmsProduct product : productList) {
-                        setMap.put("" + product.getId(), product.getSale().doubleValue());
-                    }
-                    counterRedisService.zAddAll(CacheKeys.ProductSaleRank, setMap);
-                }
-                return productList;
-            }
-
-            for (String id : productIds) {
-                productList.add(this.getProduct(Long.parseLong(id)));
-            }
-        }catch (Exception e){
-            logger.error("按销量查询商品失败:{}",e.getMessage());
+    public List<Long> geSaleRankList(int offset, int limit) {
+        List<Long> ProductIds = new ArrayList<>();
+        if (offset >ProductLimit){
+            return ProductIds;
         }
-        return productList;
+        Long len = counterRedisService.zSize(CacheKeys.ProductSaleRank);
+        if (len==null || len <= offset){
+            List<PmsProduct> productList =productDao.getMaxSaleProduct(ProductLimit);
+            if (productList==null || productList.isEmpty()){
+                return ProductIds;
+            }
+            Map<String,Double> productRank = new HashMap<>();
+            productList.stream().map(p->productRank.put(p.getId().toString(),p.getStock().doubleValue()));
+            counterRedisService.zAddAll(CacheKeys.ProductSaleRank,productRank);
+            if (offset>=productList.size()-1){
+                return null;
+            }
+            for (int i = offset ; i<Math.min(limit,productList.size());i++){
+                ProductIds.add(productList.get(i).getId());
+            }
+            return ProductIds;
+        }
+        Set<String> productIds = counterRedisService.zReverseRange(CacheKeys.ProductSaleRank, offset, offset + limit - 1);
+        productIds.stream().map(id->ProductIds.add(Long.parseLong(id)));
+        return ProductIds;
     }
 
     @Override
-    public List<PmsProduct> getNewRankList(int offset, int limit) {
+    public List<Long> getNewRankList(int offset, int limit) {
         Long len = counterRedisService.zSize(CacheKeys.ProductNewRank);
-        if (len !=null && len>0 && len<=offset){
-            return null;
+        List<Long> productIds = new ArrayList<>();
+        if (offset >ProductLimit){
+            return productIds;
         }
-        List<PmsProduct> productList = new ArrayList<>();
-        try {
-            long date = this.getThreeDaysAgo();
-            Set<String> productIds = counterRedisService.zRangeByScore(CacheKeys.ProductNewRank,
-                    (double) date /dividend,
-                    (double) System.currentTimeMillis() /dividend);
-
-            if (productIds == null || productIds.isEmpty()){
-                productList = productDao.getProductOfCreate(offset,limit,date);
-                if (productList!=null && !productList.isEmpty()){
-                    Map<String,Double> setmap = new HashMap<>();
-                    for (PmsProduct product : productList){
-                        setmap.put(""+product.getId(), (double) (System.currentTimeMillis()/dividend));
-                    }
-                    counterRedisService.zAddAll(CacheKeys.ProductNewRank,setmap);
-                    counterRedisService.zRemoveRangeByScore(CacheKeys.ProductNewRank,0.0, (double) date /dividend);
-                }
-                return productList;
+        if (len==null || len<= offset){
+            List<PmsProduct> productList = productDao.getMaxCreateProduct(ProductLimit);
+            if (productList==null || productList.isEmpty()){
+                return productIds;
             }
-
-            for (String id : productIds){
-                productList.add(this.getProduct(Long.parseLong(id)));
+            Map<String,Double> doubleMap = new HashMap<>();
+            productList.stream().map(p->doubleMap.put(p.getId().toString(),p.getCreateAt().doubleValue()));
+            counterRedisService.zAddAll(CacheKeys.ProductNewRank,doubleMap);
+            if (productList.size() <= offset){
+                return productIds;
             }
-
-        }catch (Exception e){
-            logger.error("按新品查询商品失败:{}",e.getMessage());
+            for (int i = offset; i < Math.min(limit,productList.size());i++){
+                productIds.add(productList.get(i).getId());
+            }
+            return productIds;
         }
-        return productList;
+        Set<String> strings = counterRedisService.zReverseRange(CacheKeys.ProductNewRank,offset,offset+limit-1);
+        strings.stream().map(s->productIds.add(Long.parseLong(s)));
+        return productIds;
     }
 
-    private long getThreeDaysAgo(){
-        return System.currentTimeMillis() - newProductExpired*dividend;
-    }
 
     @Override
     public ProductModel getProductModel(long productId) {
-        return this.getProductModelCache(productId,1);
+        return allowProductCache==null || !allowProductCache ? this.getProductModelInDb(productId) : this.getProductModelCache(productId,1);
     }
 
     @Override
     public PmsSkuStock getSkuStock(long productId, long skuId) {
-        try {
-            PmsSkuStock skuStock = (PmsSkuStock) redisService.hGet(CacheKeys.SkuStockHashKey(productId), CacheKeys.Field(skuId));
-            if (skuStock != null) {
-                Integer stock = this.getSkuStock(skuId);
-                if (stock!=null){
-                    skuStock.setStock(stock);
-                }
-                return skuStock;
-            }
-            PmsSkuStockExample example = new PmsSkuStockExample();
-            example.createCriteria().andProductIdEqualTo(productId);
-            List<PmsSkuStock> skuStockList = skuStockMapper.selectByExample(example);
-            if (skuStockList != null && !skuStockList.isEmpty()) {
-                Map<String, PmsSkuStock> stringPmsSkuStockMap = new HashMap<>();
-                for (PmsSkuStock stock : skuStockList) {
-                    stringPmsSkuStockMap.put(CacheKeys.Field(stock.getId()), stock);
-                }
-                redisService.hSetAll(CacheKeys.SkuStockHashKey(productId), stringPmsSkuStockMap);
-                for (PmsSkuStock stock : skuStockList) {
-                    if (stock.getId().equals(skuId)) {
-                        this.setSkuStockCount(skuId,stock.getStock());
-                        return stock;
-                    }
-                }
-            }
-        }catch (Exception e){
-            logger.error("获取 库存信息失败 productId:{},skuId:{},{}",productId,skuId,e.getMessage());
-        }
-        return null;
+        return allowProductCache==null || !allowProductCache ? this.getSkuStockInDb(skuId) : this.getSkuStockInCache(productId,skuId);
     }
+
 
     @Override
     public List<PmsSkuStock> getSkuStockList(long productId) {
-        List<PmsSkuStock> skuStockList = new ArrayList<>();
-        try {
-            Map<Object, Object> map = redisService.hGetAll(CacheKeys.SkuStockHashKey(productId));
-            if (map != null && !map.isEmpty()) {
-                for (Map.Entry<Object, Object> entry : map.entrySet()) {
-                    PmsSkuStock stock = (PmsSkuStock) entry.getValue();
-                    Integer count = this.getSkuStock(stock.getId());
-                    if (count!=null){
-                        stock.setStock(count);
-                    }
-                    skuStockList.add(stock);
-                }
-                return skuStockList;
-            }
-
-            PmsSkuStockExample example = new PmsSkuStockExample();
-            example.createCriteria().andProductIdEqualTo(productId);
-            skuStockList = skuStockMapper.selectByExample(example);
-            if (skuStockList != null && !skuStockList.isEmpty()) {
-                Map<String, PmsSkuStock> skuStockMap = new HashMap<>();
-                for (PmsSkuStock stock : skuStockList) {
-                    skuStockMap.put("" + stock.getId(), stock);
-                }
-                redisService.hSetAll(CacheKeys.SkuStockHashKey(productId), skuStockMap);
-            }
-        }catch (Exception e){
-            logger.error("获取库存信息失败:productId:{},{}",productId,e.getMessage());
-        }
-        return skuStockList;
+        return allowProductCache==null || !allowProductCache ? this.getSkuStockListInDb(productId) : this.getSkuStockListInCache(productId);
     }
 
-    private void setSkuStockCount(long skuId,int count){
-        counterRedisService.hSet(CacheKeys.SkuStockCount,CacheKeys.Field(skuId),""+count);
+    private void setSkuStockStats(long skuId,Map<String,String> map){
+        String key = CacheKeys.SkuStockStats(skuId);
+        counterRedisService.hSetAll(key,map);
     }
 
     @Override
-    public Integer getSkuStock(long skuId) {
-        String count = counterRedisService.hGet(CacheKeys.SkuStockCount,CacheKeys.Field(skuId));
-        if (count==null){
+    public ProductStats getSkuStockStats(long skuId) {
+        String key = CacheKeys.SkuStockStats(skuId);
+        Map<String,String> map = counterRedisService.hGetAll(key);
+        if (map==null || map.isEmpty()){
             PmsSkuStock stock = skuStockMapper.selectByPrimaryKey(skuId);
-            if (stock!=null){
-                this.setSkuStockCount(skuId,stock.getStock());
+            if (stock==null){
+                return null;
             }
-            return stock !=null ? stock.getStock() : null;
+            map.put(CacheKeys.Sale,stock.getSale().toString());
+            map.put(CacheKeys.Stock,stock.getStock().toString());
+            this.setSkuStockStats(skuId,map);
+            return new ProductStats(stock.getSale(),stock.getStock());
         }
-        return Integer.parseInt(count);
+        return new ProductStats(Integer.parseInt(map.get(CacheKeys.Sale)),Integer.parseInt(map.get(CacheKeys.Stock)));
     }
 
     @Override
@@ -319,7 +266,58 @@ public class ProductCacheServiceImpl implements ProductCacheService {
 
     @Override
     public void incrementSkuStock(long skuId, int delta) {
-        counterRedisService.hInCr(CacheKeys.SkuStockCount,CacheKeys.Field(skuId),delta);
+        counterRedisService.hInCr(CacheKeys.SkuStockStats(skuId),CacheKeys.Stock,delta);
+    }
+
+    @Override
+    public void incrementSkuSale(long skuId, int delta) {
+        counterRedisService.hInCr(CacheKeys.SkuStockStats(skuId),CacheKeys.Stock,delta);
+    }
+
+
+    private ProductModel getProductModelInDb(long productId){
+        ProductModel productModel = new ProductModel();
+        try {
+            productModel.setProductId(productId);
+            //获取商品属性
+            PmsProductAttributeValueExample attributeValueExample = new PmsProductAttributeValueExample();
+            attributeValueExample.createCriteria().andProductIdEqualTo(productId);
+            List<PmsProductAttributeValue> attributeValueList = attributeValueMapper.selectByExample(attributeValueExample);
+            productModel.setProductAttributeValueList(attributeValueList);
+            //获取商品价格阶梯
+            PmsProductLadderExample ladderExample = new PmsProductLadderExample();
+            ladderExample.createCriteria().andProductIdEqualTo(productId);
+            List<PmsProductLadder> ladderList = ladderMapper.selectByExample(ladderExample);
+            productModel.setProductLadderList(ladderList);
+            //获取商品减满
+            PmsProductFullReductionExample reductionExample = new PmsProductFullReductionExample();
+            reductionExample.createCriteria().andProductIdEqualTo(productId);
+            List<PmsProductFullReduction> fullReductionList = fullReductionMapper.selectByExample(reductionExample);
+            productModel.setProductFullReductionList(fullReductionList);
+            //获取商品相册集
+            PmsProductAlbumRelationExample albumRelationExample = new PmsProductAlbumRelationExample();
+            albumRelationExample.createCriteria().andProductIdEqualTo(productId);
+            List<PmsProductAlbumRelation> albumRelationList = albumRelationMapper.selectByExample(albumRelationExample);
+            if (albumRelationList != null && !albumRelationList.isEmpty()) {
+                PmsProductAlbumRelation albumRelation = albumRelationList.get(0);
+                Long albumId = albumRelation.getAlbumId();
+                //获取相册集
+                PmsAlbum album = albumMapper.selectByPrimaryKey(albumId);
+                if (album != null) {
+                    ProductAlbums productAlbums = new ProductAlbums();
+                    BeanUtils.copyProperties(album, productAlbums);
+                    //获取图片
+                    PmsAlbumPicExample albumPicExample = new PmsAlbumPicExample();
+                    albumPicExample.createCriteria().andAlbumIdEqualTo(albumId);
+                    List<PmsAlbumPic> albumPicList = albumPicMapper.selectByExample(albumPicExample);
+                    productAlbums.setAlbumPicList(albumPicList);
+                    productModel.setProductAlbums(productAlbums);
+                }
+            }
+        }catch (Exception e){
+            logger.error("查询productMode失败productId:{},原因:{}",productId,e.getMessage());
+        }
+        return productModel;
     }
 
     private ProductModel getProductModelCache(long productId,int tryCount){
@@ -346,46 +344,8 @@ public class ProductCacheServiceImpl implements ProductCacheService {
             }
             return this.getProductModelCache(productId,tryCount+1);
         }
-
-        productModel = new ProductModel();
         try {
-            productModel.setProductId(productId);
-            //获取商品属性
-            PmsProductAttributeValueExample attributeValueExample = new PmsProductAttributeValueExample();
-            attributeValueExample.createCriteria().andProductIdEqualTo(productId);
-            List<PmsProductAttributeValue> attributeValueList = attributeValueMapper.selectByExample(attributeValueExample);
-            productModel.setProductAttributeValueList(attributeValueList);
-            //获取商品价格阶梯
-            PmsProductLadderExample ladderExample = new PmsProductLadderExample();
-            ladderExample.createCriteria().andProductIdEqualTo(productId);
-            List<PmsProductLadder> ladderList = ladderMapper.selectByExample(ladderExample);
-            productModel.setProductLadderList(ladderList);
-            //获取商品减满
-            PmsProductFullReductionExample reductionExample = new PmsProductFullReductionExample();
-            reductionExample.createCriteria().andProductIdEqualTo(productId);
-            List<PmsProductFullReduction> fullReductionList = fullReductionMapper.selectByExample(reductionExample);
-            productModel.setProductFullReductionList(fullReductionList);
-            //获取商品相册集
-            PmsProductAlbumRelationExample albumRelationExample = new PmsProductAlbumRelationExample();
-            albumRelationExample.createCriteria().andProductIdEqualTo(productId);
-            List<PmsProductAlbumRelation> albumRelationList = albumRelationMapper.selectByExample(albumRelationExample);
-            if (albumRelationList!=null && !albumRelationList.isEmpty()){
-                PmsProductAlbumRelation albumRelation = albumRelationList.get(0);
-                Long albumId = albumRelation.getAlbumId();
-                //获取相册集
-                PmsAlbum album = albumMapper.selectByPrimaryKey(albumId);
-                if (album!=null){
-                    ProductAlbums productAlbums = new ProductAlbums();
-                    BeanUtils.copyProperties(album,productAlbums);
-                    //获取图片
-                    PmsAlbumPicExample albumPicExample = new PmsAlbumPicExample();
-                    albumPicExample.createCriteria().andAlbumIdEqualTo(albumId);
-                    List<PmsAlbumPic> albumPicList = albumPicMapper.selectByExample(albumPicExample);
-                    productAlbums.setAlbumPicList(albumPicList);
-                    productModel.setProductAlbums(productAlbums);
-                }
-            }
-
+            productModel = this.getProductModelInDb(productId);
             redisService.set(key,productModel);
 
         }catch (RedisException redisException){
@@ -398,6 +358,84 @@ public class ProductCacheServiceImpl implements ProductCacheService {
         return productModel;
     }
 
+    private PmsSkuStock getSkuStockInDb(long skuId){
+        return skuStockMapper.selectByPrimaryKey(skuId);
+    }
+
+    private PmsSkuStock getSkuStockInCache(long productId,long skuId){
+        try {
+            PmsSkuStock skuStock = (PmsSkuStock) redisService.hGet(CacheKeys.SkuStockHashKey(productId), CacheKeys.Field(skuId));
+            if (skuStock != null) {
+                ProductStats productStats = this.getSkuStockStats(skuId);
+                if (productStats!=null){
+                    skuStock.setStock(productStats.getStock());
+                    skuStock.setSale(productStats.getSale());
+                }
+                return skuStock;
+            }
+            PmsSkuStockExample example = new PmsSkuStockExample();
+            example.createCriteria().andProductIdEqualTo(productId);
+            List<PmsSkuStock> skuStockList = skuStockMapper.selectByExample(example);
+            if (skuStockList != null && !skuStockList.isEmpty()) {
+                Map<String, PmsSkuStock> stringPmsSkuStockMap = new HashMap<>();
+                for (PmsSkuStock stock : skuStockList) {
+                    stringPmsSkuStockMap.put(CacheKeys.Field(stock.getId()), stock);
+                }
+                redisService.hSetAll(CacheKeys.SkuStockHashKey(productId), stringPmsSkuStockMap);
+                for (PmsSkuStock stock : skuStockList) {
+                    if (stock.getId().equals(skuId)) {
+                        Map<String,String> map = new HashMap<>();
+                        map.put(CacheKeys.Sale,stock.getSale().toString());
+                        map.put(CacheKeys.Stock,stock.getStock().toString());
+                        this.setSkuStockStats(skuId,map);
+                        return stock;
+                    }
+                }
+            }
+        }catch (Exception e){
+            logger.error("获取 库存信息失败 productId:{},skuId:{},{}",productId,skuId,e.getMessage());
+        }
+        return null;
+    }
+
+    private List<PmsSkuStock> getSkuStockListInDb(long productId){
+        PmsSkuStockExample example = new PmsSkuStockExample();
+        example.createCriteria().andProductIdEqualTo(productId);
+        return skuStockMapper.selectByExample(example);
+    }
+
+    private List<PmsSkuStock> getSkuStockListInCache(long productId){
+        List<PmsSkuStock> skuStockList = new ArrayList<>();
+        try {
+            Map<Object, Object> map = redisService.hGetAll(CacheKeys.SkuStockHashKey(productId));
+            if (map != null && !map.isEmpty()) {
+                for (Map.Entry<Object, Object> entry : map.entrySet()) {
+                    PmsSkuStock stock = (PmsSkuStock) entry.getValue();
+                    ProductStats productStats = this.getSkuStockStats(stock.getId());
+                    if (productStats!=null){
+                        stock.setSale(productStats.getSale());
+                        stock.setStock(productStats.getStock());
+                    }
+                    skuStockList.add(stock);
+                }
+                return skuStockList;
+            }
+
+            PmsSkuStockExample example = new PmsSkuStockExample();
+            example.createCriteria().andProductIdEqualTo(productId);
+            skuStockList = skuStockMapper.selectByExample(example);
+            if (skuStockList != null && !skuStockList.isEmpty()) {
+                Map<String, PmsSkuStock> skuStockMap = new HashMap<>();
+                for (PmsSkuStock stock : skuStockList) {
+                    skuStockMap.put("" + stock.getId(), stock);
+                }
+                redisService.hSetAll(CacheKeys.SkuStockHashKey(productId), skuStockMap);
+            }
+        }catch (Exception e){
+            logger.error("获取库存信息失败:productId:{},{}",productId,e.getMessage());
+        }
+        return skuStockList;
+    }
 
 
     @Override
@@ -429,7 +467,7 @@ public class ProductCacheServiceImpl implements ProductCacheService {
 
     @Override
     public void delSkuStockCount(long skuId) {
-        counterRedisService.hDel(CacheKeys.SkuStockCount,CacheKeys.Field(skuId));
+        counterRedisService.del(CacheKeys.SkuStockStats(skuId));
     }
 
     @Override
