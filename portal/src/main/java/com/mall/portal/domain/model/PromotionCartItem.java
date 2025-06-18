@@ -13,7 +13,7 @@ public class PromotionCartItem implements Serializable {
     private Long cartId;
     //促销活动信息
     private String promotionMessage;
-    //促销活动减去的金额，针对每个商品
+    //计算促销活动后减免的金额
     private BigDecimal reduceAmount;
     //剩余库存-锁定库存
     private Integer realStock;

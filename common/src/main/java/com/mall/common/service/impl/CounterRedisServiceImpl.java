@@ -25,7 +25,9 @@ public class CounterRedisServiceImpl implements CounterRedisService {
 
     @Override
     public Long hInCr(String key, String hashKey, long delta) {
-        return hashOperations.increment(key,hashKey,delta);
+        Long len = hashOperations.increment(key,hashKey,delta);
+        redisService.tryExpire(key);
+        return len;
     }
 
     @Override
@@ -47,7 +49,7 @@ public class CounterRedisServiceImpl implements CounterRedisService {
     @Override
     public void hSet(String key, String field, String value, long expired) {
         this.hSet(key,field,value);
-        redisService.expire(key,expired);
+        redisService.tryExpire(key);
     }
 
     @Override

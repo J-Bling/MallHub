@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 public class ProductCacheServiceImpl implements ProductCacheService {
@@ -31,7 +33,8 @@ public class ProductCacheServiceImpl implements ProductCacheService {
     @Autowired private PmsProductFullReductionMapper fullReductionMapper;
     @Autowired private ProductDao productDao;
 
-
+    private final Lock ProductSaleLock = new ReentrantLock();
+    private final Lock ProductStockLock = new ReentrantLock();
     private final static int dividend = 1000;
     private final static int newProductExpired = 259200;
     private final Logger logger = LoggerFactory.getLogger(ProductCacheServiceImpl.class);
@@ -166,6 +169,10 @@ public class ProductCacheServiceImpl implements ProductCacheService {
         try {
             PmsSkuStock skuStock = (PmsSkuStock) redisService.hGet(CacheKeys.SkuStockHashKey(productId), CacheKeys.Field(skuId));
             if (skuStock != null) {
+                Integer stock = this.getSkuStock(skuId);
+                if (stock!=null){
+                    skuStock.setStock(stock);
+                }
                 return skuStock;
             }
             PmsSkuStockExample example = new PmsSkuStockExample();
@@ -179,6 +186,7 @@ public class ProductCacheServiceImpl implements ProductCacheService {
                 redisService.hSetAll(CacheKeys.SkuStockHashKey(productId), stringPmsSkuStockMap);
                 for (PmsSkuStock stock : skuStockList) {
                     if (stock.getId().equals(skuId)) {
+                        this.setSkuStockCount(skuId,stock.getStock());
                         return stock;
                     }
                 }
@@ -196,7 +204,12 @@ public class ProductCacheServiceImpl implements ProductCacheService {
             Map<Object, Object> map = redisService.hGetAll(CacheKeys.SkuStockHashKey(productId));
             if (map != null && !map.isEmpty()) {
                 for (Map.Entry<Object, Object> entry : map.entrySet()) {
-                    skuStockList.add((PmsSkuStock) entry.getValue());
+                    PmsSkuStock stock = (PmsSkuStock) entry.getValue();
+                    Integer count = this.getSkuStock(stock.getId());
+                    if (count!=null){
+                        stock.setStock(count);
+                    }
+                    skuStockList.add(stock);
                 }
                 return skuStockList;
             }
@@ -215,6 +228,98 @@ public class ProductCacheServiceImpl implements ProductCacheService {
             logger.error("获取库存信息失败:productId:{},{}",productId,e.getMessage());
         }
         return skuStockList;
+    }
+
+    private void setSkuStockCount(long skuId,int count){
+        counterRedisService.hSet(CacheKeys.SkuStockCount,CacheKeys.Field(skuId),""+count);
+    }
+
+    @Override
+    public Integer getSkuStock(long skuId) {
+        String count = counterRedisService.hGet(CacheKeys.SkuStockCount,CacheKeys.Field(skuId));
+        if (count==null){
+            PmsSkuStock stock = skuStockMapper.selectByPrimaryKey(skuId);
+            if (stock!=null){
+                this.setSkuStockCount(skuId,stock.getStock());
+            }
+            return stock !=null ? stock.getStock() : null;
+        }
+        return Integer.parseInt(count);
+    }
+
+    @Override
+    public ProductStats getProductStats(long productId) {
+        Map<String,String> map = counterRedisService.hGetAll(CacheKeys.ProductStats(productId));
+        if (map==null){
+            PmsProduct product = productMapper.selectByPrimaryKey(productId);
+            if (product!=null){
+                map = new HashMap<>();
+                map.put(CacheKeys.Sale,product.getSale().toString());
+                map.put(CacheKeys.Stock,product.getStock().toString());
+                counterRedisService.hSetAll(CacheKeys.ProductStats(productId),map);
+                return new ProductStats(product.getSale(),product.getStock());
+            }
+            return null;
+        }
+        String sale = map.get(CacheKeys.Sale);
+        String stock = map.get(CacheKeys.Stock);
+        if (stock !=null && sale !=null){
+            return new ProductStats(Integer.parseInt(sale),Integer.parseInt(stock));
+        }
+        return null;
+    }
+
+    @Override
+    public void incrementProductSale(long productId, int delta) {
+        String key = CacheKeys.ProductStats(productId);
+        Boolean has = counterRedisService.hHasKey(key,CacheKeys.Sale);
+        if (has!=null && has){
+            counterRedisService.hInCr(key,CacheKeys.Sale,delta);
+            return;
+        }
+        ProductSaleLock.lock();
+        try{
+            Boolean had = counterRedisService.hHasKey(key,CacheKeys.Sale);
+            if (had!=null && had){
+                counterRedisService.hInCr(key,CacheKeys.Sale,delta);
+                return;
+            }
+            PmsProduct product = productMapper.selectByPrimaryKey(productId);
+            if (product!=null){
+                counterRedisService.hInCr(key,CacheKeys.Sale,product.getSale());
+            }
+        }finally {
+            ProductSaleLock.unlock();;
+        }
+    }
+
+    @Override
+    public void incrementProductStock(long productId, int delta) {
+        String key = CacheKeys.ProductStats(productId);
+        Boolean has = counterRedisService.hHasKey(key,CacheKeys.Stock);
+        if (has!=null && has){
+            counterRedisService.hInCr(key,CacheKeys.Stock,delta);
+            return;
+        }
+        ProductStockLock.lock();
+        try{
+            Boolean had = counterRedisService.hHasKey(key,CacheKeys.Stock);
+            if (had!=null && had){
+                counterRedisService.hInCr(key,CacheKeys.Stock,delta);
+                return;
+            }
+            PmsProduct product = productMapper.selectByPrimaryKey(productId);
+            if (product!=null){
+                counterRedisService.hInCr(key,CacheKeys.Stock,product.getStock());
+            }
+        }finally {
+            ProductStockLock.unlock();;
+        }
+    }
+
+    @Override
+    public void incrementSkuStock(long skuId, int delta) {
+        counterRedisService.hInCr(CacheKeys.SkuStockCount,CacheKeys.Field(skuId),delta);
     }
 
     private ProductModel getProductModelCache(long productId,int tryCount){
@@ -320,6 +425,16 @@ public class ProductCacheServiceImpl implements ProductCacheService {
         }catch (Exception e){
             logger.error("删除 skuStock 缓存失败:{}",e.getMessage());
         }
+    }
+
+    @Override
+    public void delSkuStockCount(long skuId) {
+        counterRedisService.hDel(CacheKeys.SkuStockCount,CacheKeys.Field(skuId));
+    }
+
+    @Override
+    public void delProductStats(long productId) {
+        counterRedisService.del(CacheKeys.ProductStats(productId));
     }
 
     @Override

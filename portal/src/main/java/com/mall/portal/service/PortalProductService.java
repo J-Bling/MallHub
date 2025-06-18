@@ -1,9 +1,6 @@
 package com.mall.portal.service;
 
-import com.mall.mbg.model.PmsProduct;
-import com.mall.mbg.model.PmsProductAttribute;
-import com.mall.mbg.model.PmsProductCategory;
-import com.mall.mbg.model.PmsSkuStock;
+import com.mall.mbg.model.*;
 import com.mall.portal.domain.enums.SortTypeEnum;
 import com.mall.portal.domain.model.ProductDetail;
 
@@ -34,4 +31,16 @@ public interface PortalProductService {
      * 获取该商品所有属性
      */
     List<PmsProductAttribute> getProductAttribute(long productId);
+    /**
+     * 根据 skuId 获取 sku
+     */
+    PmsSkuStock getSkuStock(Long skuId,Long productId);
+    /**
+     * 获取该商品的减满信息
+     */
+    List<PmsProductFullReduction> getProductFullReductions(long productId);
+    /**
+     * 获取该商品的价格阶梯
+     */
+    List<PmsProductLadder> getProductLadders(long productId);
 }

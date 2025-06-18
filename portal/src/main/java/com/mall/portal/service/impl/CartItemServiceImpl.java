@@ -2,21 +2,21 @@ package com.mall.portal.service.impl;
 
 import com.mall.common.exception.Assert;
 import com.mall.mbg.mapper.OmsCartItemMapper;
-import com.mall.mbg.model.OmsCartItem;
-import com.mall.mbg.model.OmsCartItemExample;
-import com.mall.mbg.model.PmsProduct;
-import com.mall.mbg.model.UmsMember;
+import com.mall.mbg.model.*;
 import com.mall.portal.dao.OrdersDao;
 import com.mall.portal.domain.model.CartProduct;
 import com.mall.portal.domain.model.PromotionCartItem;
 import com.mall.portal.service.CartItemService;
 import com.mall.portal.service.ConsumerService;
+import com.mall.portal.service.CouponService;
 import com.mall.portal.service.PortalProductService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -26,6 +26,7 @@ public class CartItemServiceImpl implements CartItemService {
     @Autowired private OmsCartItemMapper cartItemMapper;
     @Autowired private OrdersDao ordersDao;
     @Autowired private PortalProductService productService;
+    @Autowired private CouponService couponService;
 
     @Override
     @Transactional
@@ -106,8 +107,82 @@ public class CartItemServiceImpl implements CartItemService {
 
     @Override
     public List<PromotionCartItem> promotionList(List<Long> cartIds) {
-        return null;
+        if (cartIds==null || cartIds.isEmpty()){
+            return null;
+        }
+        List<PromotionCartItem> promotionCartItemList = new ArrayList<>();
+        List<OmsCartItem> cartItemList = new ArrayList<>();
+        //获取用户所有优惠券
+        List<CouponService.UserCoupons> userCouponsList = this.couponService.getUserCoupons();
+        for (Long id : cartIds){
+            OmsCartItem cartItem = cartItemMapper.selectByPrimaryKey(id);
+            if (cartItem!=null){
+                cartItemList.add(cartItem);
+            }
+        }
+        for (OmsCartItem cartItem : cartItemList){
+            PromotionCartItem promotionCartItem = new PromotionCartItem();
+            promotionCartItem.setCartId(cartItem.getId());
+            //获取库存
+            PmsSkuStock stock = this.productService.getSkuStock(cartItem.getProductSkuId(),cartItem.getProductId());
+            if (stock!=null){
+                promotionCartItem.setRealStock(stock.getStock());
+            }
+            //获取商品
+            PmsProduct product = this.productService.getProduct(cartItem.getProductId());
+            if (product==null){
+                continue;
+            }
+            //统计价格
+            BigDecimal cartItemPrice = new BigDecimal(cartItem.getQuantity()).multiply(product.getPrice());
+            BigDecimal reductionPrice = new BigDecimal("0.00");
+            promotionCartItem.setGrowth(product.getGiftGrowth());
+            promotionCartItem.setIntegration(product.getGiftPoint());
+            //获取商品的减满
+            List<PmsProductFullReduction> productFullReductionList = this.productService.getProductFullReductions(product.getId());
+            BigDecimal fullReductionPrice = this.computeFullReduction(cartItemPrice,productFullReductionList);
+            //获取商品价格阶梯
+            List<PmsProductLadder> productLadderList = this.productService.getProductLadders(product.getId());
+            BigDecimal ladderPrice = this.computeLadderList(cartItemPrice,cartItem.getQuantity(),productLadderList);
+            //计的减免金额
+            reductionPrice =reductionPrice.add(cartItemPrice.subtract(fullReductionPrice)).add(cartItemPrice.subtract(ladderPrice));
+            promotionCartItem.setReduceAmount(reductionPrice);
+            //获得促销信息
+
+
+            promotionCartItemList.add(promotionCartItem);
+        }
+        return promotionCartItemList;
     }
+
+    /**
+     *获得减满条件计算减慢后价格
+     */
+    private BigDecimal computeFullReduction(BigDecimal lastPrice,List<PmsProductFullReduction> fullReductionList){
+        if (fullReductionList==null || fullReductionList.isEmpty()){
+            return lastPrice;
+        }
+        return fullReductionList.stream()
+                .filter(full->lastPrice.compareTo(full.getFullPrice())>=0)
+                .map(full->lastPrice.subtract(full.getReducePrice()))
+                .max(BigDecimal::compareTo)
+                .orElse(lastPrice);
+    }
+
+    /**
+     * 获得打折条件后计算打折后价格
+     */
+    private BigDecimal computeLadderList(BigDecimal lastPrice,Integer count,List<PmsProductLadder> ladderList){
+        if(ladderList==null || ladderList.isEmpty() || count<=0){
+            return lastPrice;
+        }
+        return ladderList.stream()
+                .filter(ladder->ladder.getCount()<=count)
+                .map(ladder->lastPrice.multiply(ladder.getDiscount()))
+                .max(BigDecimal::compareTo)
+                .orElse(lastPrice);
+    }
+
 
     @Override
     public void clear() {

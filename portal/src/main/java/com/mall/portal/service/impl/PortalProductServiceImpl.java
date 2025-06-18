@@ -13,6 +13,7 @@ import com.mall.portal.service.PortalProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -24,6 +25,8 @@ public class PortalProductServiceImpl implements PortalProductService {
     @Autowired private ProductAttributeCacheService productAttributeCacheService;
     @Autowired private BrandCacheService brandCacheService;
     @Autowired private CouponService couponService;
+    @Autowired private PmsProductFullReductionMapper fullReductionMapper;
+    @Autowired private PmsProductLadderMapper ladderMapper;
 
 
 
@@ -89,7 +92,13 @@ public class PortalProductServiceImpl implements PortalProductService {
 
     @Override
     public PmsProduct getProduct(long productId) {
-        return this.productCacheService.getProduct(productId);
+        PmsProduct product = this.productCacheService.getProduct(productId);
+        ProductCacheService.ProductStats stats= this.productCacheService.getProductStats(productId);
+        if (stats!=null){
+            product.setSale(stats.getSale());
+            product.setStock(stats.getStock());
+        }
+        return product;
     }
 
     @Override
@@ -100,5 +109,24 @@ public class PortalProductServiceImpl implements PortalProductService {
     @Override
     public List<PmsProductAttribute> getProductAttribute(long productId) {
         return this.productAttributeCacheService.getAttributeList(productId);
+    }
+
+    @Override
+    public PmsSkuStock getSkuStock(Long skuId,Long productId) {
+        return this.productCacheService.getSkuStock(productId,skuId);
+    }
+
+    @Override
+    public List<PmsProductFullReduction> getProductFullReductions(long productId) {
+        PmsProductFullReductionExample example = new PmsProductFullReductionExample();
+        example.createCriteria().andProductIdEqualTo(productId);
+        return fullReductionMapper.selectByExample(example);
+    }
+
+    @Override
+    public List<PmsProductLadder> getProductLadders(long productId) {
+        PmsProductLadderExample example = new PmsProductLadderExample();
+        example.createCriteria().andProductIdEqualTo(productId);
+        return ladderMapper.selectByExample(example);
     }
 }

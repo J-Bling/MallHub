@@ -41,7 +41,31 @@ public interface ProductCacheService extends Cache {
      */
     List<PmsSkuStock> getSkuStockList(long productId);
     /**
-     * 删除单个缓存 不删排行榜
+     * 获取单个sku 库存
+     */
+    Integer getSkuStock(long skuId);
+    /**
+     * 获取单个 productStats
+     */
+    ProductStats getProductStats(long productId);
+    /**
+     * 增加 product的销量
+     */
+    void incrementProductSale(long productId,int delta);
+    /**
+     * 增加/减少 product 总库存
+     */
+    void incrementProductStock(long product,int delta);
+    /**
+     * 增加或者减少sku库存
+     */
+    void incrementSkuStock(long skuId,int delta);
+    /**
+     * 对排行榜 增加销售额
+     */
+    void increaseSales(long id,int sales);
+    /**
+     *  删除单个缓存 不删排行榜  修改了 非 sale stock 字段
      */
     void delProductCache(long id);
     /**
@@ -49,14 +73,17 @@ public interface ProductCacheService extends Cache {
      */
     void delProductModelCache(long productId);
     /**
-     * 根据 productId 删除 该商品skuStock 全部缓存
+     * 根据 productId 删除 该商品skuStock 全部缓存 当修改到 所有非 stock 字段时
      */
     void delSkuStock(long productId);
     /**
-     * 增加销售额
+     *  删除 skuStock 的库存缓存
      */
-    void increaseSales(long id,int sales);
-
+    void delSkuStockCount(long skuId);
+    /**
+     * 删除对 product 的 sale stock统计数据的缓存 修改了对 sale stock两个字段
+     */
+    void delProductStats(long productId);
 
     class ProductModel implements Serializable {
         private Long productId;
@@ -110,6 +137,33 @@ public interface ProductCacheService extends Cache {
         }
     }
 
+    class ProductStats implements Serializable{
+        private Integer sale;
+        private Integer stock;
+
+        public ProductStats(){}
+        public ProductStats(Integer sale,Integer stock){
+            this.sale = sale;
+            this.stock = stock;
+        }
+
+        public Integer getStock() {
+            return stock;
+        }
+
+        public Integer getSale() {
+            return sale;
+        }
+
+        public void setStock(Integer stock) {
+            this.stock = stock;
+        }
+
+        public void setSale(Integer sale) {
+            this.sale = sale;
+        }
+    }
+
     class CacheKeys{
         public static String ProductKey(long id){return "product-key:"+id;}
         public static String ProductModelKey(long productId){return "product-model-key:"+productId;}
@@ -117,7 +171,12 @@ public interface ProductCacheService extends Cache {
         public static String ProductModelKeyLock(long productId){return "product-model-lock-key:"+productId;}
         public static String SkuStockHashKey(long productId){return "sku-stock-hash-key:"+productId;}
         public static String Field(long id){return ""+id;}
+        public static String ProductStats(long productId){return "product-stats-hash:"+productId;}
+
         public static String ProductNewRank = "product-new-rank";
         public static String ProductSaleRank = "product-sale-rank";
+        public static String SkuStockCount = "sku-stock-count-hash";
+        public static String Sale = "sale";
+        public static String Stock = "stock";
     }
 }
