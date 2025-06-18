@@ -16,7 +16,7 @@ public interface CartItemService {
     /**
      * 分页获取当前用户的购物车列表
      */
-    List<OmsCartItem> list(int offset,int limit);
+    List<OmsCartItem> list();
     /**
      * 获取包含促销活动信息的购物车列表 计算购物车中的商品 库存 减免 促销活动 赠送积分和 成长值 信息
      */

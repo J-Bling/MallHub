@@ -6,9 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
-/**
- * 购物车促销项目
- */
+
 public class PromotionCartItem implements Serializable {
     private Long cartId;
     //促销活动信息

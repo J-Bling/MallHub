@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * 秒杀
+ */
 public class FlashPromotion implements Serializable {
     //本场开始时间
     private Date startTime;

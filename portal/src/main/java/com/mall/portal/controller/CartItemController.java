@@ -6,11 +6,9 @@ import com.mall.portal.domain.model.CartProduct;
 import com.mall.portal.domain.model.PromotionCartItem;
 import com.mall.portal.service.CartItemService;
 import io.swagger.annotations.ApiOperation;
-import org.hibernate.validator.constraints.Range;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
@@ -27,16 +25,10 @@ public class CartItemController {
     }
 
 
-    @GetMapping("/list/{pageNum}/{pageSize}")
+    @GetMapping("/list/")
     @ApiOperation("分页获取当前用户购物车商品列表")
-    public ResponseResult<List<OmsCartItem>> list(@PathVariable("pageNum") @Min(0) int pageNum, @PathVariable("pageSize") @Range(min = 5,max = 50) int pageSize){
-        if (pageNum < 0){
-            pageNum = 0;
-        }
-        if (pageSize < 10){
-            pageSize =10;
-        }
-        return ResponseResult.success(cartItemService.list(pageNum,pageSize));
+    public ResponseResult<List<OmsCartItem>> list(){
+        return ResponseResult.success(cartItemService.list());
     }
 
 

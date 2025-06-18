@@ -7,6 +7,9 @@ import com.mall.mbg.model.PmsSkuStock;
 
 import java.util.List;
 
+/**
+ * 商品相关 库存 数量打折 金额减满
+ */
 public class PromotionProduct extends PmsProduct {
     //商品库存信息
     private List<PmsSkuStock> skuStockList;

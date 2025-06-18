@@ -55,11 +55,10 @@ public class CartItemServiceImpl implements CartItemService {
     }
 
     @Override
-    public List<OmsCartItem> list(int offset,int limit) {
+    public List<OmsCartItem> list() {
         UmsMember member = consumerService.getCurrentMember();
         OmsCartItemExample example = new OmsCartItemExample();
         example.createCriteria().andMemberIdEqualTo(member.getId());
-        example.setOrderByClause("id asc limit "+offset+" ,"+limit);
         return cartItemMapper.selectByExample(example);
     }
 
