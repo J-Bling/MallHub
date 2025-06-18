@@ -42,7 +42,7 @@ public enum PromotionTypeEnum {
         this.description = description;
     }
 
-    public int getCode() {
+    public Integer getCode() {
         return code;
     }
 
