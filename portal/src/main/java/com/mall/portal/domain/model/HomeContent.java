@@ -4,6 +4,7 @@ import com.mall.mbg.model.CmsSubject;
 import com.mall.mbg.model.PmsProduct;
 import com.mall.mbg.model.PmsBrand;
 import com.mall.mbg.model.SmsHomeAdvertise;
+import com.mall.portal.domain.model.flash.FlashPromotion;
 
 import java.io.Serializable;
 import java.util.List;
