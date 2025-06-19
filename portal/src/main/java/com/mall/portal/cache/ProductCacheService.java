@@ -25,9 +25,13 @@ public interface ProductCacheService extends Cache {
      */
     List<Long> getNewRankList(int offset,int limit);
     /**
-     * 获取 product 缓存
+     * 获取 product
      */
     PmsProduct getProduct(long id);
+    /**
+     * 获取 product 缓存
+     */
+    PmsProduct getProductCache(long id);
     /**
      * 获取 ProductModel
      */
@@ -51,19 +55,19 @@ public interface ProductCacheService extends Cache {
     /**
      * 增加 product的销量
      */
-    void incrementProductSale(long productId,int delta);
+    void incrementProductSale(long productId,int delta) throws InterruptedException;
     /**
      * 增加/减少 product 总库存
      */
-    void incrementProductStock(long product,int delta);
+    void incrementProductStock(long product,int delta) throws InterruptedException;
     /**
      * 增加或者减少sku库存
      */
-    void incrementSkuStock(long skuId,int delta);
+    void incrementSkuStock(long productId,long skuId,int delta) throws InterruptedException;
     /**
      * 增加或者减少该sku的销量
      */
-    void incrementSkuSale(long skuId,int delta);
+    void incrementSkuSale(long productId, long skuId,int delta) throws InterruptedException;
     /**
      * 对排行榜 增加销售额
      */

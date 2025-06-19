@@ -49,7 +49,7 @@ public class CounterRedisServiceImpl implements CounterRedisService {
     @Override
     public void hSet(String key, String field, String value, long expired) {
         this.hSet(key,field,value);
-        redisService.tryExpire(key);
+        redisService.expire(key,expired);
     }
 
     @Override

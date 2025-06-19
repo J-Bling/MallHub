@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -36,6 +37,8 @@ public class ProductCacheServiceImpl implements ProductCacheService {
 
     @Value("${cache.allow.product}")
     private Boolean allowProductCache;
+    private final int defaultLockMaxExpired = 1000;
+    private final TimeUnit timeUnit = TimeUnit.MILLISECONDS;
     private final Lock ProductSaleLock = new ReentrantLock();
     private final Lock ProductStockLock = new ReentrantLock();
     private final int ProductLimit = 500;
@@ -55,6 +58,11 @@ public class ProductCacheServiceImpl implements ProductCacheService {
     @Override
     public PmsProduct getProduct(long id) {
         return allowProductCache==null || !allowProductCache ? this.getProductInDb(id) : this.getProductInCache(id,1);
+    }
+
+    @Override
+    public PmsProduct getProductCache(long id) {
+        return this.getProductInCache(id,1);
     }
 
     private PmsProduct getProductInDb(long id){
@@ -217,61 +225,148 @@ public class ProductCacheServiceImpl implements ProductCacheService {
     }
 
     @Override
-    public void incrementProductSale(long productId, int delta) {
+    public void incrementProductSale(long productId, int delta) throws InterruptedException {
         String key = CacheKeys.ProductStats(productId);
         Boolean has = counterRedisService.hHasKey(key,CacheKeys.Sale);
         if (has!=null && has){
             counterRedisService.hInCr(key,CacheKeys.Sale,delta);
             return;
         }
-        ProductSaleLock.lock();
-        try{
-            Boolean had = counterRedisService.hHasKey(key,CacheKeys.Sale);
-            if (had!=null && had){
-                counterRedisService.hInCr(key,CacheKeys.Sale,delta);
+
+        boolean succee = false;
+        int tryCount = 1;
+
+        do{
+            boolean isLock = ProductSaleLock.tryLock(defaultLockMaxExpired,timeUnit);
+            if (!isLock){
+                Thread.sleep(defaultLockTime);
+                tryCount ++ ;
+                continue;
+            }
+            try{
+                Boolean had = counterRedisService.hHasKey(key,CacheKeys.Sale);
+                if (had!=null && had){
+                    counterRedisService.hInCr(key,CacheKeys.Sale,delta);
+                    return;
+                }
+                PmsProduct product = productMapper.selectByPrimaryKey(productId);
+                if (product!=null){
+                    counterRedisService.hInCr(key,CacheKeys.Sale,product.getSale());
+                }
                 return;
+            }catch (Exception e){
+                logger.error("设置缓存失败:{}",e.getMessage());
+            } finally {
+                ProductSaleLock.unlock();
+                succee=true;
             }
-            PmsProduct product = productMapper.selectByPrimaryKey(productId);
-            if (product!=null){
-                counterRedisService.hInCr(key,CacheKeys.Sale,product.getSale());
-            }
-        }finally {
-            ProductSaleLock.unlock();;
-        }
+        }while (tryCount<5 && !succee);
     }
 
     @Override
-    public void incrementProductStock(long productId, int delta) {
+    public void incrementProductStock(long productId, int delta) throws InterruptedException {
         String key = CacheKeys.ProductStats(productId);
         Boolean has = counterRedisService.hHasKey(key,CacheKeys.Stock);
         if (has!=null && has){
             counterRedisService.hInCr(key,CacheKeys.Stock,delta);
             return;
         }
-        ProductStockLock.lock();
-        try{
-            Boolean had = counterRedisService.hHasKey(key,CacheKeys.Stock);
-            if (had!=null && had){
-                counterRedisService.hInCr(key,CacheKeys.Stock,delta);
+        for (int tryCount =1 ; tryCount <= 5; tryCount++){
+            boolean isLock = ProductStockLock.tryLock(defaultLockMaxExpired,timeUnit);
+            if (!isLock){
+                Thread.sleep(Math.min(100*(1<<(tryCount-1)),defaultLockMaxExpired));
+                continue;
+            }
+            try {
+                Boolean had = counterRedisService.hHasKey(key,CacheKeys.Stock);
+                if (had!=null && had){
+                    counterRedisService.hInCr(key,CacheKeys.Stock,delta);
+                    return;
+                }
+                PmsProduct product = productMapper.selectByPrimaryKey(productId);
+                if (product!=null){
+                    counterRedisService.hInCr(key,CacheKeys.Stock,product.getStock());
+                }
                 return;
+            }catch (Exception e){
+                logger.error("插入数据失败 ：{}",e.getMessage());
+            }finally {
+                ProductStockLock.unlock();
             }
-            PmsProduct product = productMapper.selectByPrimaryKey(productId);
-            if (product!=null){
-                counterRedisService.hInCr(key,CacheKeys.Stock,product.getStock());
-            }
-        }finally {
-            ProductStockLock.unlock();;
         }
     }
 
+    private final Lock SkuStockLock = new ReentrantLock();
+    private final Lock SkuSale = new ReentrantLock();
+
     @Override
-    public void incrementSkuStock(long skuId, int delta) {
-        counterRedisService.hInCr(CacheKeys.SkuStockStats(skuId),CacheKeys.Stock,delta);
+    public void incrementSkuStock(long productId, long skuId, int delta) throws InterruptedException {
+        String key = CacheKeys.SkuStockStats(skuId);
+        Boolean had = counterRedisService.hHasKey(key,CacheKeys.Stock);
+        if (had!=null && had){
+            counterRedisService.hInCr(key,CacheKeys.Stock,delta);
+        }else {
+            for (int tryCount =0 ; tryCount <= 5; tryCount++){
+                boolean isLock = SkuStockLock.tryLock(defaultLockMaxExpired,timeUnit);
+                if (!isLock){
+                    Thread.sleep(Math.min(100*(1<<(tryCount-1)),defaultLockMaxExpired));
+                    continue;
+                }
+                try{
+                    had = counterRedisService.hHasKey(key,CacheKeys.Stock);
+                    if (had!=null && had){
+                        counterRedisService.hInCr(key,CacheKeys.Stock,delta);
+                        break;
+                    }
+                    PmsSkuStock stock = skuStockMapper.selectByPrimaryKey(skuId);
+                    if (stock!=null){
+                        counterRedisService.hInCr(key,CacheKeys.Stock,stock.getStock());
+                    }
+
+                }catch (Exception e){
+                    logger.error("修改sku库存失败 productId:{},skuId:{};{}",productId,skuId,e.getMessage());
+                    return;
+                }finally {
+                    SkuStockLock.unlock();
+                }
+            }
+        }
+        this.incrementProductStock(productId,delta);
     }
 
     @Override
-    public void incrementSkuSale(long skuId, int delta) {
-        counterRedisService.hInCr(CacheKeys.SkuStockStats(skuId),CacheKeys.Stock,delta);
+    public void incrementSkuSale(long productId , long skuId, int delta) throws InterruptedException {
+        String key = CacheKeys.SkuStockStats(skuId);
+        Boolean had = counterRedisService.hHasKey(key,CacheKeys.Sale);
+        if (had!=null && had){
+            counterRedisService.hInCr(key,CacheKeys.Sale,delta);
+        }else {
+            for (int tryCount =0 ; tryCount <= 5; tryCount++){
+                boolean isLock = SkuSale.tryLock(defaultLockMaxExpired,timeUnit);
+                if (!isLock){
+                    Thread.sleep(Math.min(100*(1<<(tryCount-1)),defaultLockMaxExpired));
+                    continue;
+                }
+                try{
+                    had = counterRedisService.hHasKey(key,CacheKeys.Sale);
+                    if (had!=null && had){
+                        counterRedisService.hInCr(key,CacheKeys.Sale,delta);
+                        break;
+                    }
+                    PmsSkuStock stock = skuStockMapper.selectByPrimaryKey(skuId);
+                    if (stock!=null){
+                        counterRedisService.hInCr(key,CacheKeys.Sale,stock.getSale());
+                    }
+
+                }catch (Exception e){
+                    logger.error("修改sku销量失败 productId:{},skuId:{};{}",productId,skuId,e.getMessage());
+                    return;
+                }finally {
+                    SkuStockLock.unlock();
+                }
+            }
+        }
+        this.incrementProductSale(productId,delta);
     }
 
 
