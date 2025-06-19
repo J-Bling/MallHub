@@ -50,7 +50,6 @@ public class ProductAttributeCacheServiceImpl implements ProductAttributeCacheSe
         }
         category = categoryMapper.selectByPrimaryKey(categoryId);
         if (category !=null){
-            attributeCategories ++;
             redisService.hSet(CacheKeys.ProductAttributeCategoryHashKey,CacheKeys.Field(categoryId),category);
         }
         return category;

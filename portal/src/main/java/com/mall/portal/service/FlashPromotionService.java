@@ -15,7 +15,7 @@ public interface FlashPromotionService {
     /**
      * 获取当前场次 的秒杀商品
      */
-    List<FlashProduct> getFlashProductList(long product);
+    List<FlashProduct> getFlashProductList(long sessionId);
     /**
      *获取已经开始的活动 type =1 平台活动 2 商家活动
      */
@@ -28,6 +28,10 @@ public interface FlashPromotionService {
      * 获取 7 天内 还没有开始的秒杀活动
      */
     List<FlashPromotion> getPreparationFlashPromotion();
+    /**
+     * 更新 秒杀商品库存 缓存 flashSkuRelationId 库为0
+     */
+    boolean incrementProductStock(long flashProductRelationId,long flashSkuRelationId,int delta);
     /**
      * 订阅 一个秒杀场次 只会在该场次开始通知
      */

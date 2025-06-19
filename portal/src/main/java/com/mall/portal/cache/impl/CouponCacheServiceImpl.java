@@ -210,7 +210,7 @@ public class CouponCacheServiceImpl implements CouponCacheService {
         CouponStats.refresh(map,coupon);
     }
 
-    // 在缓存中处理高频读写的统计数据
+
     @Override
     public void incrementCount(long couponId,long delta){
         counterRedisService.hInCr(CouponStatsKey(couponId),CouponStats.count,delta);

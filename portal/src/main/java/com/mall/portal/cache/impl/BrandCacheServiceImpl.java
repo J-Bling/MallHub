@@ -4,6 +4,7 @@ import com.mall.common.service.CounterRedisService;
 import com.mall.common.service.RedisService;
 import com.mall.mbg.mapper.PmsBrandMapper;
 import com.mall.mbg.model.PmsBrand;
+import com.mall.mbg.model.PmsBrandExample;
 import com.mall.portal.cache.BrandCacheService;
 import com.mall.portal.dao.BrandDao;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ public class BrandCacheServiceImpl implements BrandCacheService {
     @Autowired private BrandDao brandDao;
     @Autowired private CounterRedisService counterRedisService;
 
+    private int brandSize = 0;
 
     @Override
     public PmsBrand getBrand(long brandId) {
@@ -40,12 +42,16 @@ public class BrandCacheServiceImpl implements BrandCacheService {
 
     @Override
     public List<PmsBrand> getBrands(int offset,int limit) {
+        if (brandSize>0 && brandSize<=offset){
+            return null;
+        }
         Set<String> sets = counterRedisService.zRange(brandZSetKey,offset,offset+limit-1);
         if (sets==null || sets.isEmpty()){
-            List<PmsBrand> brandList = brandDao.findBrands(offset,limit);
+            List<PmsBrand> brandList = brandMapper.selectByExample(new PmsBrandExample());
             if (brandList==null || brandList.isEmpty()){
                 return null;
             }
+            brandSize = brandList.size();
             Map<String,PmsBrand> pmsBrandMap = new HashMap<>();
             Map<String,Double> zSetMap = new HashMap<>();
             for (PmsBrand brand : brandList){
@@ -66,5 +72,6 @@ public class BrandCacheServiceImpl implements BrandCacheService {
     public void delBrandCache(long brandId) {
         counterRedisService.zRemove(brandZSetKey,brandId+"");
         redisService.hDel(brandHashKey,HashField(brandId));
+        brandSize = 0;
     }
 }
