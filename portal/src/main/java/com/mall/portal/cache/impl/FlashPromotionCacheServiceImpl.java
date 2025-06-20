@@ -34,6 +34,11 @@ public class FlashPromotionCacheServiceImpl implements FlashPromotionCacheServic
     }
 
     @Override
+    public String getUserBuyCount(long userId, long sessionId, long productId) {
+        return counterRedisService.get(CacheKeys.UserBuyCount(userId,sessionId,productId));
+    }
+
+    @Override
     public SmsFlashPromotion flashPromotion(long promotionId) {
         return  (SmsFlashPromotion) redisService.hGet(CacheKeys.PromotionKey,CacheKeys.Field(promotionId));
     }
@@ -61,7 +66,7 @@ public class FlashPromotionCacheServiceImpl implements FlashPromotionCacheServic
     }
 
     @Override
-    public Boolean existsSession(long sessionId, long productId) {
+    public Boolean containProduct(long sessionId, long productId) {
         return counterRedisService.sIsMember(CacheKeys.SessionProductSetKey(sessionId),CacheKeys.Field(productId));
     }
 
@@ -93,12 +98,8 @@ public class FlashPromotionCacheServiceImpl implements FlashPromotionCacheServic
     }
 
     @Override
-    public SmsFlashProductRelation flashProductRelation(long sessionId, long productId) {
-         String productRelationIdStr = this.getProductRelationId(sessionId,productId);
-         if (productRelationIdStr==null || productRelationIdStr.trim().isEmpty()){
-             return null;
-         }
-         return (SmsFlashProductRelation) redisService.hGet(CacheKeys.ProductRelationHashKey(sessionId),productRelationIdStr);
+    public SmsFlashProductRelation flashProductRelation(long sessionId, long productRelationId) {
+         return (SmsFlashProductRelation) redisService.hGet(CacheKeys.ProductRelationHashKey(sessionId),CacheKeys.Field(productRelationId));
     }
 
     @Override
@@ -156,6 +157,13 @@ public class FlashPromotionCacheServiceImpl implements FlashPromotionCacheServic
         return total !=null && total > 0 && flashProductRelationId > 0L
                 ? counterRedisService.hInCr(CacheKeys.SkuFlashStockHashKey(flashProductRelationId),CacheKeys.Field(flashSkuRelationId),delta)
                 : total;
+    }
+
+    @Override
+    public void incrementUserBuyCount(long userId, long sessionId, long productId, int delta) {
+        String k = CacheKeys.UserBuyCount(userId,sessionId,productId);
+        counterRedisService.inCr(k,delta);
+        redisService.expire(k,defaultExpire);
     }
 
     @Override
@@ -302,6 +310,11 @@ public class FlashPromotionCacheServiceImpl implements FlashPromotionCacheServic
     }
 
     @Override
+    public void setSkuRelationCache(long productRelationId, Map<String, Object> skuMap) {
+        redisService.hSetAll(CacheKeys.SkuStockRelationHashKey(productRelationId),skuMap);
+    }
+
+    @Override
     public void setProductRelationStockCache(long productRelationId, int count) {
         String key = CacheKeys.ProductFlashStockKey(productRelationId);
         counterRedisService.set(key,count+"");
@@ -310,8 +323,12 @@ public class FlashPromotionCacheServiceImpl implements FlashPromotionCacheServic
 
     @Override
     public void setSkuRelationStockCache(long productRelationId,long skuRelationId, int count) {
-        String key = CacheKeys.SkuFlashStockHashKey(productRelationId);
-        counterRedisService.hSet(key,CacheKeys.Field(skuRelationId),count+"",statsExpire);
+        counterRedisService.hSet(CacheKeys.SkuFlashStockHashKey(productRelationId),CacheKeys.Field(skuRelationId),count+"",statsExpire);
+    }
+
+    @Override
+    public void setSkuRelationStockCache(long productRelationId, Map<String, String> skuStockMap) {
+        counterRedisService.hSetAll(CacheKeys.SkuFlashStockHashKey(productRelationId),skuStockMap,statsExpire);
     }
 
     @Override
@@ -321,5 +338,20 @@ public class FlashPromotionCacheServiceImpl implements FlashPromotionCacheServic
         redisService.del(CacheKeys.SkuFlashStockHashKey(productRelationId));
         redisService.del(CacheKeys.SkuStockRelationHashKey(productRelationId));
         redisService.hDel(CacheKeys.ProductRelationHashKey(sessionId),CacheKeys.Field(productRelationId));
+    }
+
+    @Override
+    public Boolean tryLock(String key, long expire) {
+        return redisService.setNX(key,lockValue,expire);
+    }
+
+    @Override
+    public Boolean tryLock(String key) {
+        return this.tryLock(key,defaultLockExpired);
+    }
+
+    @Override
+    public void unLock(String key) {
+        redisService.del(key);
     }
 }

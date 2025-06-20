@@ -7,14 +7,14 @@ import java.util.List;
 /**
  * 秒杀商品关联 该商品关联的秒杀 活动 场次 当前用户的抢购行为 该商品各个sku的库存
  */
-public class FlashProductRelation extends SmsFlashProductRelation {
+public class FlashProductRelation extends SmsFlashProductRelation{
     private SmsFlashPromotion flashPromotion;
     private SmsFlashSession flashSession;
-    private SmsFlashBehavior flashBehavior;
+    private Integer buyCount;
     private List<SmsFlashSkuRelation> flashSkuRelationList;
 
-    public SmsFlashBehavior getFlashBehavior() {
-        return flashBehavior;
+    public Integer getBuyCount() {
+        return buyCount;
     }
 
     public SmsFlashPromotion getFlashPromotion() {
@@ -33,8 +33,8 @@ public class FlashProductRelation extends SmsFlashProductRelation {
         this.flashPromotion = flashPromotion;
     }
 
-    public void setFlashBehavior(SmsFlashBehavior flashBehavior) {
-        this.flashBehavior = flashBehavior;
+    public void setBuyCount(Integer buyCount) {
+        this.buyCount = buyCount;
     }
 
     public void setFlashSession(SmsFlashSession flashSession) {

@@ -93,6 +93,24 @@ public interface ProductCacheService extends Cache {
      */
     void delProductStats(long productId);
 
+
+    class CacheKeys{
+        public static String ProductKey(long id){return "product-key:"+id;}
+        public static String ProductModelKey(long productId){return "product-model-key:"+productId;}
+        public static String ProductKeyLock(long id){return "product-lock-key:"+id;}
+        public static String ProductModelKeyLock(long productId){return "product-model-lock-key:"+productId;}
+        public static String SkuStockHashKey(long productId){return "sku-stock-hash-key:"+productId;}
+        public static String Field(long id){return ""+id;}
+        public static String ProductStats(long productId){return "product-stats-hash:"+productId;}
+        public static String SkuStockStats(long skuId) {return  "sku-stock-stats-hash:"+skuId;}
+
+        public static String ProductNewRank = "product-new-rank";
+        public static String ProductSaleRank = "product-sale-rank";
+        public static String Sale = "sale";
+        public static String Stock = "stock";
+    }
+
+
     class ProductModel implements Serializable {
         private Long productId;
         private List<PmsProductLadder> productLadderList;
@@ -168,21 +186,5 @@ public interface ProductCacheService extends Cache {
         public void setSale(Integer sale) {
             this.sale = sale;
         }
-    }
-
-    class CacheKeys{
-        public static String ProductKey(long id){return "product-key:"+id;}
-        public static String ProductModelKey(long productId){return "product-model-key:"+productId;}
-        public static String ProductKeyLock(long id){return "product-lock-key:"+id;}
-        public static String ProductModelKeyLock(long productId){return "product-model-lock-key:"+productId;}
-        public static String SkuStockHashKey(long productId){return "sku-stock-hash-key:"+productId;}
-        public static String Field(long id){return ""+id;}
-        public static String ProductStats(long productId){return "product-stats-hash:"+productId;}
-        public static String SkuStockStats(long skuId) {return  "sku-stock-stats-hash:"+skuId;}
-
-        public static String ProductNewRank = "product-new-rank";
-        public static String ProductSaleRank = "product-sale-rank";
-        public static String Sale = "sale";
-        public static String Stock = "stock";
     }
 }

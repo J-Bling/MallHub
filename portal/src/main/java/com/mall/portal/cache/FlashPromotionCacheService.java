@@ -15,6 +15,10 @@ public interface FlashPromotionCacheService extends Cache {
      */
     PmsProduct getProduct(long productId);
     /**
+     * 获取用户购买情况
+     */
+    String getUserBuyCount(long userId,long sessionId,long productId);
+    /**
      * 获取单个 promotion
      */
     SmsFlashPromotion flashPromotion(long promotionId);
@@ -23,17 +27,17 @@ public interface FlashPromotionCacheService extends Cache {
      */
     List<SmsFlashPromotion> flashPromotionList();
     /**
-     *获取当轮所有场次
+     *获取当轮所有场次ids
      */
     Set<String> getCurrentSessionIds();
     /**
-     * 获取下一轮所有场次
+     * 获取下一轮所有场次ids
      */
     Set<String> getNextSessionIds();
     /**
      * 判断productId是否在该session里面
      */
-    Boolean existsSession(long sessionId,long productId);
+    Boolean containProduct(long sessionId,long productId);
     /**
      * 使用productId获取对应的productRelationId
      */
@@ -53,9 +57,9 @@ public interface FlashPromotionCacheService extends Cache {
     /**
      * 获取 product-session关联
      */
-    SmsFlashProductRelation flashProductRelation(long sessionId,long productId);
+    SmsFlashProductRelation flashProductRelation(long sessionId,long productRelationId);
     /**
-     * 按 id获取  SmsFlashProductRelationList
+     * 按 ids获取  SmsFlashProductRelationList
      */
     List<SmsFlashProductRelation> flashProductRelationList(long sessionId,Set<String> strings);
     /**
@@ -82,6 +86,10 @@ public interface FlashPromotionCacheService extends Cache {
      * 修改库存缓存 flashSkuRelationId==0 时只处理总库存
      */
     Long incrementProductStock(long flashProductRelationId,long flashSkuRelationId,int delta);
+    /**
+     * 修改用户购买次数
+     */
+    void incrementUserBuyCount(long userId,long sessionId,long productId,int delta);
     /**
      * 修改库存销量缓存
      */
@@ -110,6 +118,10 @@ public interface FlashPromotionCacheService extends Cache {
      */
     void setSkuRelationCache(long productRelationId,SmsFlashSkuRelation skuRelation);
     /**
+     * 设置多个skuRelation缓存
+     */
+    void setSkuRelationCache(long productRelationId,Map<String,Object> skuMap);
+    /**
      * 设置 productRelation库存信息
      */
     void setProductRelationStockCache(long productRelationId,int count);
@@ -118,9 +130,23 @@ public interface FlashPromotionCacheService extends Cache {
      */
     void setSkuRelationStockCache(long productRelationId,long skuRelationId, int count);
     /**
+     * 设置多个 skuRelation 库存信息
+     */
+    void setSkuRelationStockCache(long productRelationId,Map<String,String> skuStockMap);
+    /**
      * 下架一个商品
      */
     void removedProduct(long sessionId,long productId,long productRelationId);
+    /**
+     * 获取锁
+     */
+    Boolean tryLock(String key,long expire);
+    Boolean tryLock(String key);
+    /**
+     * 解锁
+     */
+    void unLock(String key);
+
 
 
 
@@ -149,6 +175,8 @@ public interface FlashPromotionCacheService extends Cache {
         public static String ProductFlashStockKey(long productRelationId){return "flash-production-stock-key:"+productRelationId;}
         //获取 sms_flash_sku_relation.id的商品库存 flash_stock
         public static String SkuFlashStockHashKey(long productRelationId){return "flash-sku-stock-hash-key:"+productRelationId;}
+        //用户购买情况
+        public static String UserBuyCount(long userId,long sessionId,long productId){return "flash-user-but-count:user:"+userId+"sessionId:"+sessionId+"productId:"+productId;}
     }
 
     class ReSetPromotionModel implements Serializable {

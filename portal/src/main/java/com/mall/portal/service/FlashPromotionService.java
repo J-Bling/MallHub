@@ -1,5 +1,6 @@
 package com.mall.portal.service;
 
+import com.mall.mbg.model.SmsFlashBehavior;
 import com.mall.portal.domain.model.flash.*;
 
 import java.util.List;
@@ -13,9 +14,9 @@ public interface FlashPromotionService {
      */
     FlashProductRelation getFlashProductRelation(long productId);
     /**
-     * 获取当前场次 的秒杀商品
+     * 分页按排行榜热度获取当前场次的秒杀商品
      */
-    List<FlashProduct> getFlashProductList(long sessionId);
+    List<FlashProduct> getFlashProductList(long sessionId,int offset,int limit);
     /**
      *获取已经开始的活动 type =1 平台活动 2 商家活动
      */
@@ -56,4 +57,8 @@ public interface FlashPromotionService {
      * 获取当前用户订阅的商品 按时间降序
      */
     List<FlashSubscribeProductHistory> getSubscribeProductHistoryList(int offset,int limit);
+    /**
+     * 获取用户秒杀行为记录
+     */
+    List<SmsFlashBehavior> getUserBehaviorList(long sessionId, long productId);
 }
