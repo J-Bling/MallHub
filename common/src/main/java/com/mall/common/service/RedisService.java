@@ -1,4 +1,6 @@
 package com.mall.common.service;
+import org.springframework.data.redis.core.RedisTemplate;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -9,6 +11,10 @@ import java.util.concurrent.TimeUnit;
  */
 public interface RedisService {
     TimeUnit timeUnit = TimeUnit.MILLISECONDS;
+    /**
+     * 获取 redsiTemplate
+     */
+    RedisTemplate<String, Object> getTemplate();
     /**
      * 保存属性
      */
@@ -80,6 +86,8 @@ public interface RedisService {
      */
     void hSet(String key, String hashKey, Object value);
 
+    void hSet(String key,String hashKey,Object value,int x);
+
     /**
      * 直接获取整个Hash结构
      */
@@ -88,7 +96,7 @@ public interface RedisService {
      * 获取多个字段值
      */
     List<Object> hGetAll(String key,List<String> ids);
-
+    List<Object> hGetAll(String key,Set<String> strings);
     /**
      * 直接设置整个Hash结构
      */
@@ -102,7 +110,7 @@ public interface RedisService {
     /**
      * 删除Hash结构中的属性
      */
-    void hDel(String key, Object... hashKey);
+    boolean hDel(String key, Object... hashKey);
 
     /**
      * 判断Hash结构中是否有该属性

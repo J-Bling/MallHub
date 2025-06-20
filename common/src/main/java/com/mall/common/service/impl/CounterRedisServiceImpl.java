@@ -19,6 +19,21 @@ public class CounterRedisServiceImpl implements CounterRedisService {
 
 
     @Override
+    public String get(String key) {
+        return stringRedisTemplate.opsForValue().get(key);
+    }
+
+    @Override
+    public void set(String key, String value) {
+        stringRedisTemplate.opsForValue().set(key,value);
+    }
+
+    @Override
+    public Long inCr(String key, long delta) {
+        return stringRedisTemplate.opsForValue().increment(key,delta);
+    }
+
+    @Override
     public Boolean hHasKey(String key, String hashKey) {
         return hashOperations.hasKey(key,hashKey);
     }
@@ -83,8 +98,6 @@ public class CounterRedisServiceImpl implements CounterRedisService {
     public Long del(List<String> keys) {
         return redisService.del(keys);
     }
-
-
 
 
     @Override
@@ -152,7 +165,43 @@ public class CounterRedisServiceImpl implements CounterRedisService {
     }
 
     @Override
-    public Double incrementScore(String key, String value, double delta) {
+    public Double zIncrementScore(String key, String value, double delta) {
         return stringRedisTemplate.opsForZSet().incrementScore(key,value,delta);
+    }
+
+    @Override
+    public void sAdd(String key, String value) {
+        stringRedisTemplate.opsForSet().add(key,value);
+    }
+
+    @Override
+    public void sAddAll(String key, List<String> values) {
+        stringRedisTemplate.opsForSet().add(key,values.toArray(new String[0]));
+    }
+
+    @Override
+    public Set<String> sMembers(String key) {
+        return stringRedisTemplate.opsForSet().members(key);
+    }
+
+    @Override
+    public Long sCard(String key) {
+        return stringRedisTemplate.opsForSet().size(key);
+    }
+
+    @Override
+    public boolean sRm(String key, String value) {
+        Long len = stringRedisTemplate.opsForSet().remove(key,value);
+        return len !=null && len >0;
+    }
+
+    @Override
+    public void sRm(String key, List<String> values) {
+        stringRedisTemplate.opsForSet().remove(key,values.toArray(new String[0]));
+    }
+
+    @Override
+    public Boolean sIsMember(String key, String value) {
+        return stringRedisTemplate.opsForSet().isMember(key,value);
     }
 }

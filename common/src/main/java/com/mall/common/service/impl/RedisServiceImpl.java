@@ -22,6 +22,11 @@ public class RedisServiceImpl implements RedisService {
     private final long expired = 86400000;
 
     @Override
+    public RedisTemplate<String, Object> getTemplate() {
+        return this.redisTemplate;
+    }
+
+    @Override
     public void set(String key, Object value, long time) {
         redisTemplate.opsForValue().set(key, value, time, timeUnit);
     }
@@ -106,6 +111,11 @@ public class RedisServiceImpl implements RedisService {
     }
 
     @Override
+    public void hSet(String key, String hashKey, Object value, int x) {
+        redisTemplate.opsForHash().put(key,hashKey,value);
+    }
+
+    @Override
     public Map<Object, Object> hGetAll(String key) {
         return redisTemplate.opsForHash().entries(key);
     }
@@ -114,6 +124,12 @@ public class RedisServiceImpl implements RedisService {
     public List<Object> hGetAll(String key, List<String> ids) {
         HashOperations<String, String, Object> hashOperations = redisTemplate.opsForHash();
         return hashOperations.multiGet(key, ids);
+    }
+
+    @Override
+    public List<Object> hGetAll(String key,Set<String> strings){
+        HashOperations<String, String, Object> hashOperations = redisTemplate.opsForHash();
+        return hashOperations.multiGet(key,strings);
     }
 
     @Override
@@ -132,8 +148,9 @@ public class RedisServiceImpl implements RedisService {
     }
 
     @Override
-    public void hDel(String key, Object... hashKey) {
-        redisTemplate.opsForHash().delete(key, hashKey);
+    public boolean hDel(String key, Object... hashKey) {
+        Long len = redisTemplate.opsForHash().delete(key, hashKey);
+        return len !=null && len >0;
     }
 
     @Override

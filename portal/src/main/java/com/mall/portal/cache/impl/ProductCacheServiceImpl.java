@@ -366,7 +366,6 @@ public class ProductCacheServiceImpl implements ProductCacheService {
                 }
             }
         }
-        this.incrementProductSale(productId,delta);
     }
 
 
@@ -572,6 +571,6 @@ public class ProductCacheServiceImpl implements ProductCacheService {
 
     @Override
     public void increaseSales(long id, int sales) {
-        counterRedisService.incrementScore(CacheKeys.ProductSaleRank,CacheKeys.Field(id),sales);
+        counterRedisService.zIncrementScore(CacheKeys.ProductSaleRank,CacheKeys.Field(id),sales);
     }
 }

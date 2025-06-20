@@ -5,6 +5,9 @@ import java.util.Map;
 import java.util.Set;
 
 public interface CounterRedisService {
+    String get(String key);
+    void set(String key,String value);
+    Long inCr(String key,long delta);
     /**
      * 判断Hash结构中是否有该属性
      */
@@ -53,9 +56,6 @@ public interface CounterRedisService {
      * 设置有效时间
      */
     Long del(List<String> keys);
-
-
-
     /**
      * 向ZSet中添加元素（或更新分数）
      * @param key    ZSet的Key
@@ -150,5 +150,20 @@ public interface CounterRedisService {
     /**
      * 增加分数
      */
-    Double incrementScore(String key, String value, double delta);
+    Double zIncrementScore(String key, String value, double delta);
+
+    void sAdd(String key,String value);
+
+    void sAddAll(String key,List<String> values);
+
+    Set<String> sMembers(String key);
+
+    Long sCard(String key);
+
+    boolean sRm(String key,String value);
+
+    void sRm(String key,List<String> values);
+
+    Boolean sIsMember(String key,String value);
+
 }
