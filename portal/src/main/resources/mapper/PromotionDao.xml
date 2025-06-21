@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mall.portal.dao.PromotionDao">
+    <resultMap id="SessionHistoryResultMap"
+               type="com.mall.portal.domain.model.flash.FlashSubscribeSessionHistory"
+               extends="com.mall.mbg.mapper.SmsFlashSessionSubscribeMapper.BaseResultMap"
+    >
+        <association property="promotion" javaType="com.mall.mbg.model.SmsFlashPromotion"
+                     resultMap="com.mall.mbg.mapper.SmsFlashPromotionMapper.BaseResultMap"
+                     columnPrefix="p_"
+                    />
+        <association property="session" javaType="com.mall.mbg.model.SmsFlashSession"
+                     resultMap="com.mall.mbg.mapper.SmsFlashSessionMapper.BaseResultMap"
+                     columnPrefix="s_"
+                    />
+    </resultMap>
+    <resultMap id="ProductHistoryResultMap"
+               type="com.mall.portal.domain.model.flash.FlashSubscribeProductHistory"
+               extends="com.mall.mbg.mapper.SmsFlashProductSubscribeMapper.BaseResultMap"
+    >
+        <association property="product" javaType="com.mall.mbg.model.PmsProduct"
+                     resultMap="com.mall.mbg.mapper.PmsProductMapper.BaseResultMap"
+                     columnPrefix="p_"
+                    />
+        <association property="session" javaType="com.mall.mbg.model.SmsFlashSession"
+                     resultMap="com.mall.mbg.mapper.PmsProductMapper.BaseResultMap"
+                     columnPrefix="s_"
+                     />
+        <association property="promotion" javaType="com.mall.mbg.model.SmsFlashPromotion"
+                     resultMap="com.mall.mbg.mapper.SmsFlashPromotionMapper.BaseResultMap"
+                     columnPrefix="promo_"
+                     />
+        <association property="flashProductRelation" javaType="com.mall.mbg.model.SmsFlashProductRelation"
+                     resultMap="com.mall.mbg.mapper.SmsFlashProductRelationMapper.BaseResultMap"
+                     columnPrefix="fpr_"
+                     />
+        <association property="flashSkuRelation" javaType="com.mall.mbg.model.SmsFlashSkuRelation"
+                     resultMap="com.mall.mbg.mapper.SmsFlashSkuRelationMapper"
+                     columnPrefix="fsr_"
+                     />
+    </resultMap>
+    
+    <select id="getFlashSubscribeSessionHistoryList" resultMap="SessionHistoryResultMap">
+        SELECT
+        sub.*,
+        p.id AS p_id,
+        p.title AS p_title,
+        p.start_date AS p_start_date,
+        p.end_date AS p_end_date,
+        p.status AS p_status,
+        s.id AS s_id,
+        s.name AS s_name,
+        s.start_time AS s_start_time,
+        s.end_time AS s_end_time,
+        s.status AS s_status
+        FROM
+        sms_flash_session_subscribe sub
+        LEFT JOIN
+        sms_flash_session s ON sub.session_id = s.id
+        LEFT JOIN
+        sms_flash_promotion p ON s.promotion_id = p.id
+        WHERE
+        sub.member_id = #{memberId}
+        AND sub.status = 1
+        ORDER BY
+        sub.create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+    <select id="getFlashSubscribeProductHistoryList" resultMap="ProductHistoryResultMap">
+        SELECT
+        sub.*,
+        <!-- 商品信息 -->
+        p.id AS p_id,
+        p.name AS p_name,
+        p.product_sn AS p_product_sn,
+        p.price AS p_price,
+        p.pic AS p_pic,
+        <!-- 秒杀场次 -->
+        s.id AS s_id,
+        s.name AS s_name,
+        s.start_time AS s_start_time,
+        s.end_time AS s_end_time,
+        <!-- 秒杀活动 -->
+        promo.id AS promo_id,
+        promo.title AS promo_title,
+        promo.start_date AS promo_start_date,
+        promo.end_date AS promo_end_date,
+        <!-- 秒杀商品关联 -->
+        fpr.id AS fpr_id,
+        fpr.flash_price AS fpr_flash_price,
+        fpr.flash_stock AS fpr_flash_stock,
+        <!-- 秒杀SKU关联 -->
+        fsr.id AS fsr_id,
+        fsr.sku_code AS fsr_sku_code,
+        fsr.flash_price AS fsr_flash_price,
+        fsr.flash_limit AS fsr_flash_limit
+        FROM
+        sms_flash_product_subscribe sub
+        LEFT JOIN pms_product p ON sub.product_id = p.id
+        LEFT JOIN sms_flash_product_relation fpr ON sub.product_id = fpr.product_id
+        LEFT JOIN sms_flash_sku_relation fsr ON sub.sku_id = fsr.sku_id AND fsr.product_relation_id = fpr.id
+        LEFT JOIN sms_flash_session s ON fpr.session_id = s.id
+        LEFT JOIN sms_flash_promotion promo ON s.promotion_id = promo.id
+        WHERE
+        sub.member_id = #{memberId}
+        AND sub.status = 1
+        ORDER BY
+        sub.create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+</mapper>

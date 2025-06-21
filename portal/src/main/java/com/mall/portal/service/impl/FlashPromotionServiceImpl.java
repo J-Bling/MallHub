@@ -1,8 +1,10 @@
 package com.mall.portal.service.impl;
 
+import com.mall.common.exception.Assert;
 import com.mall.mbg.mapper.*;
 import com.mall.mbg.model.*;
 import com.mall.portal.cache.FlashPromotionCacheService;
+import com.mall.portal.dao.PromotionDao;
 import com.mall.portal.domain.model.flash.*;
 import com.mall.portal.service.ConsumerService;
 import com.mall.portal.service.FlashPromotionService;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class FlashPromotionServiceImpl implements FlashPromotionService {
@@ -25,6 +28,11 @@ public class FlashPromotionServiceImpl implements FlashPromotionService {
     @Autowired private SmsFlashProductSubscribeMapper productSubscribeMapper;
     @Autowired private SmsFlashSessionSubscribeMapper sessionSubscribeMapper;
     @Autowired private SmsFlashStockFlowMapper stockFlowMapper;
+    @Autowired private SmsFlashPromotionMapper promotionMapper;
+    @Autowired private SmsFlashSessionMapper sessionMapper;
+    @Autowired private PmsProductMapper productMapper;
+    @Autowired private PromotionDao promotionDao;
+
 
     private final int tryCount = 5;
     private final long lockExpire = FlashPromotionCacheService.defaultLockExpired;
@@ -61,7 +69,7 @@ public class FlashPromotionServiceImpl implements FlashPromotionService {
         BeanUtils.copyProperties(productRelation,flashProductRelation);
         flashProductRelation.setFlashStock(this.getProductRelationStock(flashProductRelation.getId()));
         flashProductRelation.setFlashPromotion(promotionCacheService.flashPromotion(flashProductRelation.getPromotionId()));
-        flashProductRelation.setFlashSession(promotionCacheService.getSession(flashProductRelation.getPromotionId(),flashProductRelation.getSessionId()));
+        flashProductRelation.setFlashSession(promotionCacheService.getSession(flashProductRelation.getPromotionId()));
         flashProductRelation.setBuyCount(this.getCurrentMemberBuyCount(sessionId,productId));
         if (flashProductRelation.getIsSku()){
             List<SmsFlashSkuRelation> skuRelationList = this.getProductSkuRelationAll(flashProductRelation.getId());
@@ -104,57 +112,145 @@ public class FlashPromotionServiceImpl implements FlashPromotionService {
 
     @Override
     public List<FlashPromotion> getStartFlashPromotion(byte type) {
-        return Collections.emptyList();
+        List<FlashPromotion> flashPromotionList = new ArrayList<>();
+        List<SmsFlashPromotion> promotionList = promotionCacheService.flashPromotionList();
+        int homeProductSize = 6;
+        if (promotionList!=null && !promotionList.isEmpty()){
+            for (SmsFlashPromotion promotion : promotionList){
+                if (promotion.getType().equals(type)){
+                    FlashPromotion flashPromotion = new FlashPromotion();
+                    SmsFlashSession session = promotionCacheService.getSession(promotion.getId());
+                    BeanUtils.copyProperties(promotion,flashPromotion);
+                    List<SmsFlashSession> sessionList = new ArrayList<>();
+                    sessionList.add(session);
+                    flashPromotion.setSessionList(sessionList);
+                    flashPromotion.setProductList(this.getFlashProductList(session.getId(),0, homeProductSize));
+                    flashPromotionList.add(flashPromotion);
+                }
+            }
+        }
+        return flashPromotionList;
     }
 
     @Override
     public List<FlashPromotion> getAllFlashPromotion() {
-        return Collections.emptyList();
+        List<FlashPromotion> flashPromotionList = new ArrayList<>();
+        Date today = new Date();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(today);
+        calendar.add(Calendar.DAY_OF_YEAR, 6);
+        Date date = calendar.getTime();
+        SmsFlashPromotionExample example = new SmsFlashPromotionExample();
+        example.createCriteria().andStartDateBetween(today,date);
+        List<SmsFlashPromotion> promotionList = promotionMapper.selectByExample(example);
+        if (promotionList==null || promotionList.isEmpty()){
+            return flashPromotionList;
+        }
+        for (SmsFlashPromotion promotion : promotionList){
+            FlashPromotion flashPromotion = new FlashPromotion();
+            SmsFlashSessionExample sessionExample = new SmsFlashSessionExample();
+            sessionExample.createCriteria().andPromotionIdEqualTo(promotion.getId());
+            BeanUtils.copyProperties(promotion,flashPromotion);
+            flashPromotion.setSessionList(sessionMapper.selectByExample(sessionExample));
+            flashPromotionList.add(flashPromotion);
+        }
+        return flashPromotionList;
     }
 
     @Override
     public List<FlashPromotion> getPreparationFlashPromotion() {
-        return Collections.emptyList();
+        List<FlashPromotion> promotionList = this.getAllFlashPromotion();
+        if (promotionList.isEmpty()){
+            return promotionList;
+        }
+        Date date =new Date();
+        return promotionList.stream().filter(p->p.getStartDate().after(date)).collect(Collectors.toList());
     }
 
     @Override
     public boolean incrementProductStock(long flashProductRelationId, long flashSkuRelationId, int delta) {
-        return false;
+        Long stock = promotionCacheService.incrementProductStock(flashProductRelationId,flashSkuRelationId,delta);
+        return stock!=null && stock >=0;
     }
 
     @Override
-    public boolean subscribeFlashSession(long flashSessionId) {
-        return false;
+    public void subscribeFlashSession(long flashSessionId) {
+        Long userId = this.getCurrentUserId();
+        SmsFlashSession session = sessionMapper.selectByPrimaryKey(flashSessionId);
+        if (session==null){
+            Assert.fail("没有该场次");
+        }
+        if (!session.getStatus() && !session.getEndTime().before(new Date())){
+            Assert.fail("该场次已经失效");
+        }
+        SmsFlashSessionSubscribeExample example = new SmsFlashSessionSubscribeExample();
+        example.createCriteria().andMemberIdEqualTo(userId).andSessionIdEqualTo(flashSessionId);
+        if (sessionSubscribeMapper.selectByExample(example)!=null){
+            Assert.fail("重复订阅抢购场次");
+        }
+        SmsFlashSessionSubscribe subscribe = new SmsFlashSessionSubscribe();
+        subscribe.setMemberId(userId);
+        subscribe.setSessionId(flashSessionId);
+        sessionSubscribeMapper.insert(subscribe);
     }
 
     @Override
-    public boolean subscribeFlashProduct(long productId) {
-        return false;
+    public void subscribeFlashProduct(long productId,long skuId) {
+        Long userId = this.getCurrentUserId();
+        PmsProduct product = productMapper.selectByPrimaryKey(productId);
+        if (product==null){
+            Assert.fail("该商品不存在");
+        }
+        SmsFlashProductSubscribeExample example = new SmsFlashProductSubscribeExample();
+        example.createCriteria().andMemberIdEqualTo(userId)
+                .andProductIdEqualTo(productId)
+                .andSkuIdEqualTo(skuId);
+        if (productSubscribeMapper.selectByExample(example)!=null){
+            Assert.fail("重复订阅商品");
+        }
+        SmsFlashProductSubscribe subscribe = new SmsFlashProductSubscribe();
+        subscribe.setProductId(productId);
+        subscribe.setMemberId(userId);
+        subscribe.setSkuId(skuId);
+        productSubscribeMapper.insert(subscribe);
     }
 
     @Override
-    public boolean unSubscribeFlashSession(long flashSessionId) {
-        return false;
+    public void unSubscribeFlashSession(long flashSessionId) {
+        Long userId = this.getCurrentUserId();
+        SmsFlashSessionSubscribeExample example = new SmsFlashSessionSubscribeExample();
+        example.createCriteria().andSessionIdEqualTo(flashSessionId).andMemberIdEqualTo(userId);
+        sessionSubscribeMapper.deleteByExample(example);
     }
 
     @Override
-    public boolean unSubscribeFlashProduct(long productId) {
-        return false;
+    public void unSubscribeFlashProduct(long productId , long skuId) {
+        Long userId = this.getCurrentUserId();
+        SmsFlashProductSubscribeExample example = new SmsFlashProductSubscribeExample();
+        example.createCriteria().andMemberIdEqualTo(userId)
+                .andProductIdEqualTo(productId)
+                .andSkuIdEqualTo(skuId);
+        productSubscribeMapper.deleteByExample(example);
     }
 
     @Override
     public List<FlashSubscribeSessionHistory> getSubscribeSessionHistoryList(int offset, int limit) {
-        return Collections.emptyList();
+        Long userId = getCurrentUserId();
+        return promotionDao.getFlashSubscribeSessionHistoryList(userId,offset,limit);
     }
 
     @Override
     public List<FlashSubscribeProductHistory> getSubscribeProductHistoryList(int offset, int limit) {
-        return Collections.emptyList();
+        Long userId = getCurrentUserId();
+        return promotionDao.getFlashSubscribeProductHistoryList(userId,offset,limit);
     }
 
     @Override
     public List<SmsFlashBehavior> getUserBehaviorList(long sessionId,long productId){
         UmsMember member = consumerService.getCurrentMember();
+        if (member==null){
+            return null;
+        }
         SmsFlashBehaviorExample example = new SmsFlashBehaviorExample();
         example.createCriteria()
                 .andMemberIdEqualTo(member.getId())
@@ -359,4 +455,11 @@ public class FlashPromotionServiceImpl implements FlashPromotionService {
         return null;
     }
 
+    private Long getCurrentUserId(){
+        UmsMember member = consumerService.getCurrentMember();
+        if (member==null){
+            Assert.fail("请先登陆");
+        }
+        return member.getId();
+    }
 }

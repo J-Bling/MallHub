@@ -8,20 +8,20 @@ import java.util.List;
 /**
  * 秒杀活动 获取当前活动场次 抢购的商品
  */
-public class FlashPromotion extends SmsFlashPromotion {
-    private SmsFlashSession flashSession;
+public class FlashPromotion extends SmsFlashPromotion{
+    private List<SmsFlashSession> sessionList;
     private List<FlashProduct> productList;
 
-    public SmsFlashSession getFlashSession() {
-        return flashSession;
+    public List<SmsFlashSession> getSessionList() {
+        return sessionList;
     }
 
     public List<FlashProduct> getProductList() {
         return productList;
     }
 
-    public void setFlashSession(SmsFlashSession flashSession) {
-        this.flashSession = flashSession;
+    public void setSessionList(List<SmsFlashSession> sessionList) {
+        this.sessionList = sessionList;
     }
 
     public void setProductList(List<FlashProduct> productList) {

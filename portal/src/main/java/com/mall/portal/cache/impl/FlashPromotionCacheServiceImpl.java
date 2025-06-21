@@ -76,20 +76,8 @@ public class FlashPromotionCacheServiceImpl implements FlashPromotionCacheServic
     }
 
     @Override
-    public SmsFlashSession getSession(long promotionId, long sessionId) {
-        return (SmsFlashSession) redisService.hGet(CacheKeys.SessionHashKey(promotionId),CacheKeys.Field(sessionId));
-    }
-
-    @Override
-    public List<SmsFlashSession> getSessions(long promotionId) {
-        List<SmsFlashSession> sessionList = new ArrayList<>();
-        Map<Object,Object> map = redisService.hGetAll(CacheKeys.SessionHashKey(promotionId));
-        if (map!=null && !map.isEmpty()){
-            for (Map.Entry<Object,Object> entry : map.entrySet()){
-                sessionList.add((SmsFlashSession) entry.getValue());
-            }
-        }
-        return sessionList;
+    public SmsFlashSession getSession(long promotionId) {
+        return (SmsFlashSession) redisService.get(CacheKeys.SessionKey(promotionId));
     }
 
     @Override
@@ -194,7 +182,7 @@ public class FlashPromotionCacheServiceImpl implements FlashPromotionCacheServic
     @Override
     public void cleanPromotion(long promotionId) {
         redisService.hDel(CacheKeys.PromotionKey,CacheKeys.Field(promotionId));
-        redisService.del(CacheKeys.SessionHashKey(promotionId));
+        redisService.del(CacheKeys.SessionKey(promotionId));
     }
 
 
@@ -234,7 +222,8 @@ public class FlashPromotionCacheServiceImpl implements FlashPromotionCacheServic
         //设置开始的场次缓存
         List<Long> startSessionIds = promotionModel.getToStartSessionIds();
         if (startSessionIds!=null && !startSessionIds.isEmpty()){
-            counterRedisService.sAddAll(CacheKeys.CurrentSessionSetKey,startSessionIds
+            counterRedisService.sAddAll(CacheKeys.CurrentSessionSetKey,
+                    startSessionIds
                     .stream()
                     .map(Object::toString)
                     .collect(Collectors.toList()));
@@ -242,11 +231,8 @@ public class FlashPromotionCacheServiceImpl implements FlashPromotionCacheServic
             sessionExample.createCriteria().andIdIn(startSessionIds);
             List<SmsFlashSession> sessionList = sessionMapper.selectByExample(sessionExample);
             Map<Long,Map<String,SmsFlashSession>> longMapMap = new HashMap<>();
-            for (SmsFlashSession session :sessionList){
-                longMapMap.computeIfAbsent(session.getPromotionId(), k -> new HashMap<>()).put(""+session.getId(),session);
-            }
-            for (Map.Entry<Long,Map<String,SmsFlashSession>> entry : longMapMap.entrySet()){
-                redisService.hSetAll(CacheKeys.SessionHashKey(entry.getKey()),entry.getValue());
+            for (SmsFlashSession session : sessionList){
+                redisService.set(CacheKeys.SessionKey(session.getPromotionId()),session);
             }
         }
         //设置将要开始场次

@@ -22,33 +22,33 @@ public interface FlashPromotionService {
      */
     List<FlashPromotion> getStartFlashPromotion(byte type);
     /**
-     * 获取 7天以内 的所有秒杀活动
+     * 获取7天以内要开始的所有秒杀活动
      */
     List<FlashPromotion> getAllFlashPromotion();
     /**
-     * 获取 7 天内 还没有开始的秒杀活动
+     * 获取7天内还没有开始的秒杀活动
      */
     List<FlashPromotion> getPreparationFlashPromotion();
     /**
-     * 更新 秒杀商品库存 缓存 flashSkuRelationId 库为0
+     * 更新 秒杀商品库存 缓存 flashSkuRelationId 库可以为0; 还没有写库
      */
     boolean incrementProductStock(long flashProductRelationId,long flashSkuRelationId,int delta);
     /**
      * 订阅 一个秒杀场次 只会在该场次开始通知
      */
-    boolean subscribeFlashSession(long flashSessionId);
+    void subscribeFlashSession(long flashSessionId);
     /**
      * 订阅抢购商品
      */
-    boolean subscribeFlashProduct(long productId);
+    void subscribeFlashProduct(long productId,long skuId);
     /**
      * 取消订阅抢购场次
      */
-    boolean unSubscribeFlashSession(long flashSessionId);
+    void unSubscribeFlashSession(long flashSessionId);
     /**
      * 取消订阅商品
      */
-    boolean unSubscribeFlashProduct(long productId);
+    void unSubscribeFlashProduct(long productId,long skuId);
     /**
      * 获取当前用户订阅的历史抢购场次 按时间降序
      */

@@ -45,11 +45,7 @@ public interface FlashPromotionCacheService extends Cache {
     /**
      * 获取一个 session
      */
-    SmsFlashSession getSession(long promotionId,long sessionId);
-    /**
-     * 根据 promotionId 获取所有 session
-     */
-    List<SmsFlashSession> getSessions(long promotionId);
+    SmsFlashSession getSession(long promotionId);
     /**
      *分数降序获取  分页获取 productRelationIds
      */
@@ -156,7 +152,7 @@ public interface FlashPromotionCacheService extends Cache {
         //字段生成
         public static String Field(long id){return ""+id;}
         //存储session的缓存
-        public static String SessionHashKey(long promotionId){return "flash-session-hash-key:"+promotionId;}
+        public static String SessionKey(long promotionId){return "flash-session-key:"+promotionId;}
         //promotion的当轮场次
         public static String CurrentSessionSetKey = "flash-promotion-current-session-set-key:";
         //promotion的下轮场次

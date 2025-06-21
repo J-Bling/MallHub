@@ -2,11 +2,12 @@ package com.mall.portal.domain.model.flash;
 
 import com.mall.mbg.model.*;
 
-public class FlashSubscribeProductHistory extends SmsFlashProductSubscribe {
+public class FlashSubscribeProductHistory  extends SmsFlashProductSubscribe{
     private PmsProduct product;
     private SmsFlashSession session;
     private SmsFlashPromotion promotion;
     private SmsFlashProductRelation flashProductRelation;
+    private SmsFlashSkuRelation flashSkuRelation;
 
     public SmsFlashSession getSession() {
         return session;
@@ -24,6 +25,10 @@ public class FlashSubscribeProductHistory extends SmsFlashProductSubscribe {
         return flashProductRelation;
     }
 
+    public SmsFlashSkuRelation getFlashSkuRelation() {
+        return flashSkuRelation;
+    }
+
     public void setPromotion(SmsFlashPromotion promotion) {
         this.promotion = promotion;
     }
@@ -38,5 +43,9 @@ public class FlashSubscribeProductHistory extends SmsFlashProductSubscribe {
 
     public void setFlashProductRelation(SmsFlashProductRelation flashProductRelation) {
         this.flashProductRelation = flashProductRelation;
+    }
+
+    public void setFlashSkuRelation(SmsFlashSkuRelation flashSkuRelation) {
+        this.flashSkuRelation = flashSkuRelation;
     }
 }
