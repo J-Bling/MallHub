@@ -9,13 +9,13 @@ import java.util.List;
 
 public interface ProductCacheService extends Cache {
     /**
-     * 新增 product 销量排行榜
+     * 新增商品
      */
-    Boolean addProductInSaleRank(long id,double score);
+    void addProduct(long id);
     /**
-     * 新增新品榜
+     * 删除排行榜
      */
-    Boolean addProductNewRank(long id);
+    void deleteRank();
     /**
      * 按销量排行降序分页获取 productList
      */
@@ -35,7 +35,7 @@ public interface ProductCacheService extends Cache {
     /**
      * 获取 ProductModel
      */
-    ProductModel getProductModel(long productId);
+    ProductSubModel getProductModel(long productId);
     /**
      * 获取单个 sku 库存
      */
@@ -111,7 +111,7 @@ public interface ProductCacheService extends Cache {
     }
 
 
-    class ProductModel implements Serializable {
+    class ProductSubModel implements Serializable {
         private Long productId;
         private List<PmsProductLadder> productLadderList;
         private List<PmsProductFullReduction> productFullReductionList;

@@ -1,5 +1,6 @@
 package com.mall.portal.cache.impl;
 
+import com.mall.common.domain.ReSetPromotionModel;
 import com.mall.common.service.CounterRedisService;
 import com.mall.common.service.RedisService;
 import com.mall.mbg.mapper.SmsFlashPromotionMapper;
@@ -210,7 +211,7 @@ public class FlashPromotionCacheServiceImpl implements FlashPromotionCacheServic
             for (SmsFlashPromotion promotion : promotionList){
                 flashPromotionMap.put(""+promotion.getId(),promotion);
             }
-            redisService.hSetAll(CacheKeys.PromotionKey,flashPromotionMap);
+            redisService.getTemplate().opsForHash().putAll(CacheKeys.PromotionKey,flashPromotionMap);
         }
         //清空过期场次
         List<Long> endSessionIds = promotionModel.getToBeEndSessionIds();
@@ -232,7 +233,7 @@ public class FlashPromotionCacheServiceImpl implements FlashPromotionCacheServic
             List<SmsFlashSession> sessionList = sessionMapper.selectByExample(sessionExample);
             Map<Long,Map<String,SmsFlashSession>> longMapMap = new HashMap<>();
             for (SmsFlashSession session : sessionList){
-                redisService.set(CacheKeys.SessionKey(session.getPromotionId()),session);
+                redisService.getTemplate().opsForValue().set(CacheKeys.SessionKey(session.getPromotionId()),session);
             }
         }
         //设置将要开始场次
@@ -264,7 +265,8 @@ public class FlashPromotionCacheServiceImpl implements FlashPromotionCacheServic
                                 .collect(Collectors.toMap(
                                         e->e.getKey().toString(),
                                         m->m.getValue().toString()
-                                ))
+                                )),
+                        0
                 );
             }
         }
@@ -279,7 +281,8 @@ public class FlashPromotionCacheServiceImpl implements FlashPromotionCacheServic
                                 .collect(Collectors.toMap(
                                         e->e.getKey().toString(),
                                         Map.Entry::getValue
-                                ))
+                                )),
+                        0
                         );
             }
         }

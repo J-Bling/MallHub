@@ -41,6 +41,10 @@ public interface CounterRedisService {
      */
     void hSetAll(String key,Map<String,String> fieldValues);
     /**
+     * 无有效时间
+     */
+    void hSetAll(String key,Map<String,String> filedValues,int noExpired);
+    /**
      * 直接设置整个Hash结构
      */
     void hSetAll(String key,Map<String,String> fieldValues,long expired);
@@ -64,7 +68,10 @@ public interface CounterRedisService {
      * @return 是否添加成功（true=新增元素，false=更新已有元素）
      */
     Boolean zAdd(String key, String value, double score);
-
+    /**
+     * 无有效时间
+     */
+    void zAdd(String key,String value,double score,int noExpired);
     /**
      * 批量添加ZSet元素
      * @param key     ZSet的Key
@@ -72,7 +79,10 @@ public interface CounterRedisService {
      * @return 新增的元素数量
      */
     Long zAddAll(String key, Map<String, Double> values);
-
+    /**
+     * 无有效时间 zAddAll
+     */
+    void zAddAll(String key,Map<String,Double> value,int noExpired);
     /**
      * 删除ZSet中的元素
      * @param key     ZSet的Key
@@ -96,14 +106,6 @@ public interface CounterRedisService {
      * @return 排名（如果元素不存在返回null）
      */
     Long zRank(String key, String value);
-
-    /**
-     * 获取ZSet的排名（降序排名，0表示第一名）
-     * @param key    ZSet的Key
-     * @param value  元素值
-     * @return 排名（如果元素不存在返回null）
-     */
-    Long zReverseRank(String key, String value);
 
     /**
      * 获取ZSet中指定分数范围的元素（升序）
@@ -131,6 +133,14 @@ public interface CounterRedisService {
      * @return 元素集合
      */
     Set<String> zReverseRange(String key, long start, long end);
+
+    /**
+     * 获取ZSet的排名（降序排名，0表示第一名）
+     * @param key    ZSet的Key
+     * @param value  元素值
+     * @return 排名（如果元素不存在返回null）
+     */
+    Long zReverseRank(String key, String value);
 
     /**
      * 获取ZSet的元素数量

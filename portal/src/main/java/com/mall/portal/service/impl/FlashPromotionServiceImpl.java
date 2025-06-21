@@ -431,9 +431,12 @@ public class FlashPromotionServiceImpl implements FlashPromotionService {
                 List<SmsFlashSkuRelation> skuRelationList = skuRelationMapper.selectByExample(example);
                 if (skuRelationList!=null && !skuRelationList.isEmpty()){
                     map = new HashMap<>();
+                    Map<String,String> writeMap = new HashMap<>();
                     for (SmsFlashSkuRelation skuRelation : skuRelationList){
                         map.put(skuRelation.getId(),skuRelation.getFlashStock());
+                        writeMap.put(skuRelation.getId().toString(),skuRelation.getFlashStock().toString());
                     }
+                    promotionCacheService.setSkuRelationStockCache(productRelationId,writeMap);
                 }
                 break;
             }finally {

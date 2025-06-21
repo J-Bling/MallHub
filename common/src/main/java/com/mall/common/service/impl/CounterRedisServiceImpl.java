@@ -79,6 +79,11 @@ public class CounterRedisServiceImpl implements CounterRedisService {
     }
 
     @Override
+    public void hSetAll(String key, Map<String, String> filedValues, int noExpired) {
+        hashOperations.putAll(key,filedValues);
+    }
+
+    @Override
     public void hSetAll(String key, Map<String, String> fieldValues, long expired) {
         this.hSetAll(key,fieldValues);
         redisService.expire(key,expired);
@@ -107,12 +112,26 @@ public class CounterRedisServiceImpl implements CounterRedisService {
     }
 
     @Override
+    public void zAdd(String key,String value,double score,int noExpired){
+        stringRedisTemplate.opsForZSet().add(key,value,score);
+    }
+
+    @Override
     public Long zAddAll(String key, Map<String, Double> values) {
         if (values==null||values.isEmpty()){
             return 0L;
         }
         redisService.tryExpire(key);
         return stringRedisTemplate.opsForZSet().add(key,values.entrySet()
+                .stream()
+                .map(e->new DefaultTypedTuple<>(e.getKey(),e.getValue()))
+                .collect(Collectors.toSet())
+        );
+    }
+
+    @Override
+    public void zAddAll(String key, Map<String, Double> value, int noExpired) {
+        stringRedisTemplate.opsForZSet().add(key,value.entrySet()
                 .stream()
                 .map(e->new DefaultTypedTuple<>(e.getKey(),e.getValue()))
                 .collect(Collectors.toSet())

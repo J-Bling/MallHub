@@ -20,6 +20,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+
+/**
+ * 商品缓存设计 提高采用redis存储缓存
+ * 可以设置 private Boolean allowProductCache; 配置进行对 大量商品进行缓存
+ * redis维护 一个销量排行榜 和 一个新品排行榜 一天时间后自动重排行榜 或者后台调用重置排行榜
+ * 根据allowProductCache来动态从数据库/缓存中获取商品 使用分布式锁防止缓存失效导致缓存穿透/雪崩 使用空值缓存防止缓存击穿
+ * 根据allowProductCache来动态从数据库/缓存中获取ProductSubModel 商品附属关联模型
+ */
+
 @Service
 public class ProductCacheServiceImpl implements ProductCacheService {
 
@@ -37,136 +46,95 @@ public class ProductCacheServiceImpl implements ProductCacheService {
 
     @Value("${cache.allow.product}")
     private Boolean allowProductCache;
+
     private final int defaultLockMaxExpired = 1000;
     private final TimeUnit timeUnit = TimeUnit.MILLISECONDS;
     private final Lock ProductSaleLock = new ReentrantLock();
     private final Lock ProductStockLock = new ReentrantLock();
-    private final int ProductLimit = 500;
+    private final Lock SkuStockLock = new ReentrantLock();
+    private final Lock SkuSale = new ReentrantLock();
+
+    private static final NullProduct nullProduct = new NullProduct();
+    private static final NummProductModel nullProductModel = new NummProductModel();
     private final Logger logger = LoggerFactory.getLogger(ProductCacheServiceImpl.class);
 
-    @Override
-    public Boolean addProductInSaleRank(long id, double score) {
-        return counterRedisService.zAdd(CacheKeys.ProductSaleRank,CacheKeys.Field(id),score);
-    }
+
 
     @Override
-    public Boolean addProductNewRank(long id) {
-        this.addProductInSaleRank(id,0.0);
-        return counterRedisService.zAdd(CacheKeys.ProductNewRank,CacheKeys.ProductKey(id), (double) System.currentTimeMillis());
-    }
-
-    @Override
-    public PmsProduct getProduct(long id) {
-        return allowProductCache==null || !allowProductCache ? this.getProductInDb(id) : this.getProductInCache(id,1);
-    }
-
-    @Override
-    public PmsProduct getProductCache(long id) {
-        return this.getProductInCache(id,1);
-    }
-
-    private PmsProduct getProductInDb(long id){
-        return productMapper.selectByPrimaryKey(id);
-    }
-
-    private PmsProduct getProductInCache(long id ,int tryCount){
-        PmsProduct product = null;
-        if (tryCount >=retryCount){
-            return null;
-        }
-        String key = CacheKeys.ProductKey(id);
-        Object o =  redisService.get(key);
-        if (defaultNULL.equals(o)){
-            return product;
-        }
-        if (o!=null){
-            return (PmsProduct) o;
-        }
-
-        String lockKey =CacheKeys.ProductKeyLock(id);
-        Boolean isLock = redisService.setNX(lockKey,lockValue,defaultLockExpired);
-        if (isLock==null || !isLock){
-            try{
-                Thread.sleep(defaultLockTime);
-            }catch (InterruptedException e) {
-                logger.error("线程休眠失败:{}",e.getMessage());
+    public void addProduct(long id){
+        PmsProduct product = productMapper.selectByPrimaryKey(id);
+        if (product!=null){
+            counterRedisService.zAdd(CacheKeys.ProductSaleRank,CacheKeys.Field(id),product.getSale());
+            counterRedisService.zAdd(CacheKeys.ProductNewRank,CacheKeys.Field(id),product.getCreateAt());
+            if (allowProductCache!=null && allowProductCache){
+                this.setProductCache(product);
             }
-            return this.getProductInCache(id,tryCount+1);
         }
+    }
 
-        try {
-            product = productMapper.selectByPrimaryKey(id);
-            if (product != null) {
-                redisService.set(key, product);
-            }else {
-                redisService.set(key,defaultNULL);
-            }
-            return product;
-        }finally {
-            redisService.del(lockKey);
-        }
+    @Override
+    public void deleteRank(){
+        redisService.del(CacheKeys.ProductNewRank);
+        redisService.del(CacheKeys.ProductSaleRank);
     }
 
     @Override
     public List<Long> geSaleRankList(int offset, int limit) {
         List<Long> ProductIds = new ArrayList<>();
-        if (offset >ProductLimit){
-            return ProductIds;
-        }
-        Long len = counterRedisService.zSize(CacheKeys.ProductSaleRank);
-        if (len==null || len <= offset){
-            List<PmsProduct> productList =productDao.getMaxSaleProduct(ProductLimit);
-            if (productList==null || productList.isEmpty()){
-                return ProductIds;
-            }
-            Map<String,Double> productRank = new HashMap<>();
-            productList.stream().map(p->productRank.put(p.getId().toString(),p.getStock().doubleValue()));
-            counterRedisService.zAddAll(CacheKeys.ProductSaleRank,productRank);
-            if (offset>=productList.size()-1){
-                return null;
-            }
-            for (int i = offset ; i<Math.min(limit,productList.size());i++){
-                ProductIds.add(productList.get(i).getId());
+        Set<String> productIdset = counterRedisService.zReverseRange(CacheKeys.ProductSaleRank,offset,offset+limit-1);
+        if (productIdset!=null && !productIdset.isEmpty()){
+            for (String id : productIdset){
+                ProductIds.add(Long.parseLong(id));
             }
             return ProductIds;
         }
-        Set<String> productIds = counterRedisService.zReverseRange(CacheKeys.ProductSaleRank, offset, offset + limit - 1);
-        productIds.stream().map(id->ProductIds.add(Long.parseLong(id)));
+        List<PmsProduct> productList = productDao.getMaxSaleProduct(offset,limit);
+        if (productList!=null && !productList.isEmpty()){
+            Map<String,Double> cacheMap = new HashMap<>();
+            for (PmsProduct product : productList){
+                ProductIds.add(product.getId());
+                cacheMap.put(CacheKeys.Field(product.getId()),product.getSale().doubleValue());
+            }
+            counterRedisService.zAddAll(CacheKeys.ProductSaleRank,cacheMap);
+        }
         return ProductIds;
     }
 
     @Override
     public List<Long> getNewRankList(int offset, int limit) {
-        Long len = counterRedisService.zSize(CacheKeys.ProductNewRank);
         List<Long> productIds = new ArrayList<>();
-        if (offset >ProductLimit){
-            return productIds;
-        }
-        if (len==null || len<= offset){
-            List<PmsProduct> productList = productDao.getMaxCreateProduct(ProductLimit);
-            if (productList==null || productList.isEmpty()){
-                return productIds;
-            }
-            Map<String,Double> doubleMap = new HashMap<>();
-            productList.stream().map(p->doubleMap.put(p.getId().toString(),p.getCreateAt().doubleValue()));
-            counterRedisService.zAddAll(CacheKeys.ProductNewRank,doubleMap);
-            if (productList.size() <= offset){
-                return productIds;
-            }
-            for (int i = offset; i < Math.min(limit,productList.size());i++){
-                productIds.add(productList.get(i).getId());
+        Set<String> productIdSet = counterRedisService.zReverseRange(CacheKeys.ProductNewRank,offset,offset+limit-1);
+        if (productIdSet!=null && !productIdSet.isEmpty()){
+            for (String id : productIdSet){
+                productIds.add(Long.parseLong(id));
             }
             return productIds;
         }
-        Set<String> strings = counterRedisService.zReverseRange(CacheKeys.ProductNewRank,offset,offset+limit-1);
-        strings.stream().map(s->productIds.add(Long.parseLong(s)));
+        List<PmsProduct> productList = productDao.getMaxCreateProduct(offset,limit);
+        if (productList!=null && !productList.isEmpty()){
+            Map<String,Double> cacheMap = new HashMap<>();
+            for (PmsProduct product : productList){
+                cacheMap.put(CacheKeys.Field(product.getId()),product.getCreateAt().doubleValue());
+                productIds.add(product.getId());
+            }
+            counterRedisService.zAddAll(CacheKeys.ProductNewRank,cacheMap);
+        }
         return productIds;
     }
 
+    @Override
+    public PmsProduct getProduct(long id) {
+        return allowProductCache==null || !allowProductCache ? this.getProductInDb(id) : this.getProductInCache(id);
+    }
 
     @Override
-    public ProductModel getProductModel(long productId) {
-        return allowProductCache==null || !allowProductCache ? this.getProductModelInDb(productId) : this.getProductModelCache(productId,1);
+    public PmsProduct getProductCache(long id) {
+        return this.getProductInCache(id);
+    }
+
+    @Override
+    public ProductSubModel getProductModel(long productId) {
+        return allowProductCache==null || !allowProductCache ? this.getProductSubModelInDb(productId) : this.getProductModelCache(productId);
     }
 
     @Override
@@ -174,15 +142,9 @@ public class ProductCacheServiceImpl implements ProductCacheService {
         return allowProductCache==null || !allowProductCache ? this.getSkuStockInDb(skuId) : this.getSkuStockInCache(productId,skuId);
     }
 
-
     @Override
     public List<PmsSkuStock> getSkuStockList(long productId) {
         return allowProductCache==null || !allowProductCache ? this.getSkuStockListInDb(productId) : this.getSkuStockListInCache(productId);
-    }
-
-    private void setSkuStockStats(long skuId,Map<String,String> map){
-        String key = CacheKeys.SkuStockStats(skuId);
-        counterRedisService.hSetAll(key,map);
     }
 
     @Override
@@ -296,9 +258,6 @@ public class ProductCacheServiceImpl implements ProductCacheService {
         }
     }
 
-    private final Lock SkuStockLock = new ReentrantLock();
-    private final Lock SkuSale = new ReentrantLock();
-
     @Override
     public void incrementSkuStock(long productId, long skuId, int delta) throws InterruptedException {
         String key = CacheKeys.SkuStockStats(skuId);
@@ -368,9 +327,96 @@ public class ProductCacheServiceImpl implements ProductCacheService {
         }
     }
 
+    @Override
+    public void delProductCache(long id) {
+        try {
+            redisService.del(CacheKeys.ProductKey(id));
+        }catch (Exception e){
+            logger.error("删除 product 失败:{}",e.getMessage());
+        }
+    }
 
-    private ProductModel getProductModelInDb(long productId){
-        ProductModel productModel = new ProductModel();
+    @Override
+    public void delProductModelCache(long productId) {
+        try {
+            redisService.del(CacheKeys.ProductModelKey(productId));
+        }catch (Exception e){
+            logger.error("删除 productModel 失败:{}",e.getMessage());
+        }
+    }
+
+    @Override
+    public void delSkuStock(long productId) {
+        try {
+            redisService.del(CacheKeys.SkuStockHashKey(productId));
+        }catch (Exception e){
+            logger.error("删除 skuStock 缓存失败:{}",e.getMessage());
+        }
+    }
+
+    @Override
+    public void delSkuStockCount(long skuId) {
+        counterRedisService.del(CacheKeys.SkuStockStats(skuId));
+    }
+
+    @Override
+    public void delProductStats(long productId) {
+        counterRedisService.del(CacheKeys.ProductStats(productId));
+    }
+
+    @Override
+    public void increaseSales(long id, int sales) {
+        counterRedisService.zIncrementScore(CacheKeys.ProductSaleRank,CacheKeys.Field(id),sales);
+    }
+
+
+
+
+
+    private PmsProduct getProductInDb(long id){
+        return productMapper.selectByPrimaryKey(id);
+    }
+
+    private PmsProduct getProductInCache(long id){
+        String key = CacheKeys.ProductKey(id);
+        PmsProduct product =(PmsProduct) redisService.get(key);
+        if (product!=null){
+            return product instanceof NullProduct ? null : product;
+        }
+        String lockKey =CacheKeys.ProductKeyLock(id);
+        for (int i=0;i<retryCount;i++){
+            Boolean isLock = redisService.setNX(lockKey,lockKey,defaultLockMaxExpired);
+            if (isLock==null || !isLock){
+                try {
+                    Thread.sleep(Math.min(defaultLockTime*(1<<(i-1)),defaultLockMaxExpired));
+                }catch (InterruptedException interruptedException){
+                    logger.error("获取线程休眠失败:{}",interruptedException.getMessage());
+                }
+                continue;
+            }
+            try {
+                product =(PmsProduct) redisService.get(key);
+                if (product!=null){
+                    return product instanceof NullProduct ? null : product;
+                }
+                product = productMapper.selectByPrimaryKey(id);
+                redisService.set(key,product!=null ? product : nullProduct);
+            }finally {
+                redisService.del(lockKey);
+            }
+            break;
+        }
+        return product;
+    }
+
+    private void setSkuStockStats(long skuId,Map<String,String> map){
+        String key = CacheKeys.SkuStockStats(skuId);
+        counterRedisService.hSetAll(key,map);
+    }
+
+
+    private ProductSubModel getProductSubModelInDb(long productId){
+        ProductSubModel productModel = new ProductSubModel();
         try {
             productModel.setProductId(productId);
             //获取商品属性
@@ -414,40 +460,34 @@ public class ProductCacheServiceImpl implements ProductCacheService {
         return productModel;
     }
 
-    private ProductModel getProductModelCache(long productId,int tryCount){
-        if (tryCount>=retryCount){
-            return null;
-        }
-        ProductModel productModel = null;
+    private ProductSubModel getProductModelCache(long productId){
         String key =CacheKeys.ProductModelKey(productId);
-        Object o = redisService.get(key);
-        if (defaultNULL.equals(o)){
-            return productModel;
+        ProductSubModel productModel = (ProductSubModel) redisService.get(key);
+        if (productModel!=null){
+            return productModel instanceof NummProductModel ? null : productModel;
         }
-        if (o!=null){
-            return (ProductModel) o;
-        }
-
-        String lockKey = CacheKeys.ProductModelKeyLock(productId);
-        Boolean isLock = redisService.setNX(lockKey,defaultNULL,defaultLockExpired);
-        if (isLock==null || !isLock){
-            try {
-                Thread.sleep(defaultLockTime);
-            }catch (InterruptedException interruptedException){
-                logger.error("线程 休眠失败:{}",interruptedException.getMessage());
+        for (int i=0;i<retryCount;i++){
+            String lockKey = CacheKeys.ProductModelKeyLock(productId);
+            Boolean isLock = redisService.setNX(lockKey,defaultNULL,defaultLockExpired);
+            if (isLock==null || !isLock){
+                try {
+                    Thread.sleep(Math.min(defaultLockTime*(1<<(i-1)),1000));
+                }catch (InterruptedException interruptedException){
+                    logger.error("线程 休眠失败:{}",interruptedException.getMessage());
+                }
+                continue;
             }
-            return this.getProductModelCache(productId,tryCount+1);
-        }
-        try {
-            productModel = this.getProductModelInDb(productId);
-            redisService.set(key,productModel);
-
-        }catch (RedisException redisException){
-            logger.error("写入缓存失败:{}",redisException.getMessage());
-        }catch (Exception e){
-            logger.error("获取 productMode失败:{}",e.getMessage());
-        } finally {
-            redisService.del(lockKey);
+            try {
+                productModel = (ProductSubModel) redisService.get(key);
+                if (productModel != null) {
+                    return productModel instanceof NummProductModel ? null : productModel;
+                }
+                productModel = this.getProductSubModelInDb(productId);
+                redisService.set(key, productModel == null ? nullProductModel : productModel);
+            }finally {
+                redisService.del(lockKey);
+            }
+            break;
         }
         return productModel;
     }
@@ -531,46 +571,10 @@ public class ProductCacheServiceImpl implements ProductCacheService {
         return skuStockList;
     }
 
-
-    @Override
-    public void delProductCache(long id) {
-        try {
-            redisService.del(CacheKeys.ProductKey(id));
-        }catch (Exception e){
-            logger.error("删除 product 失败:{}",e.getMessage());
-        }
-    }
-
-    @Override
-    public void delProductModelCache(long productId) {
-        try {
-            redisService.del(CacheKeys.ProductModelKey(productId));
-        }catch (Exception e){
-            logger.error("删除 productModel 失败:{}",e.getMessage());
-        }
-    }
-
-    @Override
-    public void delSkuStock(long productId) {
-        try {
-            redisService.del(CacheKeys.SkuStockHashKey(productId));
-        }catch (Exception e){
-            logger.error("删除 skuStock 缓存失败:{}",e.getMessage());
-        }
-    }
-
-    @Override
-    public void delSkuStockCount(long skuId) {
-        counterRedisService.del(CacheKeys.SkuStockStats(skuId));
-    }
-
-    @Override
-    public void delProductStats(long productId) {
-        counterRedisService.del(CacheKeys.ProductStats(productId));
-    }
-
-    @Override
-    public void increaseSales(long id, int sales) {
-        counterRedisService.zIncrementScore(CacheKeys.ProductSaleRank,CacheKeys.Field(id),sales);
+    private void setProductCache(PmsProduct product){
+        redisService.set(CacheKeys.ProductKey(product.getId()),product);
     }
 }
+
+class NullProduct extends PmsProduct{}
+class NummProductModel extends ProductCacheService.ProductSubModel{}

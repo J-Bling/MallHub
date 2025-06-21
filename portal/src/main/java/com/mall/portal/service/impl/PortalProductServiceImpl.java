@@ -77,7 +77,7 @@ public class PortalProductServiceImpl implements PortalProductService {
         List<PmsSkuStock> skuStockList = productCacheService.getSkuStockList(product.getId());
         productDetail.setSkuStockList(skuStockList);
         //获取 productModel
-        ProductCacheService.ProductModel productModel = productCacheService.getProductModel(id);
+        ProductCacheService.ProductSubModel productModel = productCacheService.getProductModel(id);
         //获取 相册集
         productDetail.setProductAlbums(productModel.getProductAlbums());
         //获取商品减满
