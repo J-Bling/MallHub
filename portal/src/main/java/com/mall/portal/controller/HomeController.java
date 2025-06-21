@@ -8,14 +8,11 @@ import com.mall.mbg.model.PmsProductCategory;
 import com.mall.portal.domain.model.HomeContent;
 import com.mall.portal.service.HomeService;
 import io.swagger.annotations.ApiOperation;
-import org.hibernate.validator.constraints.Range;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
@@ -31,10 +28,10 @@ public class HomeController {
     }
 
 
-    @GetMapping("/recommend.product/{pageNum}/{pageSize}}")
+    @GetMapping("/recommend.product/{offset}/{limit}")
     @ApiOperation("分页获取推荐商品")
-    public ResponseResult<List<PmsProduct>> recommendProductList(@PathVariable("pageNum") @Min(0) int pageNum, @PathVariable("pageSize") @Range(min = 5,max = 50) int pageSize){
-        return ResponseResult.success(homeService.recommendProductList(pageNum,pageSize));
+    public ResponseResult<List<PmsProduct>> recommendProductList(@PathVariable("offset") int offset, @PathVariable("limit")int limit){
+        return ResponseResult.success(homeService.recommendProductList(offset,limit));
     }
 
 
@@ -45,44 +42,25 @@ public class HomeController {
     }
 
 
-    @GetMapping("/subject.list/{categoryId}/{pageNum}/{pageSize}")
+    @GetMapping("/subject.list/{categoryId}/{offset}/{limit}")
     @ApiOperation("根据分类id分页获取")
     public ResponseResult<List<CmsSubject>> getSubject(
             @PathVariable("categoryId") long categoryId,
-            @PathVariable("pageNum") int pageNum,
-            @PathVariable("pageSize") int pageSize
+            @PathVariable("offset") int offset, @PathVariable("limit")int limit
     ){
-        if (pageNum < 0) {
-            pageNum = 0;
-        }
-        if (pageSize < 10){
-            pageSize = 10;
-        }
-        return ResponseResult.success(homeService.getSubject(categoryId,pageNum,pageSize));
+        return ResponseResult.success(homeService.getSubject(categoryId,offset,limit));
     }
 
 
-    @GetMapping("/getHotProductList/{pageNum}/{pageSize}")
+    @GetMapping("/getHotProductList/{offset}/{limit}")
     @ApiOperation("分页获取人气商品")
-    public ResponseResult<List<PmsProduct>> getHotProductList(@PathVariable("pageNum") @Min(0) int pageNum,@PathVariable("pageSize") @Range(min = 5,max=50) int pageSize){
-        if (pageNum < 0) {
-            pageNum = 0;
-        }
-        if (pageSize < 10){
-            pageSize = 10;
-        }
-        return ResponseResult.success(homeService.getHotProduct(pageNum,pageSize));
+    public ResponseResult<List<PmsProduct>> getHotProductList(@PathVariable("offset") int offset, @PathVariable("limit")int limit){
+        return ResponseResult.success(homeService.getHotProduct(offset,limit));
     }
 
-    @GetMapping("/getNewProductList/{pageNum}/{pageSize}")
+    @GetMapping("/getNewProductList/{offset}/{limit}")
     @ApiOperation("分页获取新品商品")
-    public ResponseResult<List<PmsProduct>> getNewProductList(@PathVariable("pageNum") @Min(0) int pageNum,@PathVariable("pageSize") @Range(min = 5,max = 50) int pageSize){
-        if (pageNum < 0) {
-            pageNum = 0;
-        }
-        if (pageSize < 10){
-            pageSize = 10;
-        }
-        return ResponseResult.success(homeService.getNewProduct(pageNum,pageSize));
+    public ResponseResult<List<PmsProduct>> getNewProductList(@PathVariable("offset") int offset, @PathVariable("limit")int limit){
+        return ResponseResult.success(homeService.getNewProduct(offset,limit));
     }
 }

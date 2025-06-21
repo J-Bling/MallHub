@@ -3,7 +3,6 @@ package com.mall.portal.service;
 import com.mall.mbg.model.*;
 import com.mall.portal.domain.enums.SortTypeEnum;
 import com.mall.portal.domain.model.ProductDetail;
-
 import java.util.List;
 
 public interface PortalProductService {
@@ -43,4 +42,8 @@ public interface PortalProductService {
      * 获取该商品的价格阶梯
      */
     List<PmsProductLadder> getProductLadders(long productId);
+    /**
+     * 分页获取系统推荐/热门/新品商品
+     */
+    List<PmsProduct> recommendProducts(int offset, int limit,int type);
 }

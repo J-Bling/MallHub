@@ -15,7 +15,7 @@ public class HomeContent implements Serializable {
     //推荐品牌
     private List<PmsBrand> brandList;
     //当前秒杀场次
-    private FlashPromotion flashPromotion;
+    private List<FlashPromotion> flashPromotionList;
     //新品推荐
     private List<PmsProduct> newProductList;
     //人气推荐
@@ -23,8 +23,9 @@ public class HomeContent implements Serializable {
     //推荐专题
     private List<CmsSubject> subjectList;
 
-    public FlashPromotion getFlashPromotion() {
-        return flashPromotion;
+
+    public List<FlashPromotion> getFlashPromotionList() {
+        return flashPromotionList;
     }
 
     public List<CmsSubject> getSubjectList() {
@@ -55,8 +56,8 @@ public class HomeContent implements Serializable {
         this.brandList = brandList;
     }
 
-    public void setFlashPromotion(FlashPromotion flashPromotion) {
-        this.flashPromotion = flashPromotion;
+    public void setFlashPromotionList(List<FlashPromotion> flashPromotionList) {
+        this.flashPromotionList = flashPromotionList;
     }
 
     public void setHotProductList(List<PmsProduct> hotProductList) {

@@ -19,7 +19,7 @@ public interface ProductCacheService extends Cache {
     /**
      * 按销量排行降序分页获取 productList
      */
-    List<Long> geSaleRankList(int offset, int limit);
+    List<Long> getSaleRankList(int offset, int limit);
     /**
      * 按新品排行榜降序 分页获取productIdsList
      */
@@ -45,7 +45,7 @@ public interface ProductCacheService extends Cache {
      */
     List<PmsSkuStock> getSkuStockList(long productId);
     /**
-     * 获取单个sku 库存
+     * 获取单个sku 库存和销量
      */
     ProductStats getSkuStockStats(long skuId);
     /**
@@ -72,6 +72,10 @@ public interface ProductCacheService extends Cache {
      * 对排行榜 增加销售额
      */
     void increaseSales(long id,int sales);
+    /**
+     * 下架商品
+     */
+    void deleteProduct(long id);
     /**
      *  删除单个缓存 不删排行榜  修改了 非 sale stock 字段
      */

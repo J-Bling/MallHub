@@ -17,6 +17,11 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
+/**
+ * 秒杀模块设计 redis缓存 所有活动，当轮场次，下轮场次，秒杀商品销量排行，商品库存，sku库存，用户抢购数量，用户订阅
+ */
+
 @Service
 public class FlashPromotionServiceImpl implements FlashPromotionService {
 

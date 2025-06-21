@@ -16,6 +16,11 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 秒杀模块缓存设计 活动模版，当前活动场次，下轮活动场次，记录该场次有哪些商品被包含，商品关联，sku关联，秒杀商品销量排行
+ * 商品总库存和sku库存
+ * 后台设置ReSetPromotionModel控制活动信息和数据
+ */
 @Service
 public class FlashPromotionCacheServiceImpl implements FlashPromotionCacheService {
     @Autowired private RedisService redisService;

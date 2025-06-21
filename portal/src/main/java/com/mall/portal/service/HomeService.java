@@ -18,7 +18,7 @@ public interface HomeService {
     /**
      * 分页商品推荐
      */
-    List<PmsProduct> recommendProductList(int pageNum ,int pageSize);
+    List<PmsProduct> recommendProductList(int offset, int limit);
     /**
      * 获取商品分类 parentId = 0获取第一级
      */
@@ -26,13 +26,13 @@ public interface HomeService {
     /**
      * 分页根据分类Id获取专题
      */
-    List<CmsSubject> getSubject(long categoryId , int pageNum,int pageSize);
+    List<CmsSubject> getSubject(long categoryId , int offset, int limit);
     /**
      * 分页获取人气商品
      */
-    List<PmsProduct> getHotProduct(int pageNum,int pageSize);
+    List<PmsProduct> getHotProduct(int offset, int limit);
     /**
      * 分页获取新品商品
      */
-    List<PmsProduct> getNewProduct(int pageNum,int pageSize);
+    List<PmsProduct> getNewProduct(int offset, int limit);
 }

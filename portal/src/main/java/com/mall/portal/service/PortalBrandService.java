@@ -18,4 +18,8 @@ public interface PortalBrandService {
      * 分页获取品牌相关商品
      */
     List<PmsProduct> productPage(long brandId,int offset,int limit);
+    /**
+     * 推荐品牌
+     */
+    List<PmsBrand> recommendBrands(int limit);
 }

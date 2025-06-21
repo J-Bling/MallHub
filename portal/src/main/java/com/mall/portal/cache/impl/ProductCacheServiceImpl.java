@@ -79,7 +79,7 @@ public class ProductCacheServiceImpl implements ProductCacheService {
     }
 
     @Override
-    public List<Long> geSaleRankList(int offset, int limit) {
+    public List<Long> getSaleRankList(int offset, int limit) {
         List<Long> ProductIds = new ArrayList<>();
         Set<String> productIdset = counterRedisService.zReverseRange(CacheKeys.ProductSaleRank,offset,offset+limit-1);
         if (productIdset!=null && !productIdset.isEmpty()){
@@ -156,6 +156,7 @@ public class ProductCacheServiceImpl implements ProductCacheService {
             if (stock==null){
                 return null;
             }
+            map = new HashMap<>();
             map.put(CacheKeys.Sale,stock.getSale().toString());
             map.put(CacheKeys.Stock,stock.getStock().toString());
             this.setSkuStockStats(skuId,map);
@@ -167,7 +168,7 @@ public class ProductCacheServiceImpl implements ProductCacheService {
     @Override
     public ProductStats getProductStats(long productId) {
         Map<String,String> map = counterRedisService.hGetAll(CacheKeys.ProductStats(productId));
-        if (map==null){
+        if (map==null || map.isEmpty()){
             PmsProduct product = productMapper.selectByPrimaryKey(productId);
             if (product!=null){
                 map = new HashMap<>();
@@ -178,12 +179,7 @@ public class ProductCacheServiceImpl implements ProductCacheService {
             }
             return null;
         }
-        String sale = map.get(CacheKeys.Sale);
-        String stock = map.get(CacheKeys.Stock);
-        if (stock !=null && sale !=null){
-            return new ProductStats(Integer.parseInt(sale),Integer.parseInt(stock));
-        }
-        return null;
+        return new ProductStats(Integer.parseInt(map.get(CacheKeys.Sale)),Integer.parseInt(map.get(CacheKeys.Stock)));
     }
 
     @Override
@@ -328,30 +324,30 @@ public class ProductCacheServiceImpl implements ProductCacheService {
     }
 
     @Override
-    public void delProductCache(long id) {
-        try {
-            redisService.del(CacheKeys.ProductKey(id));
-        }catch (Exception e){
-            logger.error("删除 product 失败:{}",e.getMessage());
+    public void deleteProduct(long id){
+        Long len = counterRedisService.zRemove(CacheKeys.ProductSaleRank,CacheKeys.Field(id));
+        if(len ==null || len <1){
+            len = counterRedisService.zRemove(CacheKeys.ProductNewRank,CacheKeys.Field(id));
         }
+        this.delProductCache(id);
+        this.delProductModelCache(id);
+        this.delSkuStock(id);
+        this.delProductStats(id);
+    }
+
+    @Override
+    public void delProductCache(long id) {
+        redisService.del(CacheKeys.ProductKey(id));
     }
 
     @Override
     public void delProductModelCache(long productId) {
-        try {
-            redisService.del(CacheKeys.ProductModelKey(productId));
-        }catch (Exception e){
-            logger.error("删除 productModel 失败:{}",e.getMessage());
-        }
+        redisService.del(CacheKeys.ProductModelKey(productId));
     }
 
     @Override
     public void delSkuStock(long productId) {
-        try {
-            redisService.del(CacheKeys.SkuStockHashKey(productId));
-        }catch (Exception e){
-            logger.error("删除 skuStock 缓存失败:{}",e.getMessage());
-        }
+        redisService.del(CacheKeys.SkuStockHashKey(productId));
     }
 
     @Override
@@ -381,7 +377,14 @@ public class ProductCacheServiceImpl implements ProductCacheService {
         String key = CacheKeys.ProductKey(id);
         PmsProduct product =(PmsProduct) redisService.get(key);
         if (product!=null){
-            return product instanceof NullProduct ? null : product;
+            if (! (product instanceof NullProduct)){
+                ProductStats stats = this.getProductStats(id);
+                if (stats!=null){
+                    product.setStock(stats.getStock());
+                    product.setSale(stats.getSale());
+                }
+            }
+            return product;
         }
         String lockKey =CacheKeys.ProductKeyLock(id);
         for (int i=0;i<retryCount;i++){

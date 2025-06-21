@@ -11,8 +11,10 @@ import com.mall.portal.domain.model.ProductDetail;
 import com.mall.portal.service.CouponService;
 import com.mall.portal.service.PortalProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,6 +29,8 @@ public class PortalProductServiceImpl implements PortalProductService {
     @Autowired private PmsProductFullReductionMapper fullReductionMapper;
     @Autowired private PmsProductLadderMapper ladderMapper;
 
+    @Value("${cache.allow.product}")
+    private Boolean allowProductCache;
 
 
     @Override
@@ -91,13 +95,7 @@ public class PortalProductServiceImpl implements PortalProductService {
 
     @Override
     public PmsProduct getProduct(long productId) {
-        PmsProduct product = this.productCacheService.getProduct(productId);
-        ProductCacheService.ProductStats stats= this.productCacheService.getProductStats(productId);
-        if (stats!=null){
-            product.setSale(stats.getSale());
-            product.setStock(stats.getStock());
-        }
-        return product;
+        return this.productCacheService.getProduct(productId);
     }
 
     @Override
@@ -127,5 +125,38 @@ public class PortalProductServiceImpl implements PortalProductService {
         PmsProductLadderExample example = new PmsProductLadderExample();
         example.createCriteria().andProductIdEqualTo(productId);
         return ladderMapper.selectByExample(example);
+    }
+
+    @Override
+    public List<PmsProduct> recommendProducts(int offset, int limit,int type) {
+        List<PmsProduct> productList = new ArrayList<>();
+        List<Long> productIds = this.generateRecommendIds(offset,limit,type);
+        if (productIds==null || productIds.isEmpty()){
+            return productList;
+        }
+        if (allowProductCache==null||!allowProductCache){
+            PmsProductExample example = new PmsProductExample();
+            example.createCriteria().andIdIn(productIds);
+            return productMapper.selectByExample(example);
+        }
+        for (Long id : productIds){
+            productList.add(productCacheService.getProduct(id));
+        }
+        return productList;
+    }
+
+    private List<Long> generateRecommendIds(int offset, int limit,int type){
+        List<Long> ids = null;
+        if (type==1){
+            //推荐算法
+
+        } else if (type==2) {
+            //销量排行
+            ids= productCacheService.getSaleRankList(offset,limit);
+        }else if (type==3){
+            //新品排行
+            ids=productCacheService.getNewRankList(offset,limit);
+        }
+        return ids;
     }
 }
