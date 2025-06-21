@@ -20,6 +20,8 @@ public class HomeServiceImpl implements HomeService {
     @Autowired private PortalProductService productService;
     @Autowired private PortalBrandService brandService;
     @Autowired private HomeDao homeDao;
+
+
     @Override
     public HomeContent content() {
         //首页内容

@@ -61,7 +61,7 @@ public interface ProductCacheService extends Cache {
      */
     void incrementProductStock(long product,int delta) throws InterruptedException;
     /**
-     * 增加或者减少sku库存
+     * 增加或者减少sku库存 自动修改总库存
      */
     void incrementSkuStock(long productId,long skuId,int delta) throws InterruptedException;
     /**

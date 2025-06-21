@@ -264,7 +264,14 @@ public class FlashPromotionServiceImpl implements FlashPromotionService {
         return behaviorMapper.selectByExample(example);
     }
 
-
+    @Override
+    public List<FlashBehavior> getFlashBehaviorList(int offset, int limit) {
+        UmsMember member = consumerService.getCurrentMember();
+        if (member == null ){
+            return null;
+        }
+        return promotionDao.getFlashBehaviorList(member.getId(),offset,limit);
+    }
 
 
     long getSessionId(Set<String> sessionIdSet,long productId){

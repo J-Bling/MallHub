@@ -10,7 +10,7 @@ import java.util.List;
  */
 public class FlashPromotion extends SmsFlashPromotion{
     private List<SmsFlashSession> sessionList;
-    private List<FlashProduct> productList;
+    private List<FlashProduct> productList;//当前场次的 product
 
     public List<SmsFlashSession> getSessionList() {
         return sessionList;

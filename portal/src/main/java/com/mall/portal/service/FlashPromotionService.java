@@ -61,4 +61,8 @@ public interface FlashPromotionService {
      * 获取用户秒杀行为记录
      */
     List<SmsFlashBehavior> getUserBehaviorList(long sessionId, long productId);
+    /**
+     * 回去用户所有历史抢购行为
+     */
+    List<FlashBehavior> getFlashBehaviorList(int offset,int limit);
 }

@@ -41,7 +41,28 @@
                      columnPrefix="fsr_"
                      />
     </resultMap>
-    
+    <resultMap id="FlashBehaviorMap"
+               type="com.mall.portal.domain.model.flash.FlashBehavior"
+               extends="com.mall.mbg.mapper.SmsFlashBehaviorMapper.BaseResultMap"
+    >
+        <association property="productRelation" javaType="com.mall.mbg.model.SmsFlashProductRelation"
+                     resultMap="com.mall.mbg.mapper.SmsFlashProductRelationMapper.BaseResultMap"
+                     columnPrefix="bpr_"
+                     />
+        <association property="product" javaType="com.mall.mbg.model.PmsProduct"
+                     resultMap="com.mall.mbg.mapper.PmsProductMapper.BaseResultMap"
+                     columnPrefix="bp_"
+                     />
+        <association property="flashPromotion" javaType="com.mall.mbg.model.SmsFlashPromotion"
+                     resultMap="com.mall.mbg.mapper.SmsFlashPromotionMapper.BaseResultMap"
+                     columnPrefix="bfp_"
+                     />
+        <association property="flashSession" javaType="com.mall.mbg.model.SmsFlashSession"
+                     resultMap="com.mall.mbg.mapper.SmsFlashSessionMapper.BaseResultMap"
+                     columnPrefix="bfs_"
+                     />
+    </resultMap>
+
     <select id="getFlashSubscribeSessionHistoryList" resultMap="SessionHistoryResultMap">
         SELECT
         sub.*,
@@ -109,5 +130,8 @@
         ORDER BY
         sub.create_time DESC
         LIMIT #{offset}, #{limit}
+    </select>
+    <select id="getFlashBehaviorList" resultMap="FlashBehaviorMap">
+
     </select>
 </mapper>
