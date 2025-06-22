@@ -4,6 +4,20 @@ public class RabbitRpcProductMassage extends RabbitRpcMessage{
     private Long productId;
     private Long skuId;
 
+    public static RabbitRpcProductMassage Builder(){
+        return new RabbitRpcProductMassage();
+    }
+
+    public RabbitRpcProductMassage addSkuId(Long skuId){
+        this.skuId=skuId;
+        return this;
+    }
+
+    public RabbitRpcProductMassage addProductId(Long productId){
+        this.productId = productId;
+        return this;
+    }
+
     public Long getSkuId() {
         return skuId;
     }

@@ -9,6 +9,40 @@ public class RabbitRpcPromotionMessage extends RabbitRpcMessage{
     private Long skuRelationId;
     private Integer count;
 
+    public static RabbitRpcPromotionMessage Builder(){
+        return new RabbitRpcPromotionMessage();
+    }
+
+    public RabbitRpcPromotionMessage addPromotionModel(ReSetPromotionModel model){
+        this.promotionModel = model;
+        return this;
+    }
+
+    public RabbitRpcPromotionMessage addSessionId(Long sessionId){
+        this.sessionId=sessionId;
+        return this;
+    }
+
+    public RabbitRpcPromotionMessage addProductId(Long productId){
+        this.productId = productId;
+        return this;
+    }
+
+    public RabbitRpcPromotionMessage addProductRelationId(Long productRelationId){
+        this.productRelationId = productRelationId;
+        return this;
+    }
+
+    public RabbitRpcPromotionMessage addSkuRelationId(Long skuRelationId){
+        this.skuRelationId= skuRelationId;
+        return this;
+    }
+
+    public RabbitRpcPromotionMessage addCount(Integer count){
+        this.count=count;
+        return this;
+    }
+
     public Long getProductId() {
         return productId;
     }

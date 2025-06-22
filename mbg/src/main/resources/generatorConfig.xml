@@ -20,7 +20,7 @@
 
         <commentGenerator type="com.mall.mbg.CommentGenerator">
             <!--            是否阻止生成注释-->
-            <property name="suppressAllComments" value="false"/>
+            <property name="suppressAllComments" value="true"/>
             <!-- 是否阻止生成的注释包含时间戳 -->
             <property name="suppressDate" value="false"/>
             <!-- 是否添加数据库表的备注信息 -->

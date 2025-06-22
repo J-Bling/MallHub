@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mall.admin.dao.pms.PmsProductDao">
+    <select id="selectProductList" resultType="com.mall.mbg.model.PmsProduct">
+        SELECT p.*, b.name AS brand_name, pc.name AS category_name
+        FROM pms_product p
+        LEFT JOIN pms_brand b ON p.brand_id = b.id
+        LEFT JOIN pms_product_category pc ON p.product_category_id = pc.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (p.name LIKE CONCAT('%', #{keyword}, '%') OR p.product_sn LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="brandId != null">
+                AND p.brand_id = #{brandId}
+            </if>
+            <if test="productCategoryId != null">
+                AND p.product_category_id = #{productCategoryId}
+            </if>
+            <if test="publishStatus != null">
+                AND p.publish_status = #{publishStatus}
+            </if>
+            <if test="verifyStatus != null">
+                AND p.verify_status = #{verifyStatus}
+            </if>
+            AND p.delete_status = 0
+        </where>
+        <if test="sortBy != null and sortOrder != null">
+            ORDER BY ${sortBy} ${sortOrder}
+        </if>
+        <if test="pageNum != null and pageSize != null">
+            LIMIT #{pageSize} OFFSET #{pageNum}
+        </if>
+    </select>
+
+    <select id="countProductList" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM pms_product p
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (p.name LIKE CONCAT('%', #{keyword}, '%') OR p.product_sn LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="brandId != null">
+                AND p.brand_id = #{brandId}
+            </if>
+            <if test="productCategoryId != null">
+                AND p.product_category_id = #{productCategoryId}
+            </if>
+            <if test="publishStatus != null">
+                AND p.publish_status = #{publishStatus}
+            </if>
+            <if test="verifyStatus != null">
+                AND p.verify_status = #{verifyStatus}
+            </if>
+            AND p.delete_status = 0
+        </where>
+    </select>
+
+    <resultMap id="CommentDetailResultMap" type="com.mall.admin.domain.pms.CommentDetailDTO">
+        <result property="comment.id" column="id"/>
+        <result property="comment.productId" column="product_id"/>
+        <result property="comment.memberId" column="member_id"/>
+        <association property="comment" resultMap="com.mall.mbg.mapper.PmsCommentMapper.BaseResultMap"/>
+        <association property="productSnapshot" resultMap="ProductSnapshotResultMap"/>
+        <collection property="replies" column="id"
+                    ofType="com.mall.mbg.model.PmsCommentReplay"
+                    select="selectCommentReplies"/>
+    </resultMap>
+
+    <resultMap id="ProductSnapshotResultMap" type="com.mall.admin.domain.pms.CommentDetailDTO$ProductSnapshotDTO">
+        <result column="product_name" property="productName" jdbcType="VARCHAR"/>
+        <result column="product_pic" property="productPic" jdbcType="VARCHAR"/>
+        <result column="product_attributes" property="productAttributes" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="selectCommentDetailById" resultMap="CommentDetailResultMap">
+        SELECT
+        c.*,
+        p.name AS product_name,
+        p.pic AS product_pic,
+        c.product_attribute AS product_attributes
+        FROM pms_comment c
+        LEFT JOIN pms_product p ON c.product_id = p.id
+        WHERE c.id = #{commentId}
+    </select>
+
+    <select id="selectCommentReplies" resultType="com.mall.mbg.model.PmsCommentReplay">
+        SELECT * FROM pms_comment_replay WHERE comment_id = #{id}
+    </select>
+</mapper>
