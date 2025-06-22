@@ -132,6 +132,103 @@
         LIMIT #{offset}, #{limit}
     </select>
     <select id="getFlashBehaviorList" resultMap="FlashBehaviorMap">
-
+        SELECT
+        b.*,
+        bpr.id as bpr_id,
+        bpr.promotion_id as bpr_promotion_id,
+        bpr.session_id as bpr_session_id,
+        bpr.product_id as bpr_product_id,
+        bpr.is_sku as bpr_is_sku,
+        bpr.flash_price as bpr_flash_price,
+        bpr.flash_stock as bpr_flash_stock,
+        bpr.flash_limit as bpr_flash_limit,
+        bpr.original_price as bpr_original_price,
+        bpr.sort as bpr_sort,
+        bpr.create_time as bpr_create_time,
+        bp.id as bp_id,
+        bp.brand_id as bp_brand_id,
+        bp.product_category_id as bp_product_category_id,
+        bp.freight_template_id as bp_freight_template_id,
+        bp.product_attribute_category_id as bp_product_attribute_category_id,
+        bp.name as bp_name,
+        bp.pic as bp_pic,
+        bp.product_sn as bp_product_sn,
+        bp.delete_status as bp_delete_status,
+        bp.publish_status as bp_publish_status,
+        bp.new_status as bp_new_status,
+        bp.recommend_status as bp_recommend_status,
+        bp.verify_status as bp_verify_status,
+        bp.sort as bp_sort,
+        bp.sale as bp_sale,
+        bp.price as bp_price,
+        bp.promotion_price as bp_promotion_price,
+        bp.gift_growth as bp_gift_growth,
+        bp.gift_point as bp_gift_point,
+        bp.use_point_limit as bp_use_point_limit,
+        bp.sub_title as bp_sub_title,
+        bp.original_price as bp_original_price,
+        bp.stock as bp_stock,
+        bp.low_stock as bp_low_stock,
+        bp.unit as bp_unit,
+        bp.weight as bp_weight,
+        bp.preview_status as bp_preview_status,
+        bp.service_ids as bp_service_ids,
+        bp.keywords as bp_keywords,
+        bp.note as bp_note,
+        bp.album_pics as bp_album_pics,
+        bp.detail_title as bp_detail_title,
+        bp.promotion_start_time as bp_promotion_start_time,
+        bp.promotion_end_time as bp_promotion_end_time,
+        bp.promotion_per_limit as bp_promotion_per_limit,
+        bp.promotion_type as bp_promotion_type,
+        bp.brand_name as bp_brand_name,
+        bp.product_category_name as bp_product_category_name,
+        bp.create_at as bp_create_at,
+        bp.description as bp_description,
+        bp.detail_desc as bp_detail_desc,
+        bp.detail_html as bp_detail_html,
+        bp.detail_mobile_html as bp_detail_mobile_html,
+        bfp.id as bfp_id,
+        bfp.title as bfp_title,
+        bfp.sub_title as bfp_sub_title,
+        bfp.cover_url as bfp_cover_url,
+        bfp.mobile_cover_url as bfp_mobile_cover_url,
+        bfp.type as bfp_type,
+        bfp.start_date as bfp_start_date,
+        bfp.end_date as bfp_end_date,
+        bfp.status as bfp_status,
+        bfp.create_time as bfp_create_time,
+        bfp.update_time as bfp_update_time,
+        bfp.description as bfp_description,
+        bfp.style_config as bfp_style_config,
+        bfp.custom_html as bfp_custom_html,
+        bfs.id as bfs_id,
+        bfs.promotion_id as bfs_promotion_id,
+        bfs.name as bfs_name,
+        bfs.cover_url as bfs_cover_url,
+        bfs.start_time as bfs_start_time,
+        bfs.end_time as bfs_end_time,
+        bfs.repeat_type as bfs_repeat_type,
+        bfs.status as bfs_status,
+        bfs.create_time as bfs_create_time,
+        bfs.style_config as bfs_style_config,
+        bfs.rules_config as bfs_rules_config
+        FROM
+        sms_flash_behavior b
+        LEFT JOIN
+        sms_flash_product_relation bpr ON b.product_relation_id = bpr.id
+        LEFT JOIN
+        pms_product bp ON bpr.product_id = bp.id
+        LEFT JOIN
+        sms_flash_promotion bfp ON bpr.promotion_id = bfp.id
+        LEFT JOIN
+        sms_flash_session bfs ON bpr.session_id = bfs.id
+        WHERE
+        b.member_id = #{memberId}
+        ORDER BY
+        b.create_time DESC
+        LIMIT
+        #{offset}, #{limit}
     </select>
+
 </mapper>

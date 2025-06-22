@@ -1,17 +1,25 @@
-package com.mall.portal.domain.enums;
+package com.mall.common.constant.enums.queues;
 
 /**
  * 消息队列
  */
 public enum QueueEnum {
     /**
-     * 消息通知队列
+     * 订单通知队列
      */
     QUEUE_ORDER_CANCEL("mall.order.direct", "mall.order.cancel", "mall.order.cancel"),
     /**
-     * 消息通知ttl队列
+     * 订单通知ttl队列
      */
-    QUEUE_TTL_ORDER_CANCEL("mall.order.direct.ttl", "mall.order.cancel.ttl", "mall.order.cancel.ttl");
+    QUEUE_TTL_ORDER_CANCEL("mall.order.direct.ttl", "mall.order.cancel.ttl", "mall.order.cancel.ttl"),
+    /**
+     * 商品通知队列
+     */
+    QUEUE_PRODUCT_HANDLE("mall.product.direct","mall.product.handle","mall.product.handle"),
+    /**
+     * 活动通知队列
+     */
+    QUEUE_PROMOTION_HANDLE("mall.promotion.dirct","mall.promotion.handle","mall.promotion.handle");
 
 
     private String exchange;

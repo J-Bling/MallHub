@@ -1,28 +1,39 @@
 package com.mall.portal.config;
 
-import com.mall.portal.domain.enums.QueueEnum;
+import com.mall.common.constant.enums.queues.QueueEnum;
 import org.springframework.amqp.core.*;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitmqConfig {
+    @Bean
+    public MessageConverter jsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
 
     @Bean
     DirectExchange orderDirect(){
-        return ExchangeBuilder
-                .directExchange(QueueEnum.QUEUE_ORDER_CANCEL.getExchange())
-                .durable(true)
-                .build();
+        return new DirectExchange(QueueEnum.QUEUE_ORDER_CANCEL.getExchange(),true,false);
     }
 
     @Bean
     DirectExchange orderTtlDirect(){
-        return ExchangeBuilder
-                .directExchange(QueueEnum.QUEUE_TTL_ORDER_CANCEL.getExchange())
-                .durable(true)
-                .build();
+        return new DirectExchange(QueueEnum.QUEUE_TTL_ORDER_CANCEL.getExchange(),true,false);
     }
+
+    @Bean
+    DirectExchange productDirect(){
+        return new DirectExchange(QueueEnum.QUEUE_PRODUCT_HANDLE.getExchange(),true,false);
+    }
+
+    @Bean
+    DirectExchange promotionDirect(){
+        return new DirectExchange(QueueEnum.QUEUE_PROMOTION_HANDLE.getExchange(),true,false);
+    }
+
 
 
     /**
@@ -30,7 +41,7 @@ public class RabbitmqConfig {
      */
     @Bean
     public Queue orderQueue(){
-        return new Queue(QueueEnum.QUEUE_ORDER_CANCEL.getQueueName());
+        return new Queue(QueueEnum.QUEUE_ORDER_CANCEL.getQueueName(),true,false,false);
     }
 
     /**
@@ -44,6 +55,24 @@ public class RabbitmqConfig {
                 .withArgument("x-dead-letter-routing-key",QueueEnum.QUEUE_ORDER_CANCEL.getRouteKey())
                 .build();
     }
+
+    /**
+     *商品队列
+     */
+    @Bean
+    public Queue productQueue(){
+        return new Queue(QueueEnum.QUEUE_PRODUCT_HANDLE.getQueueName(),true,false,false);
+    }
+
+    /**
+     * 活动队列
+     */
+    @Bean
+    public Queue promotionQueue(){
+        return new Queue(QueueEnum.QUEUE_PROMOTION_HANDLE.getQueueName(),true,false,false);
+    }
+
+
 
     @Bean
     Binding orderBinding(DirectExchange orderDirect , Queue orderQueue){
@@ -59,5 +88,22 @@ public class RabbitmqConfig {
                 .bind(orderTtlQueue)
                 .to(orderTtlDirect)
                 .with(QueueEnum.QUEUE_TTL_ORDER_CANCEL.getRouteKey());
+    }
+
+
+    @Bean
+    Binding productBinding(DirectExchange productDirect,Queue productQueue){
+        return BindingBuilder
+                .bind(productQueue)
+                .to(productDirect)
+                .with(QueueEnum.QUEUE_PRODUCT_HANDLE.getRouteKey());
+    }
+
+    @Bean
+    Binding promotionBinding(DirectExchange promotionDirect,Queue promotionQueue){
+        return BindingBuilder
+                .bind(promotionQueue)
+                .to(promotionDirect)
+                .with(QueueEnum.QUEUE_PROMOTION_HANDLE.getRouteKey());
     }
 }
