@@ -90,7 +90,8 @@ public class PmsProductCommentServiceImpl implements PmsProductCommentService {
         CommentDetailDTO.ProductSnapshotDTO snapshot = new CommentDetailDTO.ProductSnapshotDTO();
         snapshot.setProductName(product.getName());
         snapshot.setProductPic(product.getPic());
-        snapshot.setProductAttributes(product.getProductAttribute());
+
+//        snapshot.setProductAttributes(product.getProductAttribute());
         detailDTO.setProductSnapshot(snapshot);
 
         return detailDTO;

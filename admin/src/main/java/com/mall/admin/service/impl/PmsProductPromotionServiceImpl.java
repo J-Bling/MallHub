@@ -34,7 +34,6 @@ public class PmsProductPromotionServiceImpl implements PmsProductPromotionServic
     public int setProductLadder(Long productId, List<PmsProductLadder> ladderList) {
         // 参数校验
         validateProductId(productId);
-        validateLadderList(productId, ladderList);
 
         // 删除原有阶梯价格
         productLadderDao.deleteByProductId(productId);
@@ -61,7 +60,6 @@ public class PmsProductPromotionServiceImpl implements PmsProductPromotionServic
     public int setProductFullReduction(Long productId, List<PmsProductFullReduction> fullReductionList) {
         // 参数校验
         validateProductId(productId);
-        validateFullReductionList(productId, fullReductionList);
 
         // 删除原有满减价格
         productFullReductionDao.deleteByProductId(productId);
@@ -88,7 +86,6 @@ public class PmsProductPromotionServiceImpl implements PmsProductPromotionServic
     public int setMemberPrice(Long productId, List<PmsMemberPrice> memberPriceList) {
         // 参数校验
         validateProductId(productId);
-        validateMemberPriceList(productId, memberPriceList);
 
         // 删除原有会员价格
         memberPriceDao.deleteByProductId(productId);
@@ -123,51 +120,6 @@ public class PmsProductPromotionServiceImpl implements PmsProductPromotionServic
         // 检查商品是否存在
         if (productDao.selectById(productId) == null) {
             throw new BusinessException(BusinessErrorCode.PRODUCT_NOT_FOUND);
-        }
-    }
-
-    /**
-     * 验证阶梯价格列表
-     */
-    private void validateLadderList(Long productId, List<PmsProductLadder> ladderList) {
-        if (ladderList == null) {
-            throw new BusinessException(BusinessErrorCode.INVALID_PARAMETER, "阶梯价格列表不能为null");
-        }
-        if (ladderList.stream().anyMatch(ladder -> ladder.getCount() == null || ladder.getCount() <= 0)) {
-            throw new BusinessException(BusinessErrorCode.INVALID_PARAMETER, "阶梯数量必须大于0");
-        }
-        if (ladderList.stream().anyMatch(ladder -> ladder.getDiscount() != null && (ladder.getDiscount() < 0 || ladder.getDiscount() > 1))) {
-            throw new BusinessException(BusinessErrorCode.INVALID_PARAMETER, "折扣必须在0-1之间");
-        }
-    }
-
-    /**
-     * 验证满减价格列表
-     */
-    private void validateFullReductionList(Long productId, List<PmsProductFullReduction> fullReductionList) {
-        if (fullReductionList == null) {
-            throw new BusinessException(BusinessErrorCode.INVALID_PARAMETER, "满减价格列表不能为null");
-        }
-        if (fullReductionList.stream().anyMatch(reduction -> reduction.getFullPrice() != null && reduction.getFullPrice() <= 0)) {
-            throw new BusinessException(BusinessErrorCode.INVALID_PARAMETER, "满减门槛金额必须大于0");
-        }
-        if (fullReductionList.stream().anyMatch(reduction -> reduction.getReducePrice() != null && reduction.getReducePrice() <= 0)) {
-            throw new BusinessException(BusinessErrorCode.INVALID_PARAMETER, "满减优惠金额必须大于0");
-        }
-    }
-
-    /**
-     * 验证会员价格列表
-     */
-    private void validateMemberPriceList(Long productId, List<PmsMemberPrice> memberPriceList) {
-        if (memberPriceList == null) {
-            throw new BusinessException(BusinessErrorCode.INVALID_PARAMETER, "会员价格列表不能为null");
-        }
-        if (memberPriceList.stream().anyMatch(price -> price.getMemberLevelId() == null)) {
-            throw new BusinessException(BusinessErrorCode.INVALID_PARAMETER, "会员等级ID不能为空");
-        }
-        if (memberPriceList.stream().anyMatch(price -> price.getMemberPrice() != null && price.getMemberPrice() < 0)) {
-            throw new BusinessException(BusinessErrorCode.INVALID_PARAMETER, "会员价格不能为负数");
         }
     }
 }

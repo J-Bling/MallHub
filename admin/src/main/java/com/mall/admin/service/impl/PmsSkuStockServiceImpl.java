@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -38,7 +39,7 @@ public class PmsSkuStockServiceImpl implements PmsSkuStockService {
             skuStockList.forEach(sku -> {
                 sku.setProductId(productId);
                 if (sku.getPrice() == null) {
-                    sku.setPrice(0.0);
+                    sku.setPrice(new BigDecimal("0.0"));
                 }
                 if (sku.getStock() == null) {
                     sku.setStock(0);
@@ -47,7 +48,7 @@ public class PmsSkuStockServiceImpl implements PmsSkuStockService {
                     sku.setLowStock(0);
                 }
                 if (sku.getPromotionPrice() == null) {
-                    sku.setPromotionPrice(0.0);
+                    sku.setPromotionPrice(new BigDecimal("0.0"));
                 }
                 if (sku.getLockStock() == null) {
                     sku.setLockStock(0);
