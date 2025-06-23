@@ -1,69 +1,46 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mall.admin.dao.product.PmsProductDao">
+    <resultMap id="updateInfoMap" type="com.mall.admin.domain.product.PmsProductResult"
+               extends="com.mall.mbg.mapper.PmsProductMapper.ResultMapWithBLOBs">
+        <result column="cateParentId" jdbcType="BIGINT" property="cateParentId" />
+        <collection property="productLadderList" columnPrefix="ladder_" resultMap="com.mall.mbg.mapper.PmsProductLadderMapper.BaseResultMap">
+        </collection>
+        <collection property="productFullReductionList" columnPrefix="full_" resultMap="com.mall.mbg.mapper.PmsProductFullReductionMapper.BaseResultMap">
+        </collection>
+        <collection property="memberPriceList" columnPrefix="member_" resultMap="com.mall.mbg.mapper.PmsMemberPriceMapper.BaseResultMap">
+        </collection>
+        <collection property="skuStockList" columnPrefix="sku_" resultMap="com.mall.mbg.mapper.PmsSkuStockMapper.BaseResultMap">
+        </collection>
+        <collection property="productAttributeValueList" columnPrefix="attribute_" resultMap="com.mall.mbg.mapper.PmsProductAttributeValueMapper.BaseResultMap">
+        </collection>
+        <collection property="subjectProductRelationList" column="{productId=id}" select="selectSubjectProductRelationByProductId"/>
+        <collection property="prefrenceAreaProductRelationList" column="{productId=id}" select="selectPrefrenceAreaProductRelationByProductId"/>
 
-<mapper namespace="com.mall.admin.dao.pms.PmsProductDao">
-    <!-- 批量修改上架状态 -->
-    <update id="batchUpdatePublishStatus">
-        UPDATE pms_product
-        SET publish_status = #{status}
-        WHERE id IN
-        <foreach collection="ids" item="id" open="(" separator="," close=")">
-            #{id}
-        </foreach>
-        AND delete_status = 0 <!-- 只操作未删除的商品 -->
-    </update>
+    </resultMap>
 
-    <!-- 批量修改新品状态 -->
-    <update id="batchUpdateNewStatus">
-        UPDATE pms_product
-        SET new_status = #{status}
-        WHERE id IN
-        <foreach collection="ids" item="id" open="(" separator="," close=")">
-            #{id}
-        </foreach>
-    </update>
-
-    <!-- 批量逻辑删除 -->
-    <update id="batchUpdateDeleteStatus">
-        UPDATE pms_product
-        SET delete_status = #{status}
-        WHERE id IN
-        <foreach collection="ids" item="id" open="(" separator="," close=")">
-            #{id}
-        </foreach>
-        <!-- 已删除的商品不再重复操作 -->
-        <if test="status == 1">
-            AND delete_status = 0
-        </if>
-    </update>
-
-    <!-- 批量修改推荐状态 -->
-    <update id="batchUpdateRecommendStatus">
-        UPDATE pms_product
-        SET recommend_status = #{status}
-        WHERE id IN
-        <foreach collection="ids" item="id" open="(" separator="," close=")">
-            #{id}
-        </foreach>
-    </update>
-
-    <!-- 根据品牌查询商品ID列表 -->
-    <select id="selectIdsByBrandId" resultType="java.lang.Long">
-        SELECT id
-        FROM pms_product
-        WHERE brand_id = #{brandId}
-        AND delete_status = 0
-        AND publish_status = 1 <!-- 只查询已上架未删除的 -->
-        limit #{offset},#{limit}
+    <select id="getUpdateInfo" resultMap="updateInfoMap">
+        SELECT *,
+            pc.parent_id cateParentId,
+            l.id ladder_id,l.product_id ladder_product_id,l.discount ladder_discount,l.count ladder_count,l.price ladder_price,
+            pf.id full_id,pf.product_id full_product_id,pf.full_price full_full_price,pf.reduce_price full_reduce_price,
+            m.id member_id,m.product_id member_product_id,m.member_level_id member_member_level_id,m.member_price member_member_price,m.member_level_name member_member_level_name,
+            s.id sku_id,s.product_id sku_product_id,s.price sku_price,s.promotion_price sku_promotion_price,s.low_stock sku_low_stock,s.pic sku_pic,s.sale sku_sale,s.sku_code sku_sku_code,s.stock sku_stock,s.sp_data sku_sp_data,
+            a.id attribute_id,a.product_id attribute_product_id,a.product_attribute_id attribute_product_attribute_id,a.value attribute_value
+        FROM pms_product p
+        LEFT JOIN pms_product_category pc on pc.id = p.product_category_id
+        LEFT JOIN pms_product_ladder l ON p.id = l.product_id
+        LEFT JOIN pms_product_full_reduction pf ON pf.product_id=p.id
+        LEFT JOIN pms_member_price m ON m.product_id = p.id
+        LEFT JOIN pms_sku_stock s ON s.product_id = p.id
+        LEFT JOIN pms_product_attribute_value a ON a.product_id=p.id
+        WHERE p.id=#{id};
+    </select>
+    <select id="selectSubjectProductRelationByProductId" resultMap="com.mall.mbg.mapper.CmsSubjectProductRelationMapper.BaseResultMap">
+        select * from cms_subject_product_relation where product_id=#{productId}
+    </select>
+    <select id="selectPrefrenceAreaProductRelationByProductId" resultMap="com.mall.mbg.mapper.CmsPrefrenceAreaProductRelationMapper.BaseResultMap">
+        select * from cms_prefrence_area_product_relation where product_id=#{productId}
     </select>
 
-    <!-- 根据分类查询商品ID列表 -->
-    <select id="selectIdsByCategoryId" resultType="java.lang.Long">
-        SELECT id
-        FROM pms_product
-        WHERE product_category_id = #{categoryId}
-        AND delete_status = 0
-        limit #{offset},#{limit}
-    </select>
 </mapper>
