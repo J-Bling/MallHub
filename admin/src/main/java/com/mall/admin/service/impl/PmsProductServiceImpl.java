@@ -262,32 +262,56 @@ public class PmsProductServiceImpl implements PmsProductService {
     }
 
     @Override
-    public void updateProductPublishStatus(List<Long> ids, Integer publishStatus) {
-
+    public void updateProductPublishStatus(List<Long> ids, Integer publishStatus) throws JsonProcessingException {
+        productDao.batchUpdatePublishStatus(ids,publishStatus);
+        productManage.delRank();
     }
 
     @Override
-    public void updateNewStatus(List<Long> ids, Integer newStatus) {
-
+    public void updateNewStatus(List<Long> ids, Integer newStatus) throws JsonProcessingException {
+        productDao.batchUpdateNewStatus(ids,newStatus);
+        productManage.delRank();
     }
 
     @Override
-    public void updateDeleteStatus(List<Long> ids, Integer deleteStatus) {
-
+    public void updateDeleteStatus(List<Long> ids, Integer deleteStatus) throws JsonProcessingException {
+        productDao.batchUpdateDeleteStatus(ids,deleteStatus);
+        if (deleteStatus==1) {
+            for (Long id : ids) {
+                productManage.deleteProduct(id);
+            }
+        }
     }
 
     @Override
-    public void updateRecommendStatus(List<Long> ids, Integer recommendStatus) {
-
+    public void updateRecommendStatus(List<Long> ids, Integer recommendStatus) throws JsonProcessingException {
+        productDao.batchUpdateRecommendStatus(ids,recommendStatus);
+        productManage.delRank();
     }
 
     @Override
     public List<ProductParam> getByBrandId(Long brandId, int offset, int limit) {
-        return Collections.emptyList();
+        List<ProductParam> productParams = new ArrayList<>();
+        List<Long> ids = productDao.selectIdsByBrandId(brandId,offset,limit);
+        if (ids==null || ids.isEmpty()){
+            return productParams;
+        }
+        for (Long id : ids){
+            productParams.add(this.getProductParam(id));
+        }
+        return productParams;
     }
 
     @Override
     public List<ProductParam> getByCateId(Long cateId, int offset, int limit) {
-        return Collections.emptyList();
+        List<ProductParam> productParams = new ArrayList<>();
+        List<Long> ids = productDao.selectIdsByCategoryId(cateId,offset,limit);
+        if (ids==null || ids.isEmpty()){
+            return productParams;
+        }
+        for (Long id : ids){
+            productParams.add(this.getProductParam(id));
+        }
+        return productParams;
     }
 }

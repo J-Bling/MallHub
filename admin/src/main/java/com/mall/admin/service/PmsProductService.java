@@ -35,19 +35,19 @@ public interface PmsProductService {
     /**
      * 批量修改 商品上架状态
      */
-    void updateProductPublishStatus(List<Long> ids,Integer publishStatus);
+    void updateProductPublishStatus(List<Long> ids,Integer publishStatus) throws JsonProcessingException;
     /**
      * 批量修改新品状态 ->要通知前台删除排行榜
      */
-    void updateNewStatus(List<Long> ids,Integer newStatus);
+    void updateNewStatus(List<Long> ids,Integer newStatus) throws JsonProcessingException;
     /**
      * 批量删除商品
      */
-    void updateDeleteStatus(List<Long> ids,Integer deleteStatus);
+    void updateDeleteStatus(List<Long> ids,Integer deleteStatus) throws JsonProcessingException;
     /**
      * 批量修改商品推荐状态
      */
-    void updateRecommendStatus(List<Long> ids,Integer recommendStatus);
+    void updateRecommendStatus(List<Long> ids,Integer recommendStatus) throws JsonProcessingException;
     /**
      * 根据品牌查询商品
      */

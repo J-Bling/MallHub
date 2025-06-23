@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mall.admin.dao.pms.PmsProductDao">
+    <!-- 批量修改上架状态 -->
+    <update id="batchUpdatePublishStatus">
+        UPDATE pms_product
+        SET publish_status = #{status}
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND delete_status = 0 <!-- 只操作未删除的商品 -->
+    </update>
+
+    <!-- 批量修改新品状态 -->
+    <update id="batchUpdateNewStatus">
+        UPDATE pms_product
+        SET new_status = #{status}
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- 批量逻辑删除 -->
+    <update id="batchUpdateDeleteStatus">
+        UPDATE pms_product
+        SET delete_status = #{status}
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        <!-- 已删除的商品不再重复操作 -->
+        <if test="status == 1">
+            AND delete_status = 0
+        </if>
+    </update>
+
+    <!-- 批量修改推荐状态 -->
+    <update id="batchUpdateRecommendStatus">
+        UPDATE pms_product
+        SET recommend_status = #{status}
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- 根据品牌查询商品ID列表 -->
+    <select id="selectIdsByBrandId" resultType="java.lang.Long">
+        SELECT id
+        FROM pms_product
+        WHERE brand_id = #{brandId}
+        AND delete_status = 0
+        AND publish_status = 1 <!-- 只查询已上架未删除的 -->
+        limit #{offset},#{limit}
+    </select>
+
+    <!-- 根据分类查询商品ID列表 -->
+    <select id="selectIdsByCategoryId" resultType="java.lang.Long">
+        SELECT id
+        FROM pms_product
+        WHERE product_category_id = #{categoryId}
+        AND delete_status = 0
+        limit #{offset},#{limit}
+    </select>
+</mapper>
