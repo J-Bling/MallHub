@@ -42,4 +42,14 @@ public interface PmsBrandService {
      * 更新品牌厂家状态
      */
     int updateFactoryStatus(Long id, Integer factoryStatus);
+
+    /**
+     * 更新品牌 商品数量
+     */
+    int incrementProductCount(Long id ,Integer count);
+
+    /**
+     * 更新产品评论数
+     */
+    int incrementProductCommentCount(Long id,Integer count);
 }

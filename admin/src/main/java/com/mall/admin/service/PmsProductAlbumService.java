@@ -43,4 +43,8 @@ public interface PmsProductAlbumService {
      * 获取相册图片列表
      */
     List<PmsAlbumPic> getAlbumPictures(Long albumId);
+    /**
+     * 删除一张图片
+     */
+    int deleteAlumPic(Long id);
 }

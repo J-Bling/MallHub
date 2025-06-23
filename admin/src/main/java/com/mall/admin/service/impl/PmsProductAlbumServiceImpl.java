@@ -9,6 +9,7 @@ import com.mall.common.exception.BusinessException;
 import com.mall.common.enums.BusinessErrorCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -42,6 +43,7 @@ public class PmsProductAlbumServiceImpl implements PmsProductAlbumService {
         if (album.getPicCount() == null) {
             album.setPicCount(0);
         }
+        album.setCreateTime(new Date());
 
         return albumDao.insertAlbum(album);
     }
@@ -139,8 +141,11 @@ public class PmsProductAlbumServiceImpl implements PmsProductAlbumService {
         int count = albumPicDao.batchInsert(pics);
 
         // 更新相册图片数量
-        if (count > 0) {
-            albumDao.updatePicCount(albumId, album.getPicCount() + count);
+        albumDao.incrementPicCount(albumId, count);
+        //检查相册集也没有封面 没有就获取第一张插入作为封面
+        if (album.getCoverPic()==null){
+            album.setCoverPic(pictureUrls.get(0));
+            this.updateAlbum(album.getId(),album);
         }
 
         return count;
@@ -158,6 +163,31 @@ public class PmsProductAlbumServiceImpl implements PmsProductAlbumService {
         }
 
         return albumPicDao.selectByAlbumId(albumId);
+    }
+
+    @Override
+    @Transactional
+    public int deleteAlumPic(Long id) {
+        if (id==null){
+            throw new BusinessException(BusinessErrorCode.INVALID_PARAMETER, "图片ID不能为空");
+        }
+
+        PmsAlbumPic pic = albumPicDao.selectById(id);
+        if (pic==null){
+            throw new BusinessException(BusinessErrorCode.INVALID_PARAMETER, "图片不存在不能为空");
+        }
+        PmsAlbum album = this.getAlbum(pic.getAlbumId());
+
+        if (pic.getPic().equals(album.getCoverPic())){
+            album.setCoverPic(null);
+        }
+        album.setPicCount(album.getPicCount()-1);
+        int status = albumPicDao.deleteByAlbumId(id);
+        if (status==0){
+            throw new BusinessException(BusinessErrorCode.INVALID_PARAMETER, "删除图片失败");
+        }
+        status = this.updateAlbum(album.getId(),album);
+        return status;
     }
 
     /**

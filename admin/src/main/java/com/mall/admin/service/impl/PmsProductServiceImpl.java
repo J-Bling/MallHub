@@ -44,7 +44,7 @@ public class PmsProductServiceImpl implements PmsProductService {
     private PmsMemberPriceDao memberPriceDao;
 
     @Autowired
-    private PmsProductAlbumRelationDao productAlbumRelationDao;
+    private PmsAlbumProductRelationDao productAlbumRelationDao;
 
     @Override
     @Transactional

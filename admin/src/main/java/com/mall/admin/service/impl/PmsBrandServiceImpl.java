@@ -35,7 +35,7 @@ public class PmsBrandServiceImpl implements PmsBrandService {
             brand.setShowStatus(1);
         }
         if (brand.getFactoryStatus() == null) {
-            brand.setFactoryStatus(0);
+            brand.setFactoryStatus(1);
         }
 
         return brandDao.insertBrand(brand);
@@ -130,6 +130,16 @@ public class PmsBrandServiceImpl implements PmsBrandService {
         }
 
         return brandDao.updateFactoryStatus(id, factoryStatus);
+    }
+
+    @Override
+    public int incrementProductCount(Long id, Integer count) {
+        return brandDao.incrementProductCount(id,count);
+    }
+
+    @Override
+    public int incrementProductCommentCount(Long id, Integer count) {
+        return brandDao.incrementProductCommentCount(id,count);
     }
 
     /**

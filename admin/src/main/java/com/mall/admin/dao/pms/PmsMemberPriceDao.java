@@ -7,17 +7,21 @@ import java.util.List;
 
 public interface PmsMemberPriceDao {
 
-    @Insert("<script>" +
-            "INSERT INTO pms_member_price (product_id, member_level_id, member_price, member_level_name) VALUES " +
-            "<foreach collection='list' item='item' separator=','>" +
-            "(#{item.productId}, #{item.memberLevelId}, #{item.memberPrice}, #{item.memberLevelName})" +
-            "</foreach>" +
-            "</script>")
+    /**
+     * 批量指定会员价格
+     */
     int batchInsert(List<PmsMemberPrice> memberPriceList);
 
-    @Delete("DELETE FROM pms_member_price WHERE product_id = #{productId}")
-    int deleteByProductId(Long productId);
+    /**
+     * 指定单个商品会员价格
+     */
+    @Insert("insert into pms_member_price (product_id, member_level_id, member_price, member_level_name) VALUES " +
+            "(#{item.productId}, #{item.memberLevelId}, #{item.memberPrice}, #{item.memberLevelName})")
+    void insert(PmsMemberPrice price);
 
-    @Select("SELECT * FROM pms_member_price WHERE product_id = #{productId} ORDER BY member_level_id ASC")
+    @Delete("DELETE FROM pms_member_price WHERE product_id = #{productId}")
+    void deleteByProductId(Long productId);
+
+    @Select("SELECT * FROM pms_member_price WHERE product_id = #{productId}")
     List<PmsMemberPrice> selectByProductId(Long productId);
 }

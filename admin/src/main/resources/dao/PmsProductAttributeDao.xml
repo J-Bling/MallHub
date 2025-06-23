@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mall.admin.dao.pms.PmsProductAttributeDao">
+    <!-- ==================== pms_product_attribute 操作 ==================== -->
+    <insert id="insertAttribute" parameterType="com.mall.mbg.model.PmsProductAttribute" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO pms_product_attribute (
+        product_attribute_category_id, name, select_type, input_type,
+        input_list, sort, filter_type, search_type,
+        related_status, hand_add_status, type
+        ) VALUES (
+        #{productAttributeCategoryId}, #{name}, #{selectType}, #{inputType},
+        #{inputList}, #{sort}, #{filterType}, #{searchType},
+        #{relatedStatus}, #{handAddStatus}, #{type}
+        )
+    </insert>
+
+    <update id="updateAttribute" parameterType="com.mall.mbg.model.PmsProductAttribute">
+        UPDATE pms_product_attribute
+        <set>
+            <if test="productAttributeCategoryId != null">product_attribute_category_id = #{productAttributeCategoryId},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="selectType != null">select_type = #{selectType},</if>
+            <if test="inputType != null">input_type = #{inputType},</if>
+            <if test="inputList != null">input_list = #{inputList},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="filterType != null">filter_type = #{filterType},</if>
+            <if test="searchType != null">search_type = #{searchType},</if>
+            <if test="relatedStatus != null">related_status = #{relatedStatus},</if>
+            <if test="handAddStatus != null">hand_add_status = #{handAddStatus},</if>
+            <if test="type != null">type = #{type}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteAttribute" parameterType="java.lang.Long">
+        DELETE FROM pms_product_attribute WHERE id = #{id}
+    </delete>
+
+    <select id="selectAttributeById" parameterType="java.lang.Long" resultType="com.mall.mbg.model.PmsProductAttribute">
+        SELECT * FROM pms_product_attribute WHERE id = #{id}
+    </select>
+
+    <select id="selectAttributeByAttributeCategoryId" parameterType="java.lang.Long" resultType="com.mall.mbg.model.PmsProductAttribute">
+        SELECT * FROM pms_product_attribute
+        WHERE product_attribute_category_id = #{attributeCategoryId}
+        ORDER BY sort ASC
+    </select>
+
+    <!-- ==================== pms_product_attribute_category 操作 ==================== -->
+    <insert id="insertAttributeCategory" parameterType="com.mall.mbg.model.PmsProductAttributeCategory" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO pms_product_attribute_category (name, attribute_count, param_count)
+        VALUES (#{name}, #{attributeCount}, #{paramCount})
+    </insert>
+
+    <update id="incrementAttributeCount">
+        UPDATE pms_product_attribute_category
+        SET attribute_count = attribute_count + #{delta}
+        WHERE id = #{attributeCategoryId}
+    </update>
+
+    <update id="incrementAttributeParamCount">
+        UPDATE pms_product_attribute_category
+        SET param_count = param_count + #{delta}
+        WHERE id = #{attributeCategoryId}
+    </update>
+
+    <delete id="deleteAttributeCategory" parameterType="java.lang.Long">
+        DELETE FROM pms_product_attribute_category WHERE id = #{id}
+    </delete>
+
+    <select id="getProductAttributeCategory" parameterType="java.lang.Long" resultType="com.mall.mbg.model.PmsProductAttributeCategory">
+        SELECT * FROM pms_product_attribute_category WHERE id = #{attributeCategoryId}
+    </select>
+
+    <select id="getProductAttributeCategoryAll" resultType="com.mall.mbg.model.PmsProductAttributeCategory">
+        SELECT * FROM pms_product_attribute_category ORDER BY id ASC
+    </select>
+
+    <!-- ==================== pms_product_attribute_value 操作 ==================== -->
+    <insert id="insertProductAttributeValue" parameterType="com.mall.mbg.model.PmsProductAttributeValue" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO pms_product_attribute_value (product_id, product_attribute_id, value)
+        VALUES (#{productId}, #{productAttributeId}, #{value})
+    </insert>
+
+    <insert id="batchInsertProductAttributeValue" parameterType="java.util.List">
+        INSERT INTO pms_product_attribute_value (product_id, product_attribute_id, value)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.productId}, #{item.productAttributeId}, #{item.value})
+        </foreach>
+    </insert>
+
+    <update id="updateProductAttributeValue">
+        UPDATE pms_product_attribute_value
+        SET value = #{value}
+        WHERE id = #{productAttributeValueId}
+    </update>
+
+    <delete id="deleteProductAttributeValue" parameterType="java.lang.Long">
+        DELETE FROM pms_product_attribute_value WHERE id = #{productAttributeValueId}
+    </delete>
+
+    <delete id="cleanProductAttributeValue">
+        DELETE FROM pms_product_attribute_value
+        WHERE product_id = #{productId}
+        <if test="attributeId != null">
+            AND product_attribute_id = #{attributeId}
+        </if>
+    </delete>
+
+    <select id="getProductAttributeValue" parameterType="java.lang.Long" resultType="com.mall.mbg.model.PmsProductAttributeValue">
+        SELECT * FROM pms_product_attribute_value WHERE id = #{id}
+    </select>
+
+    <select id="getProductAttributeValueList" resultType="com.mall.mbg.model.PmsProductAttributeValue">
+        SELECT * FROM pms_product_attribute_value
+        WHERE product_id = #{productId}
+        <if test="attributeId != null">
+            AND product_attribute_id = #{attributeId}
+        </if>
+        ORDER BY id ASC
+    </select>
+
+    <!-- ==================== pms_product_category_attribute_relation 操作 ==================== -->
+    <insert id="insertProductCategoryAttributeRelation" parameterType="com.mall.mbg.model.PmsProductCategoryAttributeRelation" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO pms_product_category_attribute_relation (product_category_id, product_attribute_id)
+        VALUES (#{productCategoryId}, #{productAttributeId})
+    </insert>
+
+    <delete id="deleteProductCategoryAttributeRelation">
+        DELETE FROM pms_product_category_attribute_relation
+        WHERE product_category_id = #{productCategoryId}
+        AND product_attribute_id = #{attributeId}
+    </delete>
+
+    <select id="getProductAttributeByProductCategoryId" parameterType="java.lang.Long" resultType="com.mall.mbg.model.PmsProductAttribute">
+        SELECT pa.* FROM pms_product_attribute pa
+        INNER JOIN pms_product_category_attribute_relation pcar
+        ON pa.id = pcar.product_attribute_id
+        WHERE pcar.product_category_id = #{productCategoryId}
+        ORDER BY pa.sort ASC
+    </select>
+
+    <select id="getProductCategoryByAttributeId" parameterType="java.lang.Long" resultType="com.mall.mbg.model.PmsProductCategory">
+        SELECT pc.* FROM pms_product_category pc
+        INNER JOIN pms_product_category_attribute_relation pcar
+        ON pc.id = pcar.product_category_id
+        WHERE pcar.product_attribute_id = #{attributeId}
+        ORDER BY pc.id ASC
+    </select>
+</mapper>

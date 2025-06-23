@@ -1,7 +1,6 @@
 package com.mall.admin.service.impl;
 
 import com.mall.admin.dao.pms.PmsCommentDao;
-import com.mall.admin.dao.pms.PmsCommentReplayDao;
 import com.mall.admin.dao.pms.PmsProductDao;
 import com.mall.admin.domain.PageResult;
 import com.mall.admin.domain.pms.CommentDetailDTO;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,9 +24,6 @@ public class PmsProductCommentServiceImpl implements PmsProductCommentService {
 
     @Autowired
     private PmsCommentDao commentDao;
-
-    @Autowired
-    private PmsCommentReplayDao commentReplayDao;
 
     @Autowired
     private PmsProductDao productDao;
@@ -79,20 +74,12 @@ public class PmsProductCommentServiceImpl implements PmsProductCommentService {
         }
 
         // 查询回复列表
-        List<PmsCommentReplay> replies = commentReplayDao.selectByCommentId(commentId);
+        List<PmsCommentReplay> replies = commentDao.selectByCommentId(commentId);
 
         // 构建返回结果
         CommentDetailDTO detailDTO = new CommentDetailDTO();
         detailDTO.setComment(comment);
         detailDTO.setReplies(replies);
-
-        // 设置商品快照
-        CommentDetailDTO.ProductSnapshotDTO snapshot = new CommentDetailDTO.ProductSnapshotDTO();
-        snapshot.setProductName(product.getName());
-        snapshot.setProductPic(product.getPic());
-
-//        snapshot.setProductAttributes(product.getProductAttribute());
-        detailDTO.setProductSnapshot(snapshot);
 
         return detailDTO;
     }
@@ -116,45 +103,6 @@ public class PmsProductCommentServiceImpl implements PmsProductCommentService {
         }
 
         return commentDao.updateShowStatus(ids, showStatus);
-    }
-
-    @Override
-    public int replyComment(PmsCommentReplay commentReplay) {
-        // 参数校验
-        validateCommentReplay(commentReplay);
-
-        // 检查评论是否存在
-        if (commentDao.selectById(commentReplay.getCommentId()) == null) {
-            throw new BusinessException(BusinessErrorCode.COMMENT_NOT_FOUND);
-        }
-
-        // 设置默认值
-        if (commentReplay.getType() == null) {
-            commentReplay.setType(0); // 默认管理员回复
-        }
-        commentReplay.setCreateTime(new Date());
-
-        return commentReplayDao.insert(commentReplay);
-    }
-
-    @Override
-    public int deleteComment(Long id) {
-        // 参数校验
-        if (id == null) {
-            throw new BusinessException(BusinessErrorCode.INVALID_PARAMETER, "评论ID不能为空");
-        }
-
-        // 检查评论是否存在
-        PmsComment comment = commentDao.selectById(id);
-        if (comment == null) {
-            throw new BusinessException(BusinessErrorCode.COMMENT_NOT_FOUND);
-        }
-
-        // 删除评论回复
-        commentReplayDao.deleteByCommentId(id);
-
-        // 删除评论
-        return commentDao.deleteById(id);
     }
 
     /**
