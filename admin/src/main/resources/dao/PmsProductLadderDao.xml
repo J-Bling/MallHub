@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mall.admin.dao.pms.PmsProductLadderDao">
+
+    <!-- 批量插入阶梯价格 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO pms_product_ladder
+        (product_id, count, discount, price)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.productId}, #{item.count}, #{item.discount}, #{item.price})
+        </foreach>
+    </insert>
+
+    <!-- 根据商品ID删除阶梯价格 -->
+    <delete id="deleteByProductId" parameterType="java.lang.Long">
+        DELETE FROM pms_product_ladder
+        WHERE product_id = #{productId}
+    </delete>
+
+    <!-- 根据商品ID查询阶梯价格列表（按count升序） -->
+    <select id="selectByProductId" parameterType="java.lang.Long"
+            resultType="com.mall.mbg.model.PmsProductLadder">
+        SELECT * FROM pms_product_ladder
+        WHERE product_id = #{productId}
+        ORDER BY count ASC
+    </select>
+
+</mapper>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mall.admin.dao.pms.PmsProductFullReductionDao">
+
+    <!-- 批量插入满减优惠 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO pms_product_full_reduction
+        (product_id, full_price, reduce_price)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.productId}, #{item.fullPrice}, #{item.reducePrice})
+        </foreach>
+    </insert>
+
+    <!-- 根据商品ID删除满减优惠 -->
+    <delete id="deleteByProductId" parameterType="java.lang.Long">
+        DELETE FROM pms_product_full_reduction
+        WHERE product_id = #{productId}
+    </delete>
+
+    <!-- 根据商品ID查询满减优惠列表（按full_price升序） -->
+    <select id="selectByProductId" parameterType="java.lang.Long"
+            resultType="com.mall.mbg.model.PmsProductFullReduction">
+        SELECT * FROM pms_product_full_reduction
+        WHERE product_id = #{productId}
+        ORDER BY full_price ASC
+    </select>
+
+</mapper>

@@ -34,6 +34,8 @@ public interface PmsProductAttributeDao {
      */
     List<PmsProductAttribute> selectAttributeByAttributeCategoryId(Long attributeCategoryId);
 
+
+
     /**
      * 检查商品关联属性
      */

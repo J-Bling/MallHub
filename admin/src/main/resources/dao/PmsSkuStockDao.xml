@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mall.admin.dao.pms.PmsSkuStockDao">
+
+    <!-- 批量插入SKU库存 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO pms_sku_stock (
+        product_id, sku_code, price, stock, promotion_price,
+        low_stock, pic, sale, lock_stock, sp_data
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.productId}, #{item.skuCode}, #{item.price}, #{item.stock}, #{item.promotionPrice},
+            #{item.lowStock}, #{item.pic}, #{item.sale}, #{item.lockStock}, #{item.spData}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 根据商品ID删除SKU库存 -->
+    <delete id="deleteByProductId" parameterType="java.lang.Long">
+        DELETE FROM pms_sku_stock
+        WHERE product_id = #{productId}
+    </delete>
+
+    <!-- 根据商品ID查询SKU库存列表 -->
+    <select id="selectByProductId" parameterType="java.lang.Long"
+            resultType="com.mall.mbg.model.PmsSkuStock">
+        SELECT * FROM pms_sku_stock
+        WHERE product_id = #{productId}
+        ORDER BY id ASC
+    </select>
+
+    <!-- 根据ID查询SKU库存 -->
+    <select id="selectById" parameterType="java.lang.Long"
+            resultType="com.mall.mbg.model.PmsSkuStock">
+        SELECT * FROM pms_sku_stock
+        WHERE id = #{id}
+    </select>
+
+    <!-- 统计商品SKU数量 -->
+    <select id="countByProductId" parameterType="java.lang.Long"
+            resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM pms_sku_stock
+        WHERE product_id = #{productId}
+    </select>
+
+    <!-- 锁定库存 -->
+    <update id="lockStock">
+        UPDATE pms_sku_stock
+        SET lock_stock = lock_stock + #{quantity}
+        WHERE id = #{skuId} AND stock - lock_stock >= #{quantity}
+    </update>
+
+    <!-- 释放库存 -->
+    <update id="releaseStock">
+        UPDATE pms_sku_stock
+        SET
+        stock = stock + #{quantity},
+        lock_stock = lock_stock - #{quantity}
+        WHERE id = #{skuId} AND lock_stock >= #{quantity}
+    </update>
+
+    <update id="incrementStock">
+        UPDATE pms_sku_stock
+        SET stock = stock + #{quantity}
+        WHERE id = #{skuId}
+    </update>
+
+    <!-- 统计商品SKU编码数量 -->
+    <select id="countSkuCodeByProductId" parameterType="java.lang.Long"
+            resultType="java.lang.Integer">
+        SELECT COUNT(DISTINCT sku_code) FROM pms_sku_stock
+        WHERE product_id = #{productId}
+    </select>
+
+</mapper>
