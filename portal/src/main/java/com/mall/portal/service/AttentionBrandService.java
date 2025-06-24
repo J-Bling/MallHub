@@ -1,6 +1,6 @@
 package com.mall.portal.service;
 
-import com.mall.portal.domain.model.AttentionBrand;
+import com.mall.portal.domain.model.product.AttentionBrand;
 import java.util.List;
 
 public interface AttentionBrandService {

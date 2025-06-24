@@ -1,6 +1,6 @@
 package com.mall.portal.repository;
 
-import com.mall.portal.domain.model.AttentionBrand;
+import com.mall.portal.domain.model.product.AttentionBrand;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;

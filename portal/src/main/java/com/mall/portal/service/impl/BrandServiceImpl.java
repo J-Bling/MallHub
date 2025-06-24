@@ -6,9 +6,9 @@ import com.mall.mbg.model.PmsBrandExample;
 import com.mall.mbg.model.PmsProduct;
 import com.mall.portal.cache.BrandCacheService;
 import com.mall.portal.dao.ProductDao;
-import com.mall.portal.domain.model.AttentionBrand;
+import com.mall.portal.domain.model.product.AttentionBrand;
 import com.mall.portal.service.AttentionBrandService;
-import com.mall.portal.service.PortalBrandService;
+import com.mall.portal.service.BrandService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class PortalBrandServiceImpl implements PortalBrandService {
+public class BrandServiceImpl implements BrandService {
     @Autowired private BrandCacheService brandCacheService;
     @Autowired private ProductDao productDao;
     @Autowired private AttentionBrandService attentionBrandService;

@@ -1,4 +1,4 @@
-package com.mall.portal.domain.model;
+package com.mall.portal.domain.model.orders;
 
 import io.swagger.annotations.ApiModelProperty;
 

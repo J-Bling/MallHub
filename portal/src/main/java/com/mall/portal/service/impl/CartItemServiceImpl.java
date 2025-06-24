@@ -5,12 +5,12 @@ import com.mall.common.exception.Assert;
 import com.mall.mbg.mapper.OmsCartItemMapper;
 import com.mall.mbg.model.*;
 import com.mall.portal.dao.OrdersDao;
-import com.mall.portal.domain.model.CartProduct;
-import com.mall.portal.domain.model.PromotionCartItem;
+import com.mall.portal.domain.model.product.CartProduct;
+import com.mall.portal.domain.model.product.PromotionCartItem;
 import com.mall.portal.service.CartItemService;
 import com.mall.portal.service.ConsumerService;
 import com.mall.portal.service.CouponService;
-import com.mall.portal.service.PortalProductService;
+import com.mall.portal.service.ProductService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ public class CartItemServiceImpl implements CartItemService {
     @Autowired private ConsumerService consumerService;
     @Autowired private OmsCartItemMapper cartItemMapper;
     @Autowired private OrdersDao ordersDao;
-    @Autowired private PortalProductService productService;
+    @Autowired private ProductService productService;
     @Autowired private CouponService couponService;
 
     @Override

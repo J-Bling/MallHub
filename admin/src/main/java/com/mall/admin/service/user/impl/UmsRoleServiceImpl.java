@@ -3,7 +3,6 @@ package com.mall.admin.service.user.impl;
 import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.PageHelper;
 import com.mall.admin.dao.user.UmsRoleDao;
-import com.mall.admin.service.user.UmsAdminCacheService;
 import com.mall.admin.service.user.UmsRoleService;
 import com.mall.mbg.mapper.UmsRoleMapper;
 import com.mall.mbg.mapper.UmsRoleMenuRelationMapper;
@@ -28,8 +27,6 @@ public class UmsRoleServiceImpl implements UmsRoleService {
     private UmsRoleResourceRelationMapper roleResourceRelationMapper;
     @Autowired
     private UmsRoleDao roleDao;
-    @Autowired
-    private UmsAdminCacheService adminCacheService;
     @Override
     public int create(UmsRole role) {
         role.setCreateTime(new Date());
@@ -48,9 +45,7 @@ public class UmsRoleServiceImpl implements UmsRoleService {
     public int delete(List<Long> ids) {
         UmsRoleExample example = new UmsRoleExample();
         example.createCriteria().andIdIn(ids);
-        int count = roleMapper.deleteByExample(example);
-        adminCacheService.delResourceListByRoleIds(ids);
-        return count;
+        return roleMapper.deleteByExample(example);
     }
 
     @Override
@@ -112,7 +107,6 @@ public class UmsRoleServiceImpl implements UmsRoleService {
             relation.setResourceId(resourceId);
             roleResourceRelationMapper.insert(relation);
         }
-        adminCacheService.delResourceListByRole(roleId);
         return resourceIds.size();
     }
 }

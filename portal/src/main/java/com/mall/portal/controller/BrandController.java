@@ -1,10 +1,9 @@
 package com.mall.portal.controller;
 
-import com.mall.common.api.ResponsePage;
 import com.mall.common.api.ResponseResult;
 import com.mall.mbg.model.PmsBrand;
 import com.mall.mbg.model.PmsProduct;
-import com.mall.portal.service.PortalBrandService;
+import com.mall.portal.service.BrandService;
 import io.swagger.annotations.ApiOperation;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +17,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/portal/api/recommend.brand")
-public class PortalBrandController {
-    @Autowired private PortalBrandService brandService;
+public class BrandController {
+    @Autowired private BrandService brandService;
 
     @GetMapping("/brand.list/{offset/{limit}")
     @ApiOperation("分页获取品牌")

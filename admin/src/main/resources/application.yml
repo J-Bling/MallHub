@@ -31,13 +31,6 @@ aliyun:
     callback: http://39.98.190.128:8080/aliyun/oss/callback # 文件上传成功后的回调地址
     dir:
       prefix: mall/images/ # 上传文件夹路径前缀
-redis:
-  database: mall
-  key:
-    admin: 'ums:admin'
-    resourceList: 'ums:resourceList'
-  expire:
-    common: 86400 # 24小时
 
 secure:
   ignored:

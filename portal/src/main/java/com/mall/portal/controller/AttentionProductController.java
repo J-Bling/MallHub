@@ -1,7 +1,7 @@
 package com.mall.portal.controller;
 
 import com.mall.common.api.ResponseResult;
-import com.mall.portal.domain.model.AttentionProduct;
+import com.mall.portal.domain.model.product.AttentionProduct;
 import com.mall.portal.service.AttentionProductService;
 import io.swagger.annotations.ApiOperation;
 import org.hibernate.validator.constraints.Range;

@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Configuration
-public class MallSecurityConfig {
+public class AdminSecurityConfig {
 
     @Autowired
     private UmsAdminService adminService;

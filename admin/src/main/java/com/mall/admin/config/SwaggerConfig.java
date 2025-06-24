@@ -15,10 +15,10 @@ public class SwaggerConfig extends BaseSwaggerConfig {
     public SwaggerProperties swaggerProperties() {
         return SwaggerProperties.builder()
                 .apiBasePackage("com.macro.mall.controller")
-                .title("mall后台系统")
-                .description("mall后台相关接口文档")
-                .contactName("macro")
-                .version("1.0")
+                .title("后台系统")
+                .description("后台相关接口文档")
+                .contactName("blinger")
+                .version("2.0")
                 .enableSecurity(true)
                 .build();
     }

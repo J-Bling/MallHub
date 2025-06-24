@@ -6,8 +6,8 @@ import com.mall.portal.dao.HomeDao;
 import com.mall.portal.domain.model.HomeContent;
 import com.mall.portal.service.FlashPromotionService;
 import com.mall.portal.service.HomeService;
-import com.mall.portal.service.PortalBrandService;
-import com.mall.portal.service.PortalProductService;
+import com.mall.portal.service.BrandService;
+import com.mall.portal.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,8 +17,8 @@ import java.util.List;
 @Service
 public class HomeServiceImpl implements HomeService {
     @Autowired private FlashPromotionService flashPromotionService;
-    @Autowired private PortalProductService productService;
-    @Autowired private PortalBrandService brandService;
+    @Autowired private ProductService productService;
+    @Autowired private BrandService brandService;
     @Autowired private HomeDao homeDao;
 
 

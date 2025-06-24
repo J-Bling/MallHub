@@ -2,10 +2,10 @@ package com.mall.portal.service;
 
 import com.mall.mbg.model.*;
 import com.mall.portal.domain.enums.SortTypeEnum;
-import com.mall.portal.domain.model.ProductDetail;
+import com.mall.portal.domain.model.product.ProductDetail;
 import java.util.List;
 
-public interface PortalProductService {
+public interface ProductService {
     /**
      * 综合搜索商品
      */

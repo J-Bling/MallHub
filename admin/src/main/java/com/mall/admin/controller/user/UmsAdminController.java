@@ -54,7 +54,7 @@ public class UmsAdminController {
         return ResponseResult.success(umsAdmin);
     }
 
-    @ApiOperation(value = "登录以后返回token")
+    @ApiOperation(value = "登录以后返回token",consumes = "客户端需要传明文密码即可")
     @RequestMapping(value = "/login", method = RequestMethod.POST)
     @ResponseBody
     public ResponseResult<Map<String ,String>> login(@Validated @RequestBody UmsAdminLoginParam umsAdminLoginParam) {
@@ -108,7 +108,6 @@ public class UmsAdminController {
     @RequestMapping(value = "/logout", method = RequestMethod.POST)
     @ResponseBody
     public ResponseResult<String> logout(Principal principal) {
-        adminService.logout(principal.getName());
         return ResponseResult.success(null);
     }
 

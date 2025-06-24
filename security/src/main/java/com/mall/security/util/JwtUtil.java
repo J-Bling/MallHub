@@ -56,7 +56,7 @@ public class JwtUtil {
      * @param token
      * @return
      */
-    public Long getUserIdFromToken(String token){
+    public Object getUserIdFromToken(String token){
         Claims claims = getClaimsFromToken(token);
         if(claims!=null){
             try {
@@ -64,8 +64,7 @@ public class JwtUtil {
                 if (date.before(new Date())){
                     return null;
                 }
-                Object object = claims.get(USER_ID_KEY);
-                return Long.parseLong(object.toString());
+                return claims.get(USER_ID_KEY);
             }catch (Exception e){
                 logger.info("解析 userId失败 : {}",e.getMessage());
             }
@@ -80,7 +79,7 @@ public class JwtUtil {
      * @return
      */
     public boolean validateToken(String token, UserDetails userDetails){
-        Long userId = getUserIdFromToken(token);
+        Object userId = getUserIdFromToken(token);
         return userId!=null && userId.toString().equals(userDetails.getUsername());
     }
 

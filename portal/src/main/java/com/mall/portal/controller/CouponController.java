@@ -5,9 +5,9 @@ import com.mall.common.api.ResponseResult;
 import com.mall.mbg.model.PmsProduct;
 import com.mall.mbg.model.SmsCoupon;
 import com.mall.mbg.model.SmsCouponHistory;
-import com.mall.portal.domain.model.CouponHistoryDetail;
+import com.mall.portal.domain.model.flash.CouponHistoryDetail;
 import com.mall.portal.service.CouponService;
-import com.mall.portal.service.PortalProductService;
+import com.mall.portal.service.ProductService;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,7 +22,7 @@ import java.util.List;
 @Tag(name = "优惠券管理")
 public class CouponController {
     @Autowired private CouponService couponService;
-    @Autowired private PortalProductService productService;
+    @Autowired private ProductService productService;
 
     @PostMapping("/add/{couponId}")
     @ApiOperation("领取优惠券")

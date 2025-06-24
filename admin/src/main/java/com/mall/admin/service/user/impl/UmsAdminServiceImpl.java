@@ -2,13 +2,11 @@ package com.mall.admin.service.user.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.extra.spring.SpringUtil;
 import com.github.pagehelper.PageHelper;
 import com.mall.admin.dao.user.UmsAdminRoleRelationDao;
 import com.mall.admin.domain.AdminUserDetails;
 import com.mall.admin.domain.user.UmsAdminParam;
 import com.mall.admin.domain.user.UpdateAdminPasswordParam;
-import com.mall.admin.service.user.UmsAdminCacheService;
 import com.mall.admin.service.user.UmsAdminService;
 import com.mall.common.exception.Assert;
 import com.mall.common.util.RequestUtil;
@@ -58,20 +56,9 @@ public class UmsAdminServiceImpl implements UmsAdminService {
 
     @Override
     public UmsAdmin getAdminByUsername(String username) {
-        //先从缓存中获取数据
-        UmsAdmin admin = getCacheService().getAdmin(username);
-        if (admin != null) return admin;
-        //缓存中没有再从数据库中获取
         UmsAdminExample example = new UmsAdminExample();
         example.createCriteria().andUsernameEqualTo(username);
-        List<UmsAdmin> adminList = adminMapper.selectByExample(example);
-        if (adminList != null && adminList.size() > 0) {
-            admin = adminList.get(0);
-            //将数据库中的数据存入缓存中
-            getCacheService().setAdmin(admin);
-            return admin;
-        }
-        return null;
+        return adminMapper.selectByExample(example).get(0);
     }
 
     @Override
@@ -97,7 +84,6 @@ public class UmsAdminServiceImpl implements UmsAdminService {
     @Override
     public String login(String username, String password) {
         String token = null;
-        //密码需要客户端加密后传递
         try {
             UserDetails userDetails = loadUserByUsername(username);
             if(!passwordEncoder.matches(password,userDetails.getPassword())){
@@ -109,7 +95,6 @@ public class UmsAdminServiceImpl implements UmsAdminService {
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
             token = jwtTokenUtil.generateToken(userDetails);
-//            updateLoginTimeByUsername(username);
             insertLoginLog(username);
         } catch (AuthenticationException e) {
             LOGGER.warn("登录异常:{}", e.getMessage());
@@ -128,21 +113,14 @@ public class UmsAdminServiceImpl implements UmsAdminService {
         loginLog.setAdminId(admin.getId());
         loginLog.setCreateTime(new Date());
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        HttpServletRequest request = attributes.getRequest();
-        loginLog.setIp(RequestUtil.getRequestIp(request));
+        HttpServletRequest request = null;
+        if (attributes != null) {
+            request = attributes.getRequest();
+            loginLog.setIp(RequestUtil.getRequestIp(request));
+        }
         loginLogMapper.insert(loginLog);
     }
 
-    /**
-     * 根据用户名修改登录时间
-     */
-    private void updateLoginTimeByUsername(String username) {
-        UmsAdmin record = new UmsAdmin();
-        record.setLoginTime(new Date());
-        UmsAdminExample example = new UmsAdminExample();
-        example.createCriteria().andUsernameEqualTo(username);
-        adminMapper.updateByExampleSelective(record, example);
-    }
 
     @Override
     public String refreshToken(String oldToken) {
@@ -181,17 +159,12 @@ public class UmsAdminServiceImpl implements UmsAdminService {
                 admin.setPassword(passwordEncoder.encode(admin.getPassword()));
             }
         }
-        int count = adminMapper.updateByPrimaryKeySelective(admin);
-        getCacheService().delAdmin(id);
-        return count;
+        return adminMapper.updateByPrimaryKeySelective(admin);
     }
 
     @Override
     public int delete(Long id) {
-        int count = adminMapper.deleteByPrimaryKey(id);
-        getCacheService().delAdmin(id);
-        getCacheService().delResourceList(id);
-        return count;
+        return adminMapper.deleteByPrimaryKey(id);
     }
 
     @Override
@@ -212,7 +185,6 @@ public class UmsAdminServiceImpl implements UmsAdminService {
             }
             adminRoleRelationDao.insertList(list);
         }
-        getCacheService().delResourceList(adminId);
         return count;
     }
 
@@ -223,18 +195,7 @@ public class UmsAdminServiceImpl implements UmsAdminService {
 
     @Override
     public List<UmsResource> getResourceList(Long adminId) {
-        //先从缓存中获取数据
-        List<UmsResource> resourceList = getCacheService().getResourceList(adminId);
-        if(CollUtil.isNotEmpty(resourceList)){
-            return  resourceList;
-        }
-        //缓存中没有从数据库中获取
-        resourceList = adminRoleRelationDao.getResourceList(adminId);
-        if(CollUtil.isNotEmpty(resourceList)){
-            //将数据库中的数据存入缓存中
-            getCacheService().setResourceList(adminId,resourceList);
-        }
-        return resourceList;
+        return adminRoleRelationDao.getResourceList(adminId);
     }
 
     @Override
@@ -256,7 +217,6 @@ public class UmsAdminServiceImpl implements UmsAdminService {
         }
         umsAdmin.setPassword(passwordEncoder.encode(param.getNewPassword()));
         adminMapper.updateByPrimaryKey(umsAdmin);
-        getCacheService().delAdmin(umsAdmin.getId());
         return 1;
     }
 
@@ -269,18 +229,5 @@ public class UmsAdminServiceImpl implements UmsAdminService {
             return new AdminUserDetails(admin,resourceList);
         }
         throw new UsernameNotFoundException("用户名或密码错误");
-    }
-
-    @Override
-    public UmsAdminCacheService getCacheService() {
-        return SpringUtil.getBean(UmsAdminCacheService.class);
-    }
-
-    @Override
-    public void logout(String username) {
-        //清空缓存中的用户相关数据
-        UmsAdmin admin = getCacheService().getAdmin(username);
-        getCacheService().delAdmin(admin.getId());
-        getCacheService().delResourceList(admin.getId());
     }
 }

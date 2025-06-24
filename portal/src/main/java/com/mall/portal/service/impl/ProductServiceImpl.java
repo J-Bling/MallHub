@@ -7,9 +7,9 @@ import com.mall.portal.cache.ProductAttributeCacheService;
 import com.mall.portal.cache.ProductCacheService;
 import com.mall.portal.cache.ProductCategoryCacheService;
 import com.mall.portal.domain.enums.SortTypeEnum;
-import com.mall.portal.domain.model.ProductDetail;
+import com.mall.portal.domain.model.product.ProductDetail;
 import com.mall.portal.service.CouponService;
-import com.mall.portal.service.PortalProductService;
+import com.mall.portal.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class PortalProductServiceImpl implements PortalProductService {
+public class ProductServiceImpl implements ProductService {
 
     @Autowired private PmsProductMapper productMapper;
     @Autowired private ProductCategoryCacheService categoryCacheService;

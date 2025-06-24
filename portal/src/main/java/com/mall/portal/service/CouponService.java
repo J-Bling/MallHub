@@ -3,7 +3,7 @@ package com.mall.portal.service;
 import com.mall.mbg.model.PmsProduct;
 import com.mall.mbg.model.SmsCoupon;
 import com.mall.mbg.model.SmsCouponHistory;
-import com.mall.portal.domain.model.CouponHistoryDetail;
+import com.mall.portal.domain.model.flash.CouponHistoryDetail;
 import java.util.List;
 
 public interface CouponService {

@@ -2,7 +2,7 @@ package com.mall.portal.cache;
 
 import com.mall.common.constant.interfaces.Cache;
 import com.mall.mbg.model.*;
-import com.mall.portal.domain.model.ProductAlbums;
+import com.mall.portal.domain.model.product.ProductAlbums;
 
 import java.io.Serializable;
 import java.util.List;

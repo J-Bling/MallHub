@@ -4,8 +4,8 @@ import com.mall.common.api.ResponseResult;
 import com.mall.mbg.model.PmsProduct;
 import com.mall.mbg.model.PmsProductCategory;
 import com.mall.portal.domain.enums.SortTypeEnum;
-import com.mall.portal.domain.model.ProductDetail;
-import com.mall.portal.service.PortalProductService;
+import com.mall.portal.domain.model.product.ProductDetail;
+import com.mall.portal.service.ProductService;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +15,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/portal/api/product")
-public class PortalProductController {
-    @Autowired private PortalProductService productService;
+public class ProductController {
+    @Autowired private ProductService productService;
 
     @ApiOperation(value = "综合搜索、筛选、排序")
     @ApiImplicitParam(name = "sort", value = "排序字段:0->按相关度；1->按新品；2->按销量；3->价格从低到高；4->价格从高到低",

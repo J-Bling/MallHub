@@ -5,7 +5,7 @@ import com.mall.mbg.model.PmsProduct;
 
 import java.util.List;
 
-public interface PortalBrandService {
+public interface BrandService {
     /**
      * 分页获取品牌列表
      */

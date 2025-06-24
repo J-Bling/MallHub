@@ -1,7 +1,6 @@
 package com.mall.portal.controller;
 
 import com.mall.common.api.ResponseResult;
-import com.mall.common.exception.Assert;
 import com.mall.portal.domain.model.ReadHistory;
 import com.mall.portal.service.ReadHistoryService;
 import io.swagger.annotations.ApiOperation;

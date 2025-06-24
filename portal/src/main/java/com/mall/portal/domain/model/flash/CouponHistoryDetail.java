@@ -1,4 +1,4 @@
-package com.mall.portal.domain.model;
+package com.mall.portal.domain.model.flash;
 
 import com.mall.mbg.model.SmsCoupon;
 import com.mall.mbg.model.SmsCouponHistory;

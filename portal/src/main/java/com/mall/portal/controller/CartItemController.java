@@ -2,8 +2,8 @@ package com.mall.portal.controller;
 
 import com.mall.common.api.ResponseResult;
 import com.mall.mbg.model.OmsCartItem;
-import com.mall.portal.domain.model.CartProduct;
-import com.mall.portal.domain.model.PromotionCartItem;
+import com.mall.portal.domain.model.product.CartProduct;
+import com.mall.portal.domain.model.product.PromotionCartItem;
 import com.mall.portal.service.CartItemService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,6 +1,6 @@
 package com.mall.portal.service;
 
-import com.mall.portal.domain.model.AttentionProduct;
+import com.mall.portal.domain.model.product.AttentionProduct;
 
 import java.util.List;
 

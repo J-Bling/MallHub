@@ -1,4 +1,4 @@
-package com.mall.portal.domain.model;
+package com.mall.portal.domain.model.product;
 
 import com.mall.mbg.model.PmsProductCategory;
 import java.util.List;

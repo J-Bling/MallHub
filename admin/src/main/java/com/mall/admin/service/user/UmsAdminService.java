@@ -83,15 +83,4 @@ public interface UmsAdminService {
      * 获取用户信息
      */
     UserDetails loadUserByUsername(String username);
-
-    /**
-     * 获取缓存服务
-     */
-    UmsAdminCacheService getCacheService();
-
-    /**
-     * 登出功能
-     * @param username 用户名
-     */
-    void logout(String username);
 }

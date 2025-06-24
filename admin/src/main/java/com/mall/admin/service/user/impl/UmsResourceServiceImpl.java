@@ -2,7 +2,6 @@ package com.mall.admin.service.user.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.PageHelper;
-import com.mall.admin.service.user.UmsAdminCacheService;
 import com.mall.admin.service.user.UmsResourceService;
 import com.mall.mbg.mapper.UmsResourceMapper;
 import com.mall.mbg.model.UmsResource;
@@ -20,8 +19,6 @@ import java.util.List;
 public class UmsResourceServiceImpl implements UmsResourceService {
     @Autowired
     private UmsResourceMapper resourceMapper;
-    @Autowired
-    private UmsAdminCacheService adminCacheService;
     @Override
     public int create(UmsResource umsResource) {
         umsResource.setCreateTime(new Date());
@@ -31,9 +28,7 @@ public class UmsResourceServiceImpl implements UmsResourceService {
     @Override
     public int update(Long id, UmsResource umsResource) {
         umsResource.setId(id);
-        int count = resourceMapper.updateByPrimaryKeySelective(umsResource);
-        adminCacheService.delResourceListByResource(id);
-        return count;
+        return resourceMapper.updateByPrimaryKeySelective(umsResource);
     }
 
     @Override
@@ -43,9 +38,7 @@ public class UmsResourceServiceImpl implements UmsResourceService {
 
     @Override
     public int delete(Long id) {
-        int count = resourceMapper.deleteByPrimaryKey(id);
-        adminCacheService.delResourceListByResource(id);
-        return count;
+        return resourceMapper.deleteByPrimaryKey(id);
     }
 
     @Override

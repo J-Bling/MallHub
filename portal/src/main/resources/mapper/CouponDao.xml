@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.mall.portal.dao.CouponDao">
-    <resultMap id="couponHistoryDetailMap" type="com.mall.portal.domain.model.CouponHistoryDetail"
+    <resultMap id="couponHistoryDetailMap" type="com.mall.portal.domain.model.flash.CouponHistoryDetail"
                extends="com.mall.mbg.mapper.SmsCouponHistoryMapper.BaseResultMap">
         <association property="coupon" resultMap="com.mall.mbg.mapper.SmsCouponMapper.BaseResultMap" columnPrefix="c_">
         </association>

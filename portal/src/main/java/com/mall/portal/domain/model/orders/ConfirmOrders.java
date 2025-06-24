@@ -1,7 +1,9 @@
-package com.mall.portal.domain.model;
+package com.mall.portal.domain.model.orders;
 
 import com.mall.mbg.model.UmsIntegrationConsumeSetting;
 import com.mall.mbg.model.UmsMemberReceiveAddress;
+import com.mall.portal.domain.model.product.CartPromotionItem;
+import com.mall.portal.domain.model.flash.CouponHistoryDetail;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

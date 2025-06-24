@@ -1,7 +1,4 @@
-package com.mall.portal.domain.model;
-
-import com.mall.mbg.model.OmsCartItem;
-import io.swagger.annotations.ApiModelProperty;
+package com.mall.portal.domain.model.product;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

@@ -1,7 +1,7 @@
 package com.mall.portal.dao;
 
 import com.mall.mbg.model.SmsCoupon;
-import com.mall.portal.domain.model.CouponHistoryDetail;
+import com.mall.portal.domain.model.flash.CouponHistoryDetail;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 

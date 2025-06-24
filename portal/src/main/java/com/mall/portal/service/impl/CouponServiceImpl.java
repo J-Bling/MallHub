@@ -12,7 +12,7 @@ import com.mall.mbg.model.*;
 import com.mall.portal.cache.CouponCacheService;
 import com.mall.portal.dao.CouponDao;
 import com.mall.common.constant.enums.CouponRedemptionMethodEnum;
-import com.mall.portal.domain.model.CouponHistoryDetail;
+import com.mall.portal.domain.model.flash.CouponHistoryDetail;
 import com.mall.portal.service.CouponService;
 import com.mall.portal.service.ConsumerService;
 import org.slf4j.Logger;

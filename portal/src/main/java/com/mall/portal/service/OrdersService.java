@@ -3,9 +3,9 @@ package com.mall.portal.service;
 import com.alipay.api.domain.OrderDetail;
 import com.mall.mbg.model.OmsOrder;
 import com.mall.mbg.model.OmsOrderItem;
-import com.mall.portal.domain.model.ConfirmOrders;
-import com.mall.portal.domain.model.OrderReturnApplyParam;
-import com.mall.portal.domain.model.OrdersParma;
+import com.mall.portal.domain.model.orders.ConfirmOrders;
+import com.mall.portal.domain.model.orders.OrderReturnApplyParam;
+import com.mall.portal.domain.model.orders.OrdersParma;
 import java.util.List;
 
 public interface OrdersService {

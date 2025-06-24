@@ -6,7 +6,7 @@ import com.mall.common.exception.Assert;
 import com.mall.mbg.mapper.PmsProductMapper;
 import com.mall.mbg.model.PmsProduct;
 import com.mall.mbg.model.UmsMember;
-import com.mall.portal.domain.model.AttentionProduct;
+import com.mall.portal.domain.model.product.AttentionProduct;
 import com.mall.portal.repository.AttentionProductRepository;
 import com.mall.portal.service.AttentionProductService;
 import com.mall.portal.service.ConsumerService;
