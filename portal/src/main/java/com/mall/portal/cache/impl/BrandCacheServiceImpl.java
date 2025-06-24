@@ -8,6 +8,7 @@ import com.mall.mbg.model.PmsBrandExample;
 import com.mall.portal.cache.BrandCacheService;
 import com.mall.portal.dao.BrandDao;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -20,7 +21,11 @@ public class BrandCacheServiceImpl implements BrandCacheService {
     @Autowired private BrandDao brandDao;
     @Autowired private CounterRedisService counterRedisService;
 
-    private int brandSize = 0;
+    @Value("${redis.key.brandZSetKey:brand-zSet-key}")
+    private String brandZSetKey;
+
+    @Value("${redis.key.brandHashKey:brand-hash-key}")
+    private String brandHashKey;
 
     @Override
     public PmsBrand getBrand(long brandId) {
@@ -42,16 +47,12 @@ public class BrandCacheServiceImpl implements BrandCacheService {
 
     @Override
     public List<PmsBrand> getBrands(int offset,int limit) {
-        if (brandSize>0 && brandSize<=offset){
-            return null;
-        }
         Set<String> sets = counterRedisService.zRange(brandZSetKey,offset,offset+limit-1);
         if (sets==null || sets.isEmpty()){
             List<PmsBrand> brandList = brandMapper.selectByExample(new PmsBrandExample());
             if (brandList==null || brandList.isEmpty()){
                 return null;
             }
-            brandSize = brandList.size();
             Map<String,PmsBrand> pmsBrandMap = new HashMap<>();
             Map<String,Double> zSetMap = new HashMap<>();
             for (PmsBrand brand : brandList){
@@ -66,12 +67,5 @@ public class BrandCacheServiceImpl implements BrandCacheService {
         List<String> strings= new ArrayList<>(sets);
         List<Object> objectList = redisService.hGetAll(brandHashKey,strings);
         return objectList.stream().map(o->(PmsBrand)o).collect(Collectors.toList());
-    }
-
-    @Override
-    public void delBrandCache(long brandId) {
-        counterRedisService.zRemove(brandZSetKey,brandId+"");
-        redisService.hDel(brandHashKey,HashField(brandId));
-        brandSize = 0;
     }
 }

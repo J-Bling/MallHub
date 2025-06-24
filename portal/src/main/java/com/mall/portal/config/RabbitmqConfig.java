@@ -24,15 +24,6 @@ public class RabbitmqConfig {
         return new DirectExchange(QueueEnum.QUEUE_TTL_ORDER_CANCEL.getExchange(),true,false);
     }
 
-    @Bean
-    DirectExchange productDirect(){
-        return new DirectExchange(QueueEnum.QUEUE_PRODUCT_HANDLE.getExchange(),true,false);
-    }
-
-    @Bean
-    DirectExchange promotionDirect(){
-        return new DirectExchange(QueueEnum.QUEUE_PROMOTION_HANDLE.getExchange(),true,false);
-    }
 
 
 
@@ -56,21 +47,6 @@ public class RabbitmqConfig {
                 .build();
     }
 
-    /**
-     *商品队列
-     */
-    @Bean
-    public Queue productQueue(){
-        return new Queue(QueueEnum.QUEUE_PRODUCT_HANDLE.getQueueName(),true,false,false);
-    }
-
-    /**
-     * 活动队列
-     */
-    @Bean
-    public Queue promotionQueue(){
-        return new Queue(QueueEnum.QUEUE_PROMOTION_HANDLE.getQueueName(),true,false,false);
-    }
 
 
 
@@ -90,20 +66,4 @@ public class RabbitmqConfig {
                 .with(QueueEnum.QUEUE_TTL_ORDER_CANCEL.getRouteKey());
     }
 
-
-    @Bean
-    Binding productBinding(DirectExchange productDirect,Queue productQueue){
-        return BindingBuilder
-                .bind(productQueue)
-                .to(productDirect)
-                .with(QueueEnum.QUEUE_PRODUCT_HANDLE.getRouteKey());
-    }
-
-    @Bean
-    Binding promotionBinding(DirectExchange promotionDirect,Queue promotionQueue){
-        return BindingBuilder
-                .bind(promotionQueue)
-                .to(promotionDirect)
-                .with(QueueEnum.QUEUE_PROMOTION_HANDLE.getRouteKey());
-    }
 }

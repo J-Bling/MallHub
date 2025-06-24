@@ -25,9 +25,16 @@ redis:
     authCode: 'ums:authCode'
     orderId: 'oms:orderId'
     member: 'ums:member'
+    ProductCategoryKey: product-category-key
+    brandZSetKey: brand-zSet-key
+    brandHashKey: brand-hash-key
+
   expire:
     authCode: 90 # 验证码超期时间
     common: 86400 # 24小时
+
+
+
 
 #mongo:
 #  insert:

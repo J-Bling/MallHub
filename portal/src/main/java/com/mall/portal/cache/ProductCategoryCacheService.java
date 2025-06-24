@@ -6,7 +6,6 @@ import com.mall.mbg.model.PmsProductCategory;
 import java.util.List;
 
 public interface ProductCategoryCacheService extends Cache {
-    String ProductCategoryKey = "product-category-key";
     default String HashField(Long id){return ""+id;}
     /**
      *获取 单个 商品类型

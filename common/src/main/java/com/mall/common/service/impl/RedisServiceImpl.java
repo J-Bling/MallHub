@@ -65,7 +65,7 @@ public class RedisServiceImpl implements RedisService {
     @Override
     public void tryExpire(String key) {
         Long expire = redisTemplate.getExpire(key);
-        if (expire != null && expire > 0) {
+        if (expire > 0) {
             this.expire(key, expired);
         }
     }
@@ -104,8 +104,8 @@ public class RedisServiceImpl implements RedisService {
     @Override
     public void hSet(String key, String hashKey, Object value) {
         redisTemplate.opsForHash().put(key, hashKey, value);
-        Long Exipred = redisTemplate.getExpire(key);
-        if (Exipred != null && Exipred > 0) {
+        Long Expired = redisTemplate.getExpire(key);
+        if (Expired > 0) {
             this.expire(key, expired);
         }
     }
@@ -141,8 +141,8 @@ public class RedisServiceImpl implements RedisService {
     @Override
     public void hSetAll(String key, Map<String, ?> map) {
         redisTemplate.opsForHash().putAll(key, map);
-        Long Exipred = redisTemplate.getExpire(key);
-        if (Exipred != null && Exipred > 0) {
+        Long Expired = redisTemplate.getExpire(key);
+        if (Expired > 0) {
             this.expire(key, expired);
         }
     }
@@ -150,7 +150,7 @@ public class RedisServiceImpl implements RedisService {
     @Override
     public boolean hDel(String key, Object... hashKey) {
         Long len = redisTemplate.opsForHash().delete(key, hashKey);
-        return len !=null && len >0;
+        return len >0;
     }
 
     @Override
@@ -176,8 +176,8 @@ public class RedisServiceImpl implements RedisService {
     @Override
     public Long sAdd(String key, Object... values) {
         Long len = redisTemplate.opsForSet().add(key, values);
-        Long Exipred = redisTemplate.getExpire(key);
-        if (Exipred != null && Exipred > 0) {
+        Long Expired = redisTemplate.getExpire(key);
+        if (Expired > 0) {
             this.expire(key, expired);
         }
         return len;
@@ -223,8 +223,8 @@ public class RedisServiceImpl implements RedisService {
     @Override
     public Long lPush(String key, Object value) {
         Long len = redisTemplate.opsForList().rightPush(key, value);
-        Long Exipred = redisTemplate.getExpire(key);
-        if (Exipred != null && Exipred > 0) {
+        Long Expired = redisTemplate.getExpire(key);
+        if (Expired > 0) {
             this.expire(key, expired);
         }
         return len;
@@ -240,8 +240,8 @@ public class RedisServiceImpl implements RedisService {
     @Override
     public Long lPushAll(String key, Object... values) {
         Long len = redisTemplate.opsForList().rightPushAll(key, values);
-        Long Exipred = redisTemplate.getExpire(key);
-        if (Exipred != null && Exipred > 0) {
+        Long Expired = redisTemplate.getExpire(key);
+        if (Expired > 0) {
             this.expire(key, expired);
         }
         return len;
@@ -257,8 +257,8 @@ public class RedisServiceImpl implements RedisService {
     @Override
     public Long lRemove(String key, long count, Object value) {
         Long len = redisTemplate.opsForList().remove(key, count, value);
-        Long Exipred = redisTemplate.getExpire(key);
-        if (Exipred != null && Exipred > 0) {
+        Long Expired = redisTemplate.getExpire(key);
+        if (Expired > 0) {
             this.expire(key, expired);
         }
         return len;

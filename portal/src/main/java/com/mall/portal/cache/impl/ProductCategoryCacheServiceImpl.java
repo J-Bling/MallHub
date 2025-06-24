@@ -8,6 +8,7 @@ import com.mall.portal.cache.ProductCategoryCacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,6 +23,9 @@ public class ProductCategoryCacheServiceImpl implements ProductCategoryCacheServ
     private final Logger logger = LoggerFactory.getLogger(ProductCategoryCacheServiceImpl.class);
 
     private int categoryListSize = 0;
+
+    @Value("${redis.key.ProductCategoryKey:product-category-key}")
+    private String ProductCategoryKey;
 
     @Override
     public PmsProductCategory get(long id) {

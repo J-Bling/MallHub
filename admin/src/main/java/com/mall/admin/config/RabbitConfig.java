@@ -12,13 +12,18 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitConfig {
 
     @Bean
-    DirectExchange productDirect(){
+    public DirectExchange productDirect(){
         return new DirectExchange(QueueEnum.QUEUE_PRODUCT_HANDLE.getExchange(),true,false);
     }
 
     @Bean
-    DirectExchange promotionDirect(){
+    public DirectExchange promotionDirect(){
         return new DirectExchange(QueueEnum.QUEUE_PROMOTION_HANDLE.getExchange(),true,false);
+    }
+
+    @Bean
+    public DirectExchange couponDirect(){
+        return new DirectExchange(QueueEnum.COUPON_HANDLE.getExchange(),true,false);
     }
 
     /**
@@ -37,8 +42,16 @@ public class RabbitConfig {
         return new Queue(QueueEnum.QUEUE_PROMOTION_HANDLE.getQueueName(),true,false,false);
     }
 
+    /**
+     * 优惠券队列
+     */
     @Bean
-    Binding productBinding(DirectExchange productDirect, Queue productQueue){
+    public Queue couponQueue(){
+        return new Queue(QueueEnum.COUPON_HANDLE.getQueueName(),true,false,false);
+    }
+
+    @Bean
+    public Binding productBinding(DirectExchange productDirect, Queue productQueue){
         return BindingBuilder
                 .bind(productQueue)
                 .to(productDirect)
@@ -46,10 +59,18 @@ public class RabbitConfig {
     }
 
     @Bean
-    Binding promotionBinding(DirectExchange promotionDirect,Queue promotionQueue){
+    public Binding promotionBinding(DirectExchange promotionDirect,Queue promotionQueue){
         return BindingBuilder
                 .bind(promotionQueue)
                 .to(promotionDirect)
                 .with(QueueEnum.QUEUE_PROMOTION_HANDLE.getRouteKey());
+    }
+
+    @Bean
+    Binding couponBinding(DirectExchange couponDirect,Queue couponQueue){
+        return BindingBuilder
+                .bind(couponQueue)
+                .to(couponDirect)
+                .with(QueueEnum.COUPON_HANDLE.getRouteKey());
     }
 }

@@ -24,7 +24,7 @@ public interface ProductAttributeCacheService extends Cache {
      */
     List<PmsProductAttribute> getAttributeList(long categoryId);
 
-    void delAttributeByCategory(long categoryId);
+    void delAttributeAllByCategory(long categoryId);
     void delAttributeById(long id,long categoryId);
     void delAttributeCategoryById(long id);
     void delAttributeCategoryAll();

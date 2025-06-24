@@ -32,6 +32,13 @@ aliyun:
     dir:
       prefix: mall/images/ # 上传文件夹路径前缀
 
+
+redis:
+  key:
+    ProductCategoryKey: product-category-key
+    brandZSetKey: brand-zSet-key
+    brandHashKey: brand-hash-key
+
 secure:
   ignored:
     urls: #安全路径白名单

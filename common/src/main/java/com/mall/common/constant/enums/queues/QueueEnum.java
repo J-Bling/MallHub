@@ -19,7 +19,11 @@ public enum QueueEnum {
     /**
      * 活动通知队列
      */
-    QUEUE_PROMOTION_HANDLE("mall.promotion.dirct","mall.promotion.handle","mall.promotion.handle");
+    QUEUE_PROMOTION_HANDLE("mall.promotion.direct","mall.promotion.handle","mall.promotion.handle"),
+    /**
+     * 优惠券通知队列
+     */
+    COUPON_HANDLE("mall.coupon.direct","mall.coupon.queue","mall.coupon.queue");
 
 
     private String exchange;

@@ -11,7 +11,6 @@ import com.mall.portal.cache.ProductAttributeCacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -23,7 +22,6 @@ public class ProductAttributeCacheServiceImpl implements ProductAttributeCacheSe
     @Autowired private PmsProductAttributeCategoryMapper categoryMapper;
     @Autowired private RedisService redisService;
 
-    private static int attributeCategories = 0;
     private final Logger logger = LoggerFactory.getLogger(ProductAttributeCacheServiceImpl.class);
 
     @Override
@@ -60,7 +58,7 @@ public class ProductAttributeCacheServiceImpl implements ProductAttributeCacheSe
         List<PmsProductAttributeCategory> categoryList = new ArrayList<>();
         try {
             Map<Object,Object> map=redisService.hGetAll(CacheKeys.ProductAttributeCategoryHashKey);
-            if (map == null || map.isEmpty() || map.size() < attributeCategories) {
+            if (map == null || map.isEmpty()) {
                 PmsProductAttributeCategoryExample categoryExample = new PmsProductAttributeCategoryExample();
                 categoryList = categoryMapper.selectByExample(categoryExample);
                 if (categoryList != null && !categoryList.isEmpty()) {
@@ -68,7 +66,6 @@ public class ProductAttributeCacheServiceImpl implements ProductAttributeCacheSe
                     for (PmsProductAttributeCategory category : categoryList) {
                         categoryMap.put("" + category.getId(), category);
                     }
-                    attributeCategories = categoryList.size();
                     redisService.hSetAll(CacheKeys.ProductAttributeCategoryHashKey, categoryMap);
                 }
                 return categoryList;
@@ -120,12 +117,12 @@ public class ProductAttributeCacheServiceImpl implements ProductAttributeCacheSe
     }
 
     @Override
-    public void delAttributeByCategory(long categoryId) {
+    public void delAttributeAllByCategory(long categoryId) {
         redisService.del(CacheKeys.ProductAttributeHashKey(categoryId));
     }
 
     @Override
-    public void delAttributeById(long id, @Nullable long categoryId) {
+    public void delAttributeById(long id, long categoryId) {
         String key = CacheKeys.ProductAttributeHashKey(categoryId);
         redisService.hDel(key,CacheKeys.Field(id));
         redisService.del(CacheKeys.ProductAttributeKey(id));

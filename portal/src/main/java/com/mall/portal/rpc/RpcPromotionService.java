@@ -1,4 +1,4 @@
-package com.mall.portal.component;
+package com.mall.portal.rpc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mall.common.constant.enums.rpc.PromotionRpc;
@@ -41,10 +41,10 @@ public class RpcPromotionService {
             }else {
                 throw new RuntimeException("没有该方法:"+method);
             }
-            channel.basicAck(message.getMessageProperties().getDeliveryTag(),true);
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(),false);
         }catch (Exception e){
             logger.error("调用 promotion服务失败:body : {},原因:{}",body,e.getMessage());
-            channel.basicNack(message.getMessageProperties().getDeliveryTag(),false,true);
+            channel.basicNack(message.getMessageProperties().getDeliveryTag(),false,false);
         }
     }
 }
