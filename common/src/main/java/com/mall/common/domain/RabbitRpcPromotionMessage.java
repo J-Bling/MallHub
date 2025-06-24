@@ -9,6 +9,8 @@ public class RabbitRpcPromotionMessage extends RabbitRpcMessage{
     private Long skuRelationId;
     private Integer count;
 
+    public RabbitRpcPromotionMessage(){}
+
     public static RabbitRpcPromotionMessage Builder(){
         return new RabbitRpcPromotionMessage();
     }

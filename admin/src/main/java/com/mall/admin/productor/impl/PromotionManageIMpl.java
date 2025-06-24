@@ -14,68 +14,57 @@ import org.springframework.stereotype.Service;
 public class PromotionManageIMpl implements PromotionManage {
     @Autowired private RabbitTemplate rabbitTemplate;
 
+    @Override
+    public RabbitTemplate getRabbitTemplate() {
+        return rabbitTemplate;
+    }
+
+
 
     @Override
     public void setNextPromotion(ReSetPromotionModel promotionModel) throws JsonProcessingException {
-        rabbitTemplate.convertAndSend(
-                QueueEnum.QUEUE_PROMOTION_HANDLE.getExchange(),
-                QueueEnum.QUEUE_PROMOTION_HANDLE.getRouteKey(),
-                serialization(
-                        RabbitRpcPromotionMessage.Builder()
-                                .addPromotionModel(promotionModel)
-                                .addQueue(QueueEnum.QUEUE_PROMOTION_HANDLE.getQueueName())
-                                .addMethod(PromotionRpc.NEXT_PROMOTION.getMethod())
-                ),
-                setCallBack(PromotionRpc.NEXT_PROMOTION.getMethod())
+        sendMessage(
+                QueueEnum.QUEUE_PROMOTION_HANDLE,
+                PromotionRpc.NEXT_PROMOTION.getMethod(),
+                builder -> builder.addPromotionModel(promotionModel),
+                RabbitRpcPromotionMessage.Builder()
         );
     }
 
     @Override
     public void incrementProductStock(long productRelationId, long skuRelationId, int count) throws JsonProcessingException {
-        rabbitTemplate.convertAndSend(
-                QueueEnum.QUEUE_PROMOTION_HANDLE.getExchange(),
-                QueueEnum.QUEUE_PROMOTION_HANDLE.getRouteKey(),
-                serialization(
-                        RabbitRpcPromotionMessage.Builder()
-                                .addProductRelationId(productRelationId)
-                                .addSkuRelationId(skuRelationId)
-                                .addCount(count)
-                                .addQueue(QueueEnum.QUEUE_PROMOTION_HANDLE.getQueueName())
-                                .addMethod(PromotionRpc.INCREMENT_PRODUCT_STOCK.getMethod())
-                ),
-                setCallBack(PromotionRpc.INCREMENT_PRODUCT_STOCK.getMethod())
+        sendMessage(
+                QueueEnum.QUEUE_PROMOTION_HANDLE,
+                PromotionRpc.INCREMENT_PRODUCT_STOCK.getMethod(),
+                builder -> builder
+                        .addProductRelationId(productRelationId)
+                        .addSkuRelationId(skuRelationId)
+                        .addCount(count),
+                RabbitRpcPromotionMessage.Builder()
         );
     }
 
     @Override
     public void delProduct(long sessionId, long productId, long productRelationId) throws JsonProcessingException {
-        rabbitTemplate.convertAndSend(
-                QueueEnum.QUEUE_PROMOTION_HANDLE.getExchange(),
-                QueueEnum.QUEUE_PROMOTION_HANDLE.getRouteKey(),
-                serialization(
-                        RabbitRpcPromotionMessage.Builder()
-                                .addSessionId(sessionId)
-                                .addProductId(productId)
-                                .addProductRelationId(productRelationId)
-                                .addQueue(QueueEnum.QUEUE_PROMOTION_HANDLE.getQueueName())
-                                .addMethod(PromotionRpc.DEL_PRODUCT.getMethod())
-                ),
-                setCallBack(PromotionRpc.DEL_PRODUCT.getMethod())
+        sendMessage(
+                QueueEnum.QUEUE_PROMOTION_HANDLE,
+                PromotionRpc.DEL_PRODUCT.getMethod(),
+                builder -> builder
+                        .addProductRelationId(productRelationId)
+                        .addSessionId(sessionId)
+                        .addProductId(productId),
+                RabbitRpcPromotionMessage.Builder()
         );
     }
 
     @Override
     public void delSession(long sessionId) throws JsonProcessingException {
-        rabbitTemplate.convertAndSend(
-                QueueEnum.QUEUE_PROMOTION_HANDLE.getExchange(),
-                QueueEnum.QUEUE_PROMOTION_HANDLE.getRouteKey(),
-                serialization(
-                        RabbitRpcPromotionMessage.Builder()
-                                .addSessionId(sessionId)
-                                .addQueue(QueueEnum.QUEUE_PROMOTION_HANDLE.getQueueName())
-                                .addMethod(PromotionRpc.DEL_SESSION.getMethod())
-                ),
-                setCallBack(PromotionRpc.DEL_SESSION.getMethod())
+        sendMessage(
+                QueueEnum.QUEUE_PROMOTION_HANDLE,
+                PromotionRpc.DEL_PRODUCT.getMethod(),
+                builder -> builder
+                        .addSessionId(sessionId),
+                RabbitRpcPromotionMessage.Builder()
         );
     }
 }

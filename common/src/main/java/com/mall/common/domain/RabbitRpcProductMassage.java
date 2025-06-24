@@ -4,6 +4,8 @@ public class RabbitRpcProductMassage extends RabbitRpcMessage{
     private Long productId;
     private Long skuId;
 
+    public RabbitRpcProductMassage(){}
+
     public static RabbitRpcProductMassage Builder(){
         return new RabbitRpcProductMassage();
     }

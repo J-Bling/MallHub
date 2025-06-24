@@ -14,106 +14,78 @@ public class ProductManageImpl implements ProductManage {
     @Autowired private RabbitTemplate rabbitTemplate;
 
     @Override
+    public RabbitTemplate getRabbitTemplate() {
+        return rabbitTemplate;
+    }
+
+
+    @Override
     public void delRank() throws JsonProcessingException {
-        rabbitTemplate.convertAndSend(
-                QueueEnum.QUEUE_PRODUCT_HANDLE.getExchange(),
-                QueueEnum.QUEUE_PRODUCT_HANDLE.getRouteKey(),
-                serialization(
-                        RabbitRpcProductMassage.Builder()
-                            .addQueue(QueueEnum.QUEUE_PRODUCT_HANDLE.getQueueName())
-                            .addMethod(ProductRpc.DEL_RANK.getMethod())
-                ),
-                setCallBack(ProductRpc.DEL_RANK.getMethod())
+        sendMessage(
+                QueueEnum.QUEUE_PRODUCT_HANDLE,
+                ProductRpc.DEL_RANK.getMethod(),
+                builder->{},
+                new RabbitRpcProductMassage()
         );
     }
 
     @Override
     public void addProduct(long productId) throws JsonProcessingException {
-        rabbitTemplate.convertAndSend(
-                QueueEnum.QUEUE_PRODUCT_HANDLE.getExchange(),
-                QueueEnum.QUEUE_PRODUCT_HANDLE.getRouteKey(),
-                serialization(
-                        RabbitRpcProductMassage.Builder()
-                                .addProductId(productId)
-                                .addQueue(QueueEnum.QUEUE_PRODUCT_HANDLE.getQueueName())
-                                .addMethod(ProductRpc.ADD_PRODUCT.getMethod())
-                ),
-                setCallBack(ProductRpc.ADD_PRODUCT.getMethod())
+        sendMessage(
+                QueueEnum.QUEUE_PRODUCT_HANDLE,
+                ProductRpc.ADD_PRODUCT.getMethod(),
+                builder->builder.setProductId(productId),
+                new RabbitRpcProductMassage()
         );
     }
 
     @Override
     public void deleteProduct(long productId) throws JsonProcessingException {
-        rabbitTemplate.convertAndSend(
-                QueueEnum.QUEUE_PRODUCT_HANDLE.getExchange(),
-                QueueEnum.QUEUE_PRODUCT_HANDLE.getRouteKey(),
-                serialization(
-                        RabbitRpcProductMassage.Builder()
-                                .addProductId(productId)
-                                .addQueue(QueueEnum.QUEUE_PRODUCT_HANDLE.getQueueName())
-                                .addMethod(ProductRpc.DEL_PRODUCT.getMethod())
-                ),
-                setCallBack(ProductRpc.DEL_PRODUCT.getMethod())
+        sendMessage(
+                QueueEnum.QUEUE_PRODUCT_HANDLE,
+                ProductRpc.DEL_PRODUCT.getMethod(),
+                builder->builder.setProductId(productId),
+                new RabbitRpcProductMassage()
         );
     }
 
     @Override
     public void upToDelProductCache(long productId) throws JsonProcessingException {
-        rabbitTemplate.convertAndSend(
-                QueueEnum.QUEUE_PRODUCT_HANDLE.getExchange(),
-                QueueEnum.QUEUE_PRODUCT_HANDLE.getRouteKey(),
-                serialization(
-                        RabbitRpcProductMassage.Builder()
-                                .addProductId(productId)
-                                .addQueue(QueueEnum.QUEUE_PRODUCT_HANDLE.getQueueName())
-                                .addMethod(ProductRpc.UP_DEL_PRODUCT.getMethod())
-                ),
-                setCallBack(ProductRpc.UP_DEL_PRODUCT.getMethod())
+        sendMessage(
+                QueueEnum.QUEUE_PRODUCT_HANDLE,
+                ProductRpc.UP_DEL_PRODUCT.getMethod(),
+                builder->builder.setProductId(productId),
+                new RabbitRpcProductMassage()
         );
     }
 
     @Override
     public void upToDelProductSubModelCache(long productId) throws JsonProcessingException {
-        rabbitTemplate.convertAndSend(
-                QueueEnum.QUEUE_PRODUCT_HANDLE.getExchange(),
-                QueueEnum.QUEUE_PRODUCT_HANDLE.getRouteKey(),
-                serialization(
-                        RabbitRpcProductMassage.Builder()
-                                .addProductId(productId)
-                                .addQueue(QueueEnum.QUEUE_PRODUCT_HANDLE.getQueueName())
-                                .addMethod(ProductRpc.UP_DEL_PRODUCT_SUB.getMethod())
-                ),
-                setCallBack(ProductRpc.UP_DEL_PRODUCT_SUB.getMethod())
+        sendMessage(
+                QueueEnum.QUEUE_PRODUCT_HANDLE,
+                ProductRpc.UP_DEL_PRODUCT_SUB.getMethod(),
+                builder->builder.setProductId(productId),
+                new RabbitRpcProductMassage()
         );
     }
 
     @Override
     public void upToDelSkuStockCache(long productId) throws JsonProcessingException {
-        rabbitTemplate.convertAndSend(
-                QueueEnum.QUEUE_PRODUCT_HANDLE.getExchange(),
-                QueueEnum.QUEUE_PRODUCT_HANDLE.getRouteKey(),
-                serialization(
-                        RabbitRpcProductMassage.Builder()
-                                .addProductId(productId)
-                                .addQueue(QueueEnum.QUEUE_PRODUCT_HANDLE.getQueueName())
-                                .addMethod(ProductRpc.UP_DEL_SKU.getMethod())
-                ),
-                setCallBack(ProductRpc.UP_DEL_SKU.getMethod())
+        sendMessage(
+                QueueEnum.QUEUE_PRODUCT_HANDLE,
+                ProductRpc.UP_DEL_SKU.getMethod(),
+                builder->builder.setProductId(productId),
+                new RabbitRpcProductMassage()
         );
     }
 
     @Override
     public void upToDelStats(long productId, long skuId) throws JsonProcessingException {
-        rabbitTemplate.convertAndSend(
-                QueueEnum.QUEUE_PRODUCT_HANDLE.getExchange(),
-                QueueEnum.QUEUE_PRODUCT_HANDLE.getRouteKey(),
-                serialization(
-                        RabbitRpcProductMassage.Builder()
-                                .addProductId(productId)
-                                .addQueue(QueueEnum.QUEUE_PRODUCT_HANDLE.getQueueName())
-                                .addMethod(ProductRpc.UP_DEL_STATS.getMethod())
-                ),
-                setCallBack(ProductRpc.UP_DEL_STATS.getMethod())
+        sendMessage(
+                QueueEnum.QUEUE_PRODUCT_HANDLE,
+                ProductRpc.UP_DEL_STATS.getMethod(),
+                builder -> builder.setProductId(productId),
+                new RabbitRpcProductMassage()
         );
     }
 }

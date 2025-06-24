@@ -1,6 +1,7 @@
 package com.mall.portal.rpc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mall.common.constant.enums.rpc.AttributeRpc;
 import com.mall.common.domain.RabbitAttributeMessage;
 import com.mall.portal.consumer.AttributeHandle;
 import com.rabbitmq.client.Channel;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Component
-@RabbitListener(queues = "")
+@RabbitListener(queues = "mall.attribute.queue")
 public class RpcAttributeService {
     @Autowired private AttributeHandle handle;
     @Autowired private ObjectMapper objectMapper;
@@ -28,7 +29,18 @@ public class RpcAttributeService {
         try{
             RabbitAttributeMessage attributeMessage = objectMapper.readValue(body,objectMapper.constructType(RabbitAttributeMessage.class));
             String method = attributeMessage.getMethod();
-
+            if (AttributeRpc.DEL_ATTRIBUTE.getMethod().equals(method)){
+                handle.delAttribute(attributeMessage.getAttributeId(),attributeMessage.getCategoryId());
+            } else if (AttributeRpc.DEL_ATTRIBUTE_CATEGORY_BY_ID.getMethod().equals(method)) {
+                handle.delAttributeCategoryById(attributeMessage.getCategoryId());
+            } else if (AttributeRpc.DEL_ATTRIBUTE_ALL_BY_CATEGORY.getMethod().equals(method)) {
+                handle.delAttributeAllByCategory(attributeMessage.getCategoryId());
+            } else if (AttributeRpc.DEL_ATTRIBUTE_CATEGORY_ALL.getMethod().equals(method)) {
+                handle.delAttributeCategoryAll();
+            }else {
+                throw new RuntimeException("没有该方法可以调用");
+            }
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(),false);
 
         }catch (Exception e){
             logger.error("调用服务失败:{}",e.getMessage());

@@ -6,7 +6,7 @@ public enum CouponRpc {
     DEL_COUPON_PRO_CATE_RELATION("delCacheCouponProductCateRelation");
 
 
-    private String method;
+    private final String method;
     CouponRpc(String method){
         this.method=method;
     }

@@ -14,53 +14,47 @@ public class CouponManageImpl implements CouponManage {
     @Autowired private RabbitTemplate rabbitTemplate;
 
     @Override
+    public RabbitTemplate getRabbitTemplate() {
+        return rabbitTemplate;
+    }
+
+    @Override
     public void delCoupon(Long id, Boolean isAllUseType) throws JsonProcessingException {
-        rabbitTemplate.convertAndSend(
-                QueueEnum.COUPON_HANDLE.getExchange(),
-                QueueEnum.COUPON_HANDLE.getRouteKey(),
-                serialization(
-                        RabbitCouponMessage.builder()
-                                .couponId(id)
-                                .isAllUseType(isAllUseType)
-                                .build()
-                                .addQueue(QueueEnum.COUPON_HANDLE.getQueueName())
-                                .addMethod(CouponRpc.DEL_COUPON.getMethod())
-                ),
-                setCallBack(CouponRpc.DEL_COUPON.getMethod())
+        sendMessage(
+                QueueEnum.COUPON_HANDLE,
+                CouponRpc.DEL_COUPON.getMethod(),
+                builder->{
+                    builder.setCouponId(id);
+                    builder.setIsAllUseType(isAllUseType);
+                },
+                new RabbitCouponMessage()
         );
     }
 
     @Override
     public void delCacheCouponProductRelation(Long productId, Long couponId) throws JsonProcessingException {
-        rabbitTemplate.convertAndSend(
-                QueueEnum.COUPON_HANDLE.getExchange(),
-                QueueEnum.COUPON_HANDLE.getRouteKey(),
-                serialization(
-                        RabbitCouponMessage.builder()
-                                .couponId(couponId)
-                                .productId(productId)
-                                .build()
-                                .addQueue(QueueEnum.COUPON_HANDLE.getQueueName())
-                                .addMethod(CouponRpc.DEL_COUPON_PRODUCT_RELATION.getMethod())
-                ),
-                setCallBack(CouponRpc.DEL_COUPON_PRODUCT_RELATION.getMethod())
+        sendMessage(
+                QueueEnum.COUPON_HANDLE,
+                CouponRpc.DEL_COUPON_PRODUCT_RELATION.getMethod(),
+                builder->{
+                    builder.setCouponId(couponId);
+                    builder.setProductId(productId);
+                },
+                new RabbitCouponMessage()
         );
     }
 
     @Override
     public void delCacheCouponProductCateRelation(Long productCateId, Long couponId) throws JsonProcessingException {
-        rabbitTemplate.convertAndSend(
-                QueueEnum.COUPON_HANDLE.getExchange(),
-                QueueEnum.COUPON_HANDLE.getRouteKey(),
-                serialization(
-                        RabbitCouponMessage.builder()
-                                .couponId(couponId)
-                                .productCateId(productCateId)
-                                .build()
-                                .addQueue(QueueEnum.COUPON_HANDLE.getQueueName())
-                                .addMethod(CouponRpc.DEL_COUPON_PRO_CATE_RELATION.getMethod())
-                ),
-                setCallBack(CouponRpc.DEL_COUPON_PRO_CATE_RELATION.getMethod())
+        sendMessage(
+                QueueEnum.COUPON_HANDLE,
+                CouponRpc.DEL_COUPON_PRO_CATE_RELATION.getMethod(),
+                builder->{
+                    builder.setProductCateId(productCateId);
+                    builder.setCouponId(couponId);
+                },
+                new RabbitCouponMessage()
         );
     }
+
 }

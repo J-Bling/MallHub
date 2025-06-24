@@ -23,7 +23,11 @@ public enum QueueEnum {
     /**
      * 优惠券通知队列
      */
-    COUPON_HANDLE("mall.coupon.direct","mall.coupon.queue","mall.coupon.queue");
+    COUPON_HANDLE("mall.coupon.direct","mall.coupon.queue","mall.coupon.queue"),
+    /**
+     * 属性通知队列
+     */
+    PRODUCT_ATTRIBUTE_HANDLE("mall.attribute.direct","mall.attribute.queue","mall.attribute.queue");
 
 
     private String exchange;

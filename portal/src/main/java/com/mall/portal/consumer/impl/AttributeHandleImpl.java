@@ -16,7 +16,7 @@ public class AttributeHandleImpl implements AttributeHandle {
     }
 
     @Override
-    public void delAttributeById(long id, long categoryId) {
+    public void delAttribute(long id, long categoryId) {
         attributeCacheService.delAttributeById(id,categoryId);
     }
 

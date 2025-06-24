@@ -4,6 +4,8 @@ public class RabbitRpcMessage {
     private String queue;
     private String method;
 
+    public RabbitRpcMessage(){}
+
     public static RabbitRpcMessage Builder(){
         return new RabbitRpcPromotionMessage();
     }
