@@ -1,16 +1,20 @@
 package com.mall.admin.service.product.impl;
 
 import com.github.pagehelper.PageHelper;
+import com.mall.admin.cache.ProductCateCacheManage;
 import com.mall.admin.dao.product.PmsProductCategoryAttributeRelationDao;
 import com.mall.admin.dao.product.PmsProductCategoryDao;
 import com.mall.admin.domain.product.PmsProductCategoryParam;
 import com.mall.admin.domain.product.PmsProductCategoryWithChildrenItem;
+import com.mall.admin.productor.ProductManage;
 import com.mall.admin.service.product.PmsProductCategoryService;
 import com.mall.mbg.mapper.PmsProductCategoryAttributeRelationMapper;
 import com.mall.mbg.mapper.PmsProductCategoryMapper;
 import com.mall.mbg.mapper.PmsProductMapper;
 import com.mall.mbg.model.*;
 import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,6 +37,13 @@ public class PmsProductCategoryServiceImpl implements PmsProductCategoryService 
     private PmsProductCategoryAttributeRelationMapper productCategoryAttributeRelationMapper;
     @Autowired
     private PmsProductCategoryDao productCategoryDao;
+    @Autowired
+    private ProductCateCacheManage cateCacheManage ;
+    @Autowired
+    ProductManage productManage;
+
+    private final Logger logger = LoggerFactory.getLogger(PmsProductCategoryServiceImpl.class);
+
     @Override
     public int create(PmsProductCategoryParam pmsProductCategoryParam) {
         PmsProductCategory productCategory = new PmsProductCategory();
@@ -41,6 +52,7 @@ public class PmsProductCategoryServiceImpl implements PmsProductCategoryService 
         //没有父分类时为一级分类
         setCategoryLevel(productCategory);
         int count = productCategoryMapper.insertSelective(productCategory);
+        cateCacheManage.add(productCategory);
         //创建筛选属性关联
         List<Long> productAttributeIdList = pmsProductCategoryParam.getProductAttributeIdList();
         if(!CollectionUtils.isEmpty(productAttributeIdList)){
@@ -77,6 +89,16 @@ public class PmsProductCategoryServiceImpl implements PmsProductCategoryService 
         PmsProductExample example = new PmsProductExample();
         example.createCriteria().andProductCategoryIdEqualTo(id);
         productMapper.updateByExampleSelective(product,example);
+        List<PmsProduct> productList = productMapper.selectByExample(example);
+        if (!CollectionUtils.isEmpty(productList)){
+            for(PmsProduct pmsProduct : productList){
+                try {
+                    productManage.upToDelProductCache(pmsProduct.getId());
+                }catch (Exception e){
+                    logger.error(e.getMessage());
+                }
+            }
+        }
         //同时更新筛选属性的信息
         if(!CollectionUtils.isEmpty(pmsProductCategoryParam.getProductAttributeIdList())){
             PmsProductCategoryAttributeRelationExample relationExample = new PmsProductCategoryAttributeRelationExample();
@@ -88,7 +110,11 @@ public class PmsProductCategoryServiceImpl implements PmsProductCategoryService 
             relationExample.createCriteria().andProductCategoryIdEqualTo(id);
             productCategoryAttributeRelationMapper.deleteByExample(relationExample);
         }
-        return productCategoryMapper.updateByPrimaryKeySelective(productCategory);
+        int status = productCategoryMapper.updateByPrimaryKeySelective(productCategory);
+        productCategory = productCategoryMapper.selectByPrimaryKey(id);
+        if (productCategory!=null)
+            cateCacheManage.add(productCategory);
+        return status;
     }
 
     @Override
@@ -102,7 +128,9 @@ public class PmsProductCategoryServiceImpl implements PmsProductCategoryService 
 
     @Override
     public int delete(Long id) {
-        return productCategoryMapper.deleteByPrimaryKey(id);
+        int status =productCategoryMapper.deleteByPrimaryKey(id);
+        cateCacheManage.deleteCateCache(id);
+        return status;
     }
 
     @Override
@@ -116,7 +144,12 @@ public class PmsProductCategoryServiceImpl implements PmsProductCategoryService 
         productCategory.setNavStatus(navStatus);
         PmsProductCategoryExample example = new PmsProductCategoryExample();
         example.createCriteria().andIdIn(ids);
-        return productCategoryMapper.updateByExampleSelective(productCategory, example);
+        int status = productCategoryMapper.updateByExampleSelective(productCategory, example);
+        List<PmsProductCategory> categoryList = productCategoryMapper.selectByExample(example);
+        if (!CollectionUtils.isEmpty(categoryList)){
+            cateCacheManage.addAdd(categoryList);
+        }
+        return status;
     }
 
     @Override
@@ -125,7 +158,12 @@ public class PmsProductCategoryServiceImpl implements PmsProductCategoryService 
         productCategory.setShowStatus(showStatus);
         PmsProductCategoryExample example = new PmsProductCategoryExample();
         example.createCriteria().andIdIn(ids);
-        return productCategoryMapper.updateByExampleSelective(productCategory, example);
+        int status =productCategoryMapper.updateByExampleSelective(productCategory, example);
+        List<PmsProductCategory> categoryList = productCategoryMapper.selectByExample(example);
+        if (!CollectionUtils.isEmpty(categoryList)){
+            cateCacheManage.addAdd(categoryList);
+        }
+        return status;
     }
 
     @Override

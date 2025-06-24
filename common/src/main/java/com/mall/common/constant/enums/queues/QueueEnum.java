@@ -21,10 +21,6 @@ public enum QueueEnum {
      */
     QUEUE_PROMOTION_HANDLE("mall.promotion.direct","mall.promotion.handle","mall.promotion.handle"),
     /**
-     * 优惠券通知队列
-     */
-    COUPON_HANDLE("mall.coupon.direct","mall.coupon.queue","mall.coupon.queue"),
-    /**
      * 属性通知队列
      */
     PRODUCT_ATTRIBUTE_HANDLE("mall.attribute.direct","mall.attribute.queue","mall.attribute.queue");

@@ -22,15 +22,9 @@ public class RabbitConfig {
     }
 
     @Bean
-    public DirectExchange couponDirect(){
-        return new DirectExchange(QueueEnum.COUPON_HANDLE.getExchange(),true,false);
-    }
-
-    @Bean
     public DirectExchange productAttributeDirect(){
         return new DirectExchange(QueueEnum.PRODUCT_ATTRIBUTE_HANDLE.getExchange(),true,false);
     }
-
 
 
 
@@ -49,14 +43,6 @@ public class RabbitConfig {
     @Bean
     public Queue promotionQueue(){
         return new Queue(QueueEnum.QUEUE_PROMOTION_HANDLE.getQueueName(),true,false,false);
-    }
-
-    /**
-     * 优惠券队列
-     */
-    @Bean
-    public Queue couponQueue(){
-        return new Queue(QueueEnum.COUPON_HANDLE.getQueueName(),true,false,false);
     }
 
     /**
@@ -86,13 +72,6 @@ public class RabbitConfig {
                 .with(QueueEnum.QUEUE_PROMOTION_HANDLE.getRouteKey());
     }
 
-    @Bean
-    Binding couponBinding(DirectExchange couponDirect,Queue couponQueue){
-        return BindingBuilder
-                .bind(couponQueue)
-                .to(couponDirect)
-                .with(QueueEnum.COUPON_HANDLE.getRouteKey());
-    }
 
     @Bean
     public Binding productAttributeBinding(DirectExchange productAttributeDirect,Queue productAttributeQueue){

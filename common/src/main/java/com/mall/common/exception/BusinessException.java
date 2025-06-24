@@ -1,7 +1,7 @@
 package com.mall.common.exception;
 
 
-import com.mall.common.enums.BusinessErrorCode;
+import com.mall.common.constant.enums.BusinessErrorCode;
 
 public class BusinessException  extends RuntimeException{
     private final BusinessErrorCode errorCode;

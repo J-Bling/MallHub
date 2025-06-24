@@ -1,8 +1,11 @@
 package com.mall.admin.service.product.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.github.pagehelper.PageHelper;
+import com.mall.admin.cache.BrandCacheManage;
 import com.mall.admin.domain.product.PmsBrandParam;
+import com.mall.admin.productor.ProductManage;
 import com.mall.admin.service.product.PmsBrandService;
 import com.mall.mbg.mapper.PmsBrandMapper;
 import com.mall.mbg.mapper.PmsProductMapper;
@@ -10,9 +13,12 @@ import com.mall.mbg.model.PmsBrand;
 import com.mall.mbg.model.PmsBrandExample;
 import com.mall.mbg.model.PmsProduct;
 import com.mall.mbg.model.PmsProductExample;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -25,6 +31,12 @@ public class PmsBrandServiceImpl implements PmsBrandService {
     private PmsBrandMapper brandMapper;
     @Autowired
     private PmsProductMapper productMapper;
+    @Autowired
+    private BrandCacheManage brandCacheManage;
+    @Autowired
+    private ProductManage productManage;
+
+    private final Logger logger = LoggerFactory.getLogger(PmsBrandServiceImpl.class);
 
     @Override
     public List<PmsBrand> listAllBrand() {
@@ -39,7 +51,17 @@ public class PmsBrandServiceImpl implements PmsBrandService {
         if (StrUtil.isEmpty(pmsBrand.getFirstLetter())) {
             pmsBrand.setFirstLetter(pmsBrand.getName().substring(0, 1));
         }
-        return brandMapper.insertSelective(pmsBrand);
+        PmsBrandExample example = new PmsBrandExample();
+        example.createCriteria().andNameEqualTo(pmsBrand.getName());
+        List<PmsBrand> brandList = brandMapper.selectByExample(example);
+        if (!CollectionUtil.isEmpty(brandList)){
+            throw new RuntimeException("该品牌名称已经被注册");
+        }
+        int status = brandMapper.insertSelective(pmsBrand);
+        if (status>0){
+            brandCacheManage.add(pmsBrand);
+        }
+        return status;
     }
 
     @Override
@@ -57,19 +79,44 @@ public class PmsBrandServiceImpl implements PmsBrandService {
         PmsProductExample example = new PmsProductExample();
         example.createCriteria().andBrandIdEqualTo(id);
         productMapper.updateByExampleSelective(product,example);
-        return brandMapper.updateByPrimaryKeySelective(pmsBrand);
+
+        PmsProductExample pmsProductExample = new PmsProductExample();
+        pmsProductExample.createCriteria().andBrandIdEqualTo(id);
+        List<PmsProduct> productList = productMapper.selectByExample(pmsProductExample);
+        if (!CollectionUtil.isEmpty(productList)){
+            try{
+                for (PmsProduct pmsProduct : productList){
+                    productManage.upToDelProductCache(pmsProduct.getId());
+                }
+            }catch (Exception e){
+                logger.error("发生错误:{}",e.getMessage());
+            }
+        }
+
+        int status = brandMapper.updateByPrimaryKeySelective(pmsBrand);
+        if (status>0)
+            brandCacheManage.add(brandMapper.selectByPrimaryKey(id));
+        return status;
     }
 
     @Override
     public int deleteBrand(Long id) {
-        return brandMapper.deleteByPrimaryKey(id);
+        int status = brandMapper.deleteByPrimaryKey(id);
+        brandCacheManage.delBrandCache(id);
+        return status;
     }
 
     @Override
+    @Transactional
     public int deleteBrand(List<Long> ids) {
         PmsBrandExample pmsBrandExample = new PmsBrandExample();
         pmsBrandExample.createCriteria().andIdIn(ids);
-        return brandMapper.deleteByExample(pmsBrandExample);
+        for (Long id : ids){
+            int status = brandMapper.deleteByPrimaryKey(id);
+            if (status>0)
+                brandCacheManage.delBrandCache(id);
+        }
+        return 1;
     }
 
     @Override
@@ -98,7 +145,16 @@ public class PmsBrandServiceImpl implements PmsBrandService {
         pmsBrand.setShowStatus(showStatus);
         PmsBrandExample pmsBrandExample = new PmsBrandExample();
         pmsBrandExample.createCriteria().andIdIn(ids);
-        return brandMapper.updateByExampleSelective(pmsBrand, pmsBrandExample);
+        int status = brandMapper.updateByExampleSelective(pmsBrand, pmsBrandExample);
+        if (status>0){
+            for (Long id : ids){
+                PmsBrand brand = brandMapper.selectByPrimaryKey(id);
+                if (brand!=null){
+                    brandCacheManage.add(brand);
+                }
+            }
+        }
+        return status;
     }
 
     @Override
@@ -107,6 +163,15 @@ public class PmsBrandServiceImpl implements PmsBrandService {
         pmsBrand.setFactoryStatus(factoryStatus);
         PmsBrandExample pmsBrandExample = new PmsBrandExample();
         pmsBrandExample.createCriteria().andIdIn(ids);
-        return brandMapper.updateByExampleSelective(pmsBrand, pmsBrandExample);
+        int status = brandMapper.updateByExampleSelective(pmsBrand, pmsBrandExample);
+        if (status>0){
+            for (Long id : ids){
+                PmsBrand brand = brandMapper.selectByPrimaryKey(id);
+                if (brand!=null){
+                    brandCacheManage.add(brand);
+                }
+            }
+        }
+        return status;
     }
 }

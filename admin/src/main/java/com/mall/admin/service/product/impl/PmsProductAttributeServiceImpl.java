@@ -1,15 +1,19 @@
 package com.mall.admin.service.product.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.github.pagehelper.PageHelper;
 import com.mall.admin.dao.product.PmsProductAttributeDao;
 import com.mall.admin.domain.product.PmsProductAttributeParam;
 import com.mall.admin.domain.product.ProductAttrInfo;
+import com.mall.admin.productor.AttributeManage;
 import com.mall.admin.service.product.PmsProductAttributeService;
 import com.mall.mbg.mapper.PmsProductAttributeCategoryMapper;
 import com.mall.mbg.mapper.PmsProductAttributeMapper;
 import com.mall.mbg.model.PmsProductAttribute;
 import com.mall.mbg.model.PmsProductAttributeCategory;
 import com.mall.mbg.model.PmsProductAttributeExample;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +31,10 @@ public class PmsProductAttributeServiceImpl implements PmsProductAttributeServic
     private PmsProductAttributeCategoryMapper productAttributeCategoryMapper;
     @Autowired
     private PmsProductAttributeDao productAttributeDao;
+    @Autowired
+    private AttributeManage attributeManage;
+
+    private final Logger logger = LoggerFactory.getLogger(PmsProductAttributeServiceImpl.class);
 
     @Override
     public List<PmsProductAttribute> getList(Long cid, Integer type, Integer pageSize, Integer pageNum) {
@@ -42,6 +50,11 @@ public class PmsProductAttributeServiceImpl implements PmsProductAttributeServic
         PmsProductAttribute pmsProductAttribute = new PmsProductAttribute();
         BeanUtils.copyProperties(pmsProductAttributeParam, pmsProductAttribute);
         int count = productAttributeMapper.insertSelective(pmsProductAttribute);
+        try {
+            attributeManage.delAttributeAllByCategory(pmsProductAttribute.getProductAttributeCategoryId());
+        }catch (Exception e){
+            logger.error(e.getMessage());
+        }
         //新增商品属性以后需要更新商品属性分类数量
         PmsProductAttributeCategory pmsProductAttributeCategory = productAttributeCategoryMapper.selectByPrimaryKey(pmsProductAttribute.getProductAttributeCategoryId());
         if(pmsProductAttribute.getType()==0){
@@ -50,6 +63,11 @@ public class PmsProductAttributeServiceImpl implements PmsProductAttributeServic
             pmsProductAttributeCategory.setParamCount(pmsProductAttributeCategory.getParamCount()+1);
         }
         productAttributeCategoryMapper.updateByPrimaryKey(pmsProductAttributeCategory);
+        try{
+            attributeManage.delAttributeCategoryAll();
+        }catch (Exception e){
+            logger.error(e.getMessage());
+        }
         return count;
     }
 
@@ -58,7 +76,13 @@ public class PmsProductAttributeServiceImpl implements PmsProductAttributeServic
         PmsProductAttribute pmsProductAttribute = new PmsProductAttribute();
         pmsProductAttribute.setId(id);
         BeanUtils.copyProperties(productAttributeParam, pmsProductAttribute);
-        return productAttributeMapper.updateByPrimaryKeySelective(pmsProductAttribute);
+        int status = productAttributeMapper.updateByPrimaryKeySelective(pmsProductAttribute);
+        try {
+            attributeManage.delAttributeAllByCategory(pmsProductAttribute.getProductAttributeCategoryId());
+        }catch (Exception e){
+            logger.error(e.getMessage());
+        }
+        return status;
     }
 
     @Override
@@ -90,6 +114,22 @@ public class PmsProductAttributeServiceImpl implements PmsProductAttributeServic
             }
         }
         productAttributeCategoryMapper.updateByPrimaryKey(pmsProductAttributeCategory);
+        try{
+            if (count <10){
+                List<PmsProductAttribute> attributeList = productAttributeMapper.selectByExample(example);
+                if (!CollectionUtil.isEmpty(attributeList)){
+                    for (PmsProductAttribute attribute : attributeList){
+                        attributeManage.delAttribute(attribute.getId(),attribute.getProductAttributeCategoryId());
+                    }
+                }
+            }else {
+                attributeManage.delAttributeCategoryById(pmsProductAttribute.getProductAttributeCategoryId());
+            }
+
+            attributeManage.delAttributeCategoryAll();
+        }catch (Exception e){
+            logger.error(e.getMessage());
+        }
         return count;
     }
 

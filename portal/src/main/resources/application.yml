@@ -28,6 +28,8 @@ redis:
     ProductCategoryKey: product-category-key
     brandZSetKey: brand-zSet-key
     brandHashKey: brand-hash-key
+    CouponKey: coupon-key
+    AllUseTypeCouponKey: all-use-type-coupon-key
 
   expire:
     authCode: 90 # 验证码超期时间

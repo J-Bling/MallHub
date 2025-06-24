@@ -11,6 +11,7 @@ import com.mall.portal.cache.CouponCacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -24,14 +25,26 @@ public class CouponCacheServiceImpl implements CouponCacheService {
     @Autowired private SmsCouponProductRelationMapper productRelationMapper;
     @Autowired private SmsCouponProductCategoryRelationMapper categoryRelationMapper;
 
+
+    @Value("${redis.key.CouponKey:coupon-key}")
+    private String CouponKey;
+    @Value("${redis.key.AllUseTypeCouponKey:all-use-type-coupon-key}")
+    private String AllUseTypeCouponKey;
+
+    String HashField(long id){return ""+id;}
+    String CouponStatsKey(long couponId){return "stats-coupon-key:"+couponId;}
+    String CouponProductRelationKey(long productId){ return  "coupon-product-relation-key:"+productId;}
+    String CouponProductCategoryRelationKey(long productCategoryId) {return  "coupon-product-category-relation-key:"+productCategoryId;}
+
     private final Logger logger = LoggerFactory.getLogger(CouponCacheServiceImpl.class);
+    private final static NullCoupon nullCoupon = new NullCoupon();
 
     @Override
     public SmsCoupon get(long couponId) {
         try {
             String field = HashField(couponId);
             Object result = redisService.hGet(CouponKey, field);
-            if (CouponCacheService.defaultNULL.equals(result)) {
+            if (result instanceof NullCoupon) {
                 return null;
             }
             if (result != null) {
@@ -47,7 +60,7 @@ public class CouponCacheServiceImpl implements CouponCacheService {
                 redisService.hSet(CouponKey,field,coupon);
                 this.setCouponStatsCache(coupon);
             }else {
-                redisService.hSet(CouponKey,field,CouponCacheService.defaultNULL);
+                redisService.hSet(CouponKey,field,nullCoupon);
             }
             return coupon;
         }catch (Exception e){
@@ -70,7 +83,7 @@ public class CouponCacheServiceImpl implements CouponCacheService {
                     couponList.add(coupon);
                     continue;
                 }
-                if (CouponCacheService.defaultNULL.equals(result)) {
+                if (result instanceof NullCoupon) {
                     couponList.add(null);
                     continue;
                 }
@@ -101,7 +114,7 @@ public class CouponCacheServiceImpl implements CouponCacheService {
 
                 if (productRelationList == null || productRelationList.isEmpty()) {
                     //空缓存
-                    redisService.hSetAll(key, Collections.emptyMap());
+//                    redisService.hSetAll(key, Collections.emptyMap());
                 } else {
                     Map<String, SmsCouponProductRelation> relationMap = new HashMap<>();
                     for (SmsCouponProductRelation relation : productRelationList) {
@@ -147,33 +160,6 @@ public class CouponCacheServiceImpl implements CouponCacheService {
         return categoryRelationList;
     }
 
-    @Override
-    public void delCacheCoupon(long couponId) {
-        redisService.hDel(CouponKey,HashField(couponId));
-        this.delCouponStats(couponId);
-    }
-
-    @Override
-    public void delCacheAllUseTypeCoupon(long couponId,boolean isAllUseType){
-        this.delCacheCoupon(couponId);
-        if (isAllUseType) {
-            redisService.hDel(AllUseTypeCouponKey, HashField(couponId));
-        }
-    }
-
-    @Override
-    public void delCacheCouponProductRelation(long productId , long couponId) {
-        String key = CouponProductRelationKey(productId);
-        String field = HashField(couponId);
-        redisService.hDel(key,field);
-    }
-
-    @Override
-    public void delCacheCouponProductCategoryRelation(long productCategoryId , long couponId) {
-        String key = CouponProductCategoryRelationKey(productCategoryId);
-        String field = HashField(couponId);
-        redisService.hDel(key,field);
-    }
 
     private void setAllUseTypeCouponCache(long couponId){
         redisService.hSet(AllUseTypeCouponKey,HashField(couponId),couponId);
@@ -213,20 +199,22 @@ public class CouponCacheServiceImpl implements CouponCacheService {
 
     @Override
     public void incrementCount(long couponId,long delta){
-        counterRedisService.hInCr(CouponStatsKey(couponId),CouponStats.count,delta);
+        counterRedisService.hInCr(CouponStatsKey(couponId),count,delta);
     }
 
     @Override
     public void incrementUseCount(long couponId,long delta){
-        counterRedisService.hInCr(CouponStatsKey(couponId),CouponStats.useCount,delta);
+        counterRedisService.hInCr(CouponStatsKey(couponId),useCount,delta);
     }
 
     @Override
     public void incrementReceiveCount(long couponId,long delta){
-        counterRedisService.hInCr(CouponStatsKey(couponId),CouponStats.receiveCount,delta);
+        counterRedisService.hInCr(CouponStatsKey(couponId),receiveCount,delta);
     }
 
     private void delCouponStats(long couponId){
         redisService.del(CouponStatsKey(couponId));
     }
+
 }
+class NullCoupon extends SmsCoupon{}

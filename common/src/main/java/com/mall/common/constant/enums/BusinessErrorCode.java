@@ -1,4 +1,4 @@
-package com.mall.common.enums;
+package com.mall.common.constant.enums;
 
 
 public enum BusinessErrorCode {

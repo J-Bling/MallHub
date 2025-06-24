@@ -62,12 +62,6 @@
             <artifactId>kryo</artifactId>
             <version>${kryo.version}</version>
         </dependency>
-<!--&lt;!&ndash;        构造函数的对象实例化能力&ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>org.objenesis</groupId>-->
-<!--            <artifactId>objenesis</artifactId>-->
-<!--            <version>${objenesis.version}</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

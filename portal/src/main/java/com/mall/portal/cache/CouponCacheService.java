@@ -4,19 +4,14 @@ import com.mall.common.constant.interfaces.Cache;
 import com.mall.mbg.model.SmsCoupon;
 import com.mall.mbg.model.SmsCouponProductCategoryRelation;
 import com.mall.mbg.model.SmsCouponProductRelation;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public interface CouponCacheService extends Cache {
-    String CouponKey = "coupon-key";
-    String AllUseTypeCouponKey = "all-use-type-coupon-key";
-    default String CouponProductRelationKey(long productId){ return  "coupon-product-relation-key:"+productId;}
-    default String CouponProductCategoryRelationKey(long productId) {return  "coupon-product-category-relation-key:"+productId;}
-    default String HashField(long id){return ""+id;}
-    default String CouponStatsKey(long couponId){return "stats-coupon-key";}
-
+    String count = "count";
+    String useCount = "useCount";
+    String receiveCount = "receiveCount";
     /**
      * 获取优惠券信息
      */
@@ -38,28 +33,13 @@ public interface CouponCacheService extends Cache {
      */
     List<SmsCouponProductCategoryRelation> getCouponProductCategoryRelationList(long productCategoryId);
 
-    /**
-     * 删除优惠券 缓存
-     */
-    void delCacheCoupon(long couponId);
-    /**
-     * 删除通用优惠券缓存记录
-     */
-    void delCacheAllUseTypeCoupon(long couponId,boolean isAllUseType);
-    /**
-     * 删除商品-优惠券关联(多对多) 缓存
-     */
-    void delCacheCouponProductRelation(long productId,long couponId);
-    /**
-     * 删除商品类型-优惠券(多对多) 缓存
-     */
-    void delCacheCouponProductCategoryRelation(long productCategoryId,long couponId);
+
+    void incrementCount(long couponId,long delta);
+    void incrementUseCount(long couponId,long delta);
+    void incrementReceiveCount(long couponId,long delta);
+
 
     class CouponStats{
-        public static final String count = "count";
-        public static final String useCount = "useCount";
-        public static final String receiveCount = "receiveCount";
-
         private final Map<String,String> stringStringMap = new HashMap<>();
 
         public CouponStats(){}
@@ -79,10 +59,4 @@ public interface CouponCacheService extends Cache {
             return stringStringMap;
         }
     }
-
-
-
-    void incrementCount(long couponId,long delta);
-    void incrementUseCount(long couponId,long delta);
-    void incrementReceiveCount(long couponId,long delta);
 }

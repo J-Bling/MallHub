@@ -9,6 +9,8 @@ import com.mall.admin.dao.product.*;
 import com.mall.admin.domain.product.PmsProductParam;
 import com.mall.admin.domain.product.PmsProductQueryParam;
 import com.mall.admin.domain.product.PmsProductResult;
+import com.mall.admin.productor.AttributeManage;
+import com.mall.admin.productor.ProductManage;
 import com.mall.admin.service.product.PmsProductService;
 import com.mall.mbg.mapper.*;
 import com.mall.mbg.model.*;
@@ -65,6 +67,13 @@ public class PmsProductServiceImpl implements PmsProductService {
     private PmsProductDao productDao;
     @Autowired
     private PmsProductVertifyRecordDao productVertifyRecordDao;
+    @Autowired
+    private ProductManage productManage;
+    @Autowired
+    private AttributeManage attributeManage;
+
+
+    private final Logger logger = LoggerFactory.getLogger(PmsProductServiceImpl.class);
 
     @Override
     public int create(PmsProductParam productParam) {
@@ -92,6 +101,11 @@ public class PmsProductServiceImpl implements PmsProductService {
         //关联优选
         relateAndInsertList(prefrenceAreaProductRelationDao, productParam.getPrefrenceAreaProductRelationList(), productId);
         count = 1;
+        try {
+            productManage.addProduct(productId);
+        }catch (Exception e){
+            logger.error(e.getMessage());
+        }
         return count;
     }
 
@@ -158,6 +172,15 @@ public class PmsProductServiceImpl implements PmsProductService {
         prefrenceAreaProductRelationMapper.deleteByExample(prefrenceAreaExample);
         relateAndInsertList(prefrenceAreaProductRelationDao, productParam.getPrefrenceAreaProductRelationList(), id);
         count = 1;
+
+        try{
+            productManage.upToDelStats(product.getId(), 0);
+            productManage.upToDelProductSubModelCache(product.getId());
+            productManage.upToDelSkuStockCache(product.getId());
+            productManage.upToDelSkuStockCache(product.getId());
+        }catch (Exception e){
+            logger.error(e.getMessage());
+        }
         return count;
     }
 
@@ -248,8 +271,18 @@ public class PmsProductServiceImpl implements PmsProductService {
             record.setStatus(verifyStatus);
             record.setVertifyMan("test");
             list.add(record);
+            try {
+                productManage.upToDelProductCache(id);
+            }catch (Exception e){
+                logger.error(e.getMessage());
+            }
         }
         productVertifyRecordDao.insertList(list);
+        try {
+            productManage.delRank();
+        }catch (Exception e){
+            logger.error(e.getMessage());
+        }
         return count;
     }
 
@@ -259,7 +292,13 @@ public class PmsProductServiceImpl implements PmsProductService {
         record.setPublishStatus(publishStatus);
         PmsProductExample example = new PmsProductExample();
         example.createCriteria().andIdIn(ids);
-        return productMapper.updateByExampleSelective(record, example);
+        int s = productMapper.updateByExampleSelective(record, example);
+        try {
+            productManage.delRank();
+        }catch (Exception e){
+            logger.error(e.getMessage());
+        }
+        return s;
     }
 
     @Override
@@ -268,7 +307,13 @@ public class PmsProductServiceImpl implements PmsProductService {
         record.setRecommendStatus(recommendStatus==1);
         PmsProductExample example = new PmsProductExample();
         example.createCriteria().andIdIn(ids);
-        return productMapper.updateByExampleSelective(record, example);
+        int s = productMapper.updateByExampleSelective(record, example);
+        try {
+            productManage.delRank();
+        }catch (Exception e){
+            logger.error(e.getMessage());
+        }
+        return s;
     }
 
     @Override
@@ -277,7 +322,13 @@ public class PmsProductServiceImpl implements PmsProductService {
         record.setNewStatus(newStatus);
         PmsProductExample example = new PmsProductExample();
         example.createCriteria().andIdIn(ids);
-        return productMapper.updateByExampleSelective(record, example);
+        int s = productMapper.updateByExampleSelective(record, example);
+        try {
+            productManage.delRank();
+        }catch (Exception e){
+            logger.error(e.getMessage());
+        }
+        return s;
     }
 
     @Override
@@ -286,7 +337,13 @@ public class PmsProductServiceImpl implements PmsProductService {
         record.setDeleteStatus(deleteStatus);
         PmsProductExample example = new PmsProductExample();
         example.createCriteria().andIdIn(ids);
-        return productMapper.updateByExampleSelective(record, example);
+        int s = productMapper.updateByExampleSelective(record, example);
+        try {
+            productManage.delRank();
+        }catch (Exception e){
+            logger.error(e.getMessage());
+        }
+        return s;
     }
 
     @Override
