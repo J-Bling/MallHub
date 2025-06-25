@@ -8,7 +8,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,7 +15,7 @@ import java.util.List;
 /**
  * 首页品牌管理Controller
  */
-@Controller
+@RestController
 @Api(tags = "SmsHomeBrandController")
 @Tag(name = "SmsHomeBrandController", description = "首页品牌管理")
 @RequestMapping("/home/brand")
@@ -25,9 +24,8 @@ public class SmsHomeBrandController {
     private SmsHomeBrandService homeBrandService;
 
     @ApiOperation("添加首页推荐品牌")
-    @RequestMapping(value = "/create", method = RequestMethod.POST)
-    @ResponseBody
-    public ResponseResult create(@RequestBody List<SmsHomeBrand> homeBrandList) {
+    @PostMapping("/create")
+    public ResponseResult<Integer> create(@RequestBody List<SmsHomeBrand> homeBrandList) {
         int count = homeBrandService.create(homeBrandList);
         if (count > 0) {
             return ResponseResult.success(count);
@@ -36,9 +34,8 @@ public class SmsHomeBrandController {
     }
 
     @ApiOperation("修改推荐品牌排序")
-    @RequestMapping(value = "/update/sort/{id}", method = RequestMethod.POST)
-    @ResponseBody
-    public ResponseResult updateSort(@PathVariable Long id, Integer sort) {
+    @PutMapping("/update/sort/{id}")
+    public ResponseResult<Integer> updateSort(@PathVariable Long id, Integer sort) {
         int count = homeBrandService.updateSort(id, sort);
         if (count > 0) {
             return ResponseResult.success(count);
@@ -47,9 +44,8 @@ public class SmsHomeBrandController {
     }
 
     @ApiOperation("批量删除推荐品牌")
-    @RequestMapping(value = "/delete", method = RequestMethod.POST)
-    @ResponseBody
-    public ResponseResult delete(@RequestParam("ids") List<Long> ids) {
+    @PostMapping("/delete")
+    public ResponseResult<Integer> delete(@RequestBody List<Long> ids) {
         int count = homeBrandService.delete(ids);
         if (count > 0) {
             return ResponseResult.success(count);
@@ -58,9 +54,8 @@ public class SmsHomeBrandController {
     }
 
     @ApiOperation("批量修改推荐品牌状态")
-    @RequestMapping(value = "/update/recommendStatus", method = RequestMethod.POST)
-    @ResponseBody
-    public ResponseResult updateRecommendStatus(@RequestParam("ids") List<Long> ids, @RequestParam Integer recommendStatus) {
+    @PutMapping("/update/recommendStatus")
+    public ResponseResult<Integer> updateRecommendStatus(@RequestBody List<Long> ids, @RequestParam Integer recommendStatus) {
         int count = homeBrandService.updateRecommendStatus(ids, recommendStatus);
         if (count > 0) {
             return ResponseResult.success(count);
@@ -69,8 +64,7 @@ public class SmsHomeBrandController {
     }
 
     @ApiOperation("分页查询推荐品牌")
-    @RequestMapping(value = "/list", method = RequestMethod.GET)
-    @ResponseBody
+    @GetMapping("/list")
     public ResponseResult<ResponsePage<SmsHomeBrand>> list(@RequestParam(value = "brandName", required = false) String brandName,
                                                        @RequestParam(value = "recommendStatus", required = false) Integer recommendStatus,
                                                        @RequestParam(value = "pageSize", defaultValue = "5") Integer pageSize,
