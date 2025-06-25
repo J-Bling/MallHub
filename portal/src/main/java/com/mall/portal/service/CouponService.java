@@ -31,6 +31,7 @@ public interface CouponService {
      * 获取该用户所有领取优惠券
      */
     List<UserCoupons> getUserCoupons();
+
     class UserCoupons{
         private SmsCoupon coupon;
         private SmsCouponHistory couponHistory;

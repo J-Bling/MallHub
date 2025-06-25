@@ -38,8 +38,6 @@ redis:
     ProductCategoryKey: product-category-key
     brandZSetKey: brand-zSet-key
     brandHashKey: brand-hash-key
-    CouponKey: coupon-key
-    AllUseTypeCouponKey: all-use-type-coupon-key
 
 secure:
   ignored:

@@ -34,8 +34,6 @@ public class SmsCouponServiceImpl implements SmsCouponService {
     @Autowired
     private SmsCouponDao couponDao;
 
-
-
     @Override
     public int create(SmsCouponParam couponParam) {
         couponParam.setCount(couponParam.getPublishCount());
