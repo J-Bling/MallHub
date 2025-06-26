@@ -3,6 +3,7 @@ package com.mall.portal.cache;
 import com.mall.common.constant.interfaces.Cache;
 import com.mall.mbg.model.*;
 import com.mall.portal.domain.model.product.ProductAlbums;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.util.List;
@@ -114,57 +115,16 @@ public interface ProductCacheService extends Cache {
         public static String Stock = "stock";
     }
 
-
+    @Data
     class ProductSubModel implements Serializable {
         private Long productId;
         private List<PmsProductLadder> productLadderList;
         private List<PmsProductFullReduction> productFullReductionList;
         private ProductAlbums productAlbums;
         private List<PmsProductAttributeValue> productAttributeValueList;
-
-        public Long getProductId() {
-            return productId;
-        }
-
-
-        public ProductAlbums getProductAlbums() {
-            return productAlbums;
-        }
-
-        public List<PmsProductLadder> getProductLadderList() {
-            return productLadderList;
-        }
-
-        public List<PmsProductFullReduction> getProductFullReductionList() {
-            return productFullReductionList;
-        }
-
-        public List<PmsProductAttributeValue> getProductAttributeValueList() {
-            return productAttributeValueList;
-        }
-
-        public void setProductId(Long productId) {
-            this.productId = productId;
-        }
-
-        public void setProductAlbums(ProductAlbums productAlbums) {
-            this.productAlbums = productAlbums;
-        }
-
-
-        public void setProductFullReductionList(List<PmsProductFullReduction> productFullReductionList) {
-            this.productFullReductionList = productFullReductionList;
-        }
-
-        public void setProductLadderList(List<PmsProductLadder> productLadderList) {
-            this.productLadderList = productLadderList;
-        }
-
-        public void setProductAttributeValueList(List<PmsProductAttributeValue> productAttributeValueList) {
-            this.productAttributeValueList = productAttributeValueList;
-        }
     }
 
+    @Data
     class ProductStats implements Serializable{
         private Integer sale;
         private Integer stock;
@@ -173,22 +133,6 @@ public interface ProductCacheService extends Cache {
         public ProductStats(Integer sale,Integer stock){
             this.sale = sale;
             this.stock = stock;
-        }
-
-        public Integer getStock() {
-            return stock;
-        }
-
-        public Integer getSale() {
-            return sale;
-        }
-
-        public void setStock(Integer stock) {
-            this.stock = stock;
-        }
-
-        public void setSale(Integer sale) {
-            this.sale = sale;
         }
     }
 }

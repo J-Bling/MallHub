@@ -54,17 +54,24 @@ public class ProductCacheServiceImpl implements ProductCacheService {
     private final Lock SkuSale = new ReentrantLock();
 
     private static final NullProduct nullProduct = new NullProduct();
-    private static final NummProductModel nullProductModel = new NummProductModel();
+    private static final NullProductModel nullProductModel = new NullProductModel();
     private final Logger logger = LoggerFactory.getLogger(ProductCacheServiceImpl.class);
 
 
 
     @Override
     public void addProduct(long id){
+        if (allowProductCache==null || !allowProductCache){
+            return;
+        }
         PmsProduct product = productMapper.selectByPrimaryKey(id);
         if (product!=null){
             counterRedisService.zAdd(CacheKeys.ProductSaleRank,CacheKeys.Field(id),product.getSale());
-            counterRedisService.zAdd(CacheKeys.ProductNewRank,CacheKeys.Field(id),product.getCreateAt());
+            if (product.getNewStatus()>0 || product.getDeleteStatus()==0) {
+                counterRedisService.zAdd(CacheKeys.ProductNewRank, CacheKeys.Field(id), product.getCreateAt());
+                long expires = System.currentTimeMillis()- 7*24*60*60*1000;//删除8天前缓存
+                counterRedisService.zRemoveRangeByScore(CacheKeys.ProductNewRank,0,expires);
+            }
             if (allowProductCache!=null && allowProductCache){
                 this.setProductCache(product);
             }
@@ -166,14 +173,16 @@ public class ProductCacheServiceImpl implements ProductCacheService {
 
     @Override
     public ProductStats getProductStats(long productId) {
-        Map<String,String> map = counterRedisService.hGetAll(CacheKeys.ProductStats(productId));
+        String key = CacheKeys.ProductStats(productId);
+        Map<String,String> map = counterRedisService.hGetAll(key);
         if (map==null || map.isEmpty()){
             PmsProduct product = productMapper.selectByPrimaryKey(productId);
             if (product!=null){
                 map = new HashMap<>();
                 map.put(CacheKeys.Sale,product.getSale().toString());
                 map.put(CacheKeys.Stock,product.getStock().toString());
-                counterRedisService.hSetAll(CacheKeys.ProductStats(productId),map);
+                counterRedisService.hSetAll(key,map);
+                redisService.expire(key,oneDayExpired);
                 return new ProductStats(product.getSale(),product.getStock());
             }
             return null;
@@ -209,6 +218,7 @@ public class ProductCacheServiceImpl implements ProductCacheService {
                 PmsProduct product = productMapper.selectByPrimaryKey(productId);
                 if (product!=null){
                     counterRedisService.hInCr(key,CacheKeys.Sale,product.getSale());
+                    redisService.expire(key,oneDayExpired);
                 }
                 return;
             }catch (Exception e){
@@ -243,6 +253,7 @@ public class ProductCacheServiceImpl implements ProductCacheService {
                 PmsProduct product = productMapper.selectByPrimaryKey(productId);
                 if (product!=null){
                     counterRedisService.hInCr(key,CacheKeys.Stock,product.getStock());
+                    redisService.expire(key,oneDayExpired);
                 }
                 return;
             }catch (Exception e){
@@ -275,6 +286,7 @@ public class ProductCacheServiceImpl implements ProductCacheService {
                     PmsSkuStock stock = skuStockMapper.selectByPrimaryKey(skuId);
                     if (stock!=null){
                         counterRedisService.hInCr(key,CacheKeys.Stock,stock.getStock());
+                        redisService.expire(key,oneDayExpired);
                     }
 
                 }catch (Exception e){
@@ -310,6 +322,7 @@ public class ProductCacheServiceImpl implements ProductCacheService {
                     PmsSkuStock stock = skuStockMapper.selectByPrimaryKey(skuId);
                     if (stock!=null){
                         counterRedisService.hInCr(key,CacheKeys.Sale,stock.getSale());
+                        redisService.expire(key,oneDayExpired);
                     }
 
                 }catch (Exception e){
@@ -390,7 +403,7 @@ public class ProductCacheServiceImpl implements ProductCacheService {
             Boolean isLock = redisService.setNX(lockKey,lockKey,defaultLockMaxExpired);
             if (isLock==null || !isLock){
                 try {
-                    Thread.sleep(Math.min(defaultLockTime*(1<<(i-1)),defaultLockMaxExpired));
+                    Thread.sleep(Math.min(defaultLockTime*(1L <<(i-1)),defaultLockMaxExpired));
                 }catch (InterruptedException interruptedException){
                     logger.error("获取线程休眠失败:{}",interruptedException.getMessage());
                 }
@@ -402,7 +415,7 @@ public class ProductCacheServiceImpl implements ProductCacheService {
                     return product instanceof NullProduct ? null : product;
                 }
                 product = productMapper.selectByPrimaryKey(id);
-                redisService.set(key,product!=null ? product : nullProduct);
+                redisService.set(key,product!=null ? product : nullProduct,oneDayExpired);
             }finally {
                 redisService.del(lockKey);
             }
@@ -414,6 +427,7 @@ public class ProductCacheServiceImpl implements ProductCacheService {
     private void setSkuStockStats(long skuId,Map<String,String> map){
         String key = CacheKeys.SkuStockStats(skuId);
         counterRedisService.hSetAll(key,map);
+        redisService.expire(key,oneDayExpired);
     }
 
 
@@ -466,14 +480,14 @@ public class ProductCacheServiceImpl implements ProductCacheService {
         String key =CacheKeys.ProductModelKey(productId);
         ProductSubModel productModel = (ProductSubModel) redisService.get(key);
         if (productModel!=null){
-            return productModel instanceof NummProductModel ? null : productModel;
+            return productModel instanceof NullProductModel ? null : productModel;
         }
         for (int i=0;i<retryCount;i++){
             String lockKey = CacheKeys.ProductModelKeyLock(productId);
             Boolean isLock = redisService.setNX(lockKey,defaultNULL,defaultLockExpired);
             if (isLock==null || !isLock){
                 try {
-                    Thread.sleep(Math.min(defaultLockTime*(1<<(i-1)),1000));
+                    Thread.sleep(Math.min(defaultLockTime*(1L <<(i-1)),1000));
                 }catch (InterruptedException interruptedException){
                     logger.error("线程 休眠失败:{}",interruptedException.getMessage());
                 }
@@ -482,10 +496,10 @@ public class ProductCacheServiceImpl implements ProductCacheService {
             try {
                 productModel = (ProductSubModel) redisService.get(key);
                 if (productModel != null) {
-                    return productModel instanceof NummProductModel ? null : productModel;
+                    return productModel instanceof NullProductModel ? null : productModel;
                 }
                 productModel = this.getProductSubModelInDb(productId);
-                redisService.set(key, productModel == null ? nullProductModel : productModel);
+                redisService.set(key, productModel == null ? nullProductModel : productModel,oneDayExpired);
             }finally {
                 redisService.del(lockKey);
             }
@@ -500,7 +514,8 @@ public class ProductCacheServiceImpl implements ProductCacheService {
 
     private PmsSkuStock getSkuStockInCache(long productId,long skuId){
         try {
-            PmsSkuStock skuStock = (PmsSkuStock) redisService.hGet(CacheKeys.SkuStockHashKey(productId), CacheKeys.Field(skuId));
+            String key = CacheKeys.SkuStockHashKey(productId);
+            PmsSkuStock skuStock = (PmsSkuStock) redisService.hGet(key, CacheKeys.Field(skuId));
             if (skuStock != null) {
                 ProductStats productStats = this.getSkuStockStats(skuId);
                 if (productStats!=null){
@@ -517,7 +532,8 @@ public class ProductCacheServiceImpl implements ProductCacheService {
                 for (PmsSkuStock stock : skuStockList) {
                     stringPmsSkuStockMap.put(CacheKeys.Field(stock.getId()), stock);
                 }
-                redisService.hSetAll(CacheKeys.SkuStockHashKey(productId), stringPmsSkuStockMap);
+                redisService.hSetAll(key, stringPmsSkuStockMap);
+                redisService.expire(key,oneDayExpired);
                 for (PmsSkuStock stock : skuStockList) {
                     if (stock.getId().equals(skuId)) {
                         Map<String,String> map = new HashMap<>();
@@ -543,7 +559,8 @@ public class ProductCacheServiceImpl implements ProductCacheService {
     private List<PmsSkuStock> getSkuStockListInCache(long productId){
         List<PmsSkuStock> skuStockList = new ArrayList<>();
         try {
-            Map<Object, Object> map = redisService.hGetAll(CacheKeys.SkuStockHashKey(productId));
+            String key = CacheKeys.SkuStockHashKey(productId);
+            Map<Object, Object> map = redisService.hGetAll(key);
             if (map != null && !map.isEmpty()) {
                 for (Map.Entry<Object, Object> entry : map.entrySet()) {
                     PmsSkuStock stock = (PmsSkuStock) entry.getValue();
@@ -565,7 +582,8 @@ public class ProductCacheServiceImpl implements ProductCacheService {
                 for (PmsSkuStock stock : skuStockList) {
                     skuStockMap.put("" + stock.getId(), stock);
                 }
-                redisService.hSetAll(CacheKeys.SkuStockHashKey(productId), skuStockMap);
+                redisService.hSetAll(key, skuStockMap);
+                redisService.expire(key,oneDayExpired);
             }
         }catch (Exception e){
             logger.error("获取库存信息失败:productId:{},{}",productId,e.getMessage());
@@ -574,9 +592,9 @@ public class ProductCacheServiceImpl implements ProductCacheService {
     }
 
     private void setProductCache(PmsProduct product){
-        redisService.set(CacheKeys.ProductKey(product.getId()),product);
+        redisService.set(CacheKeys.ProductKey(product.getId()),product,oneDayExpired);
     }
 }
 
 class NullProduct extends PmsProduct{}
-class NummProductModel extends ProductCacheService.ProductSubModel{}
+class NullProductModel extends ProductCacheService.ProductSubModel{}

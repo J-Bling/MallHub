@@ -76,6 +76,9 @@ public interface FlashPromotionCacheService extends Cache {
      * 获取 该productRelation sku库存缓存
      */
     Map<Long,Integer> skuStockCountMap(long productRelationId);
+
+
+
     /**
      * 修改库存缓存 flashSkuRelationId==0 时只处理总库存
      */
@@ -88,6 +91,9 @@ public interface FlashPromotionCacheService extends Cache {
      * 修改库存销量缓存
      */
     void incrementProductSale(long sessionId,long productRelationId,long productId,long skuId,int delta);
+
+
+
     /**
      * 清空结束场次以及附带信息
      */
@@ -131,6 +137,10 @@ public interface FlashPromotionCacheService extends Cache {
      * 下架一个商品
      */
     void removedProduct(long sessionId,long productId,long productRelationId);
+
+
+
+
     /**
      * 获取锁
      */
@@ -157,7 +167,7 @@ public interface FlashPromotionCacheService extends Cache {
         public static String NextSessionSetKey= "flash-promotion-next-session-set-key:";
         //session的productId
         public static String SessionProductSetKey(long sessionId){return "flash-session-product-set-key:"+sessionId;}
-        // product-productRelation对应id
+        // product-productRelation对应id 根据productId找到 productRelationId
         public static String ProductIdToProductRelationId(long sessionId){return "flash-product-to-productRelation-hash-key:"+sessionId;}
         //sms_flash_product_relation.id 排行 缓存 根据sessionId存储
         public static String ProductRelationZSetKey(long sessionId){return "flash-product-relation-z-set-key:"+sessionId;}
