@@ -46,10 +46,6 @@ public interface RedisService {
      * 设置过期时间
      */
     Boolean expire(String key, long time);
-    /**
-     * 尝试设置过期时间
-     */
-    void tryExpire(String key);
 
     /**
      * 获取过期时间
@@ -85,8 +81,6 @@ public interface RedisService {
      * 向Hash结构中放入一个属性
      */
     void hSet(String key, String hashKey, Object value);
-
-    void hSet(String key,String hashKey,Object value,int x);
 
     /**
      * 直接获取整个Hash结构

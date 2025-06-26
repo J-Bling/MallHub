@@ -7,4 +7,5 @@ public interface Cache {
     long defaultLockExpired = 1000;
     int retryCount = 5;
     String lockValue = "lock";
+    long oneDayExpired = 86400000;
 }

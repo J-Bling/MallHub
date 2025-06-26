@@ -1,10 +1,11 @@
 package com.mall.common.domain;
 
-import java.io.Serializable;
+import com.mall.common.constant.interfaces.ParamsModel;
+
 import java.util.List;
 import java.util.Map;
 
-public class ReSetPromotionModel implements Serializable {
+public class ReSetPromotionModel implements ParamsModel {
     private List<Long> lastPromotionIds;//结束的活动
     private List<Long> currentPromotionIds;//开始的活动
 

@@ -15,12 +15,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.sql.SQLException;
-import java.sql.SQLSyntaxErrorException;
 
 @ControllerAdvice
 public class GlobalExceptionHandle {
 
-    private Logger logger = LoggerFactory.getLogger(GlobalExceptionHandle.class);
+    private final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandle.class);
 
     @ResponseBody
     @ExceptionHandler(value = ApiException.class)

@@ -40,9 +40,7 @@ public class CounterRedisServiceImpl implements CounterRedisService {
 
     @Override
     public Long hInCr(String key, String hashKey, long delta) {
-        Long len = hashOperations.increment(key,hashKey,delta);
-        redisService.tryExpire(key);
-        return len;
+        return hashOperations.increment(key,hashKey,delta);
     }
 
     @Override
@@ -58,7 +56,6 @@ public class CounterRedisServiceImpl implements CounterRedisService {
     @Override
     public void hSet(String key, String field, String value) {
         hashOperations.put(key,field,value);
-        redisService.tryExpire(key);
     }
 
     @Override
@@ -75,7 +72,6 @@ public class CounterRedisServiceImpl implements CounterRedisService {
     @Override
     public void hSetAll(String key, Map<String, String> fieldValues) {
         hashOperations.putAll(key,fieldValues);
-        redisService.tryExpire(key);
     }
 
     @Override
@@ -107,7 +103,6 @@ public class CounterRedisServiceImpl implements CounterRedisService {
 
     @Override
     public Boolean zAdd(String key, String value, double score) {
-        redisService.tryExpire(key);
         return stringRedisTemplate.opsForZSet().add(key,value,score);
     }
 
@@ -121,7 +116,6 @@ public class CounterRedisServiceImpl implements CounterRedisService {
         if (values==null||values.isEmpty()){
             return 0L;
         }
-        redisService.tryExpire(key);
         return stringRedisTemplate.opsForZSet().add(key,values.entrySet()
                 .stream()
                 .map(e->new DefaultTypedTuple<>(e.getKey(),e.getValue()))
@@ -195,7 +189,11 @@ public class CounterRedisServiceImpl implements CounterRedisService {
 
     @Override
     public void sAddAll(String key, List<String> values) {
-        stringRedisTemplate.opsForSet().add(key,values.toArray(new String[0]));
+        String[] strings = new String[values.size()];
+        for (int i=0;i<values.size();i++){
+            strings[i] = values.get(i);
+        }
+        stringRedisTemplate.opsForSet().add(key,strings);
     }
 
     @Override
@@ -216,7 +214,11 @@ public class CounterRedisServiceImpl implements CounterRedisService {
 
     @Override
     public void sRm(String key, List<String> values) {
-        stringRedisTemplate.opsForSet().remove(key,values.toArray(new String[0]));
+        Object[] objects = new Object[values.size()];
+        for (int i=0;i<values.size();i++){
+            objects[i] = values.get(i);
+        }
+        stringRedisTemplate.opsForSet().remove(key,objects);
     }
 
     @Override

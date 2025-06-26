@@ -1,12 +1,10 @@
 package com.mall.portal.cache.impl;
 
+import com.mall.common.service.CounterRedisService;
 import com.mall.common.service.RedisService;
 import com.mall.mbg.mapper.PmsProductAttributeCategoryMapper;
 import com.mall.mbg.mapper.PmsProductAttributeMapper;
-import com.mall.mbg.model.PmsProductAttribute;
-import com.mall.mbg.model.PmsProductAttributeCategory;
-import com.mall.mbg.model.PmsProductAttributeCategoryExample;
-import com.mall.mbg.model.PmsProductAttributeExample;
+import com.mall.mbg.model.*;
 import com.mall.portal.cache.ProductAttributeCacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductAttributeCacheServiceImpl implements ProductAttributeCacheService {
@@ -21,37 +20,74 @@ public class ProductAttributeCacheServiceImpl implements ProductAttributeCacheSe
     @Autowired private PmsProductAttributeMapper attributeMapper;
     @Autowired private PmsProductAttributeCategoryMapper categoryMapper;
     @Autowired private RedisService redisService;
+    @Autowired private CounterRedisService counterRedisService;
 
     private final Logger logger = LoggerFactory.getLogger(ProductAttributeCacheServiceImpl.class);
 
     @Override
-    public PmsProductAttributeCategory getAttributeCategory(long categoryId) {
-        return this.getCategoryCache(categoryId,1);
+    public void addAttributeCate(long cateId) {
+        PmsProductAttributeCategory category = categoryMapper.selectByPrimaryKey(cateId);
+        if (category==null){
+            return;
+        }
+        redisService.hSet(CacheKeys.ProductAttributeCategoryHashKey,CacheKeys.Field(cateId),category);
     }
 
-    private PmsProductAttributeCategory getCategoryCache(long categoryId,int tryCount){
-        if (tryCount>=retryCount){
-            return null;
+    @Override
+    public void addAttribute(long attributeId) {
+        PmsProductAttribute attribute = attributeMapper.selectByPrimaryKey(attributeId);
+        if (attribute==null){
+            return;
         }
+        counterRedisService.sAdd(CacheKeys.AttributeCateSetKey(attribute.getProductAttributeCategoryId()),attributeId+"");
+        redisService.set(CacheKeys.ProductAttributeKey(attributeId),attribute,oneDayExpired);
+    }
+
+    @Override
+    public void addAttributeAll(List<Long> attributeIds) {
+        PmsProductAttributeExample example = new PmsProductAttributeExample();
+        example.createCriteria().andIdIn(attributeIds);
+        List<PmsProductAttribute> attributeList = attributeMapper.selectByExample(example);
+        if (attributeList == null || attributeList.isEmpty()){
+            return;
+        }
+        Map<String,List<String>> listMap = new HashMap<>();
+        for (PmsProductAttribute attribute : attributeList){
+            listMap.computeIfAbsent(CacheKeys.AttributeCateSetKey(attribute.getProductAttributeCategoryId()),k->new ArrayList<>()).add(attribute.getId()+"");
+            redisService.set(CacheKeys.ProductAttributeKey(attribute.getId()),attribute,oneDayExpired);
+        }
+        for (Map.Entry<String,List<String>> entry : listMap.entrySet()){
+            counterRedisService.sAddAll(entry.getKey(),entry.getValue());
+        }
+    }
+
+
+
+    @Override
+    public PmsProductAttributeCategory getAttributeCategory(long categoryId) {
         PmsProductAttributeCategory category=(PmsProductAttributeCategory) redisService.hGet(CacheKeys.ProductAttributeCategoryHashKey,CacheKeys.Field(categoryId));
         if (category!=null){
             return category;
         }
-        Boolean isLock = redisService.setNX(CacheKeys.CategoryLock(categoryId),lockValue,defaultLockExpired);
-        if (isLock==null || !isLock){
-            try{
-                Thread.sleep(defaultLockTime);
-            }catch (InterruptedException interruptedException){
-                logger.error("线程休眠失败:{}", interruptedException.getMessage());
+        for (int i=0;i<retryCount;i++){
+            Boolean isLock = redisService.setNX(CacheKeys.CategoryLock(categoryId),lockValue,defaultLockExpired);
+            if (isLock ==null || !isLock){
+                try{
+                    Thread.sleep(defaultLockTime);
+                }catch (InterruptedException interruptedException){
+                    logger.error("线程休眠失败:{}", interruptedException.getMessage());
+                }
+                continue;
             }
-            return this.getCategoryCache(categoryId,tryCount+1);
-        }
-        category = categoryMapper.selectByPrimaryKey(categoryId);
-        if (category !=null){
-            redisService.hSet(CacheKeys.ProductAttributeCategoryHashKey,CacheKeys.Field(categoryId),category);
+            category = categoryMapper.selectByPrimaryKey(categoryId);
+            if (category !=null){
+                redisService.hSet(CacheKeys.ProductAttributeCategoryHashKey,CacheKeys.Field(categoryId),category);
+            }
+            break;
         }
         return category;
     }
+
 
     @Override
     public List<PmsProductAttributeCategory> getCategoryList() {
@@ -88,44 +124,46 @@ public class ProductAttributeCacheServiceImpl implements ProductAttributeCacheSe
         }
         attribute = attributeMapper.selectByPrimaryKey(attributeId);
         if (attribute!=null){
-            redisService.set(CacheKeys.ProductAttributeKey(attributeId),attribute);
+            redisService.set(CacheKeys.ProductAttributeKey(attributeId),attribute,oneDayExpired);
+            counterRedisService.sAdd(CacheKeys.AttributeCateSetKey(attribute.getProductAttributeCategoryId()),attributeId+"");
         }
         return attribute;
     }
 
     @Override
     public List<PmsProductAttribute> getAttributeList(long categoryId) {
+        Set<String> strings = counterRedisService.sMembers(CacheKeys.AttributeCateSetKey(categoryId));
         List<PmsProductAttribute> attributeList = new ArrayList<>();
-        Map<Object,Object> map = redisService.hGetAll(CacheKeys.ProductAttributeHashKey(categoryId));
-        if (map==null || map.isEmpty()){
+        if (strings!=null && !strings.isEmpty()){
+            for (String id : strings){
+                attributeList.add(this.getAttribute(Long.parseLong(id)));
+            }
+        }else {
             PmsProductAttributeExample example = new PmsProductAttributeExample();
             example.createCriteria().andProductAttributeCategoryIdEqualTo(categoryId);
             attributeList = attributeMapper.selectByExample(example);
             if (attributeList!=null && !attributeList.isEmpty()){
-                Map<String,Long> attributeMap = new HashMap<>();
+                List<String> ids = new ArrayList<>();
                 for (PmsProductAttribute attribute : attributeList){
-                    attributeMap.put(""+attribute.getId(),attribute.getId());
+                    ids.add(""+attribute.getId());
+                    redisService.set(CacheKeys.ProductAttributeKey(attribute.getId()),attribute,oneDayExpired);
                 }
-                redisService.hSetAll(CacheKeys.ProductAttributeHashKey(categoryId),attributeMap);
-            }
-        }else {
-            for (Map.Entry<Object,Object> entry : map.entrySet()){
-                attributeList.add((PmsProductAttribute) redisService.get(CacheKeys.ProductAttributeKey((Long) entry.getValue())));
+                counterRedisService.sAddAll(CacheKeys.AttributeCateSetKey(categoryId),ids);
             }
         }
         return attributeList;
     }
 
+
     @Override
     public void delAttributeAllByCategory(long categoryId) {
-        redisService.del(CacheKeys.ProductAttributeHashKey(categoryId));
+        redisService.del(CacheKeys.AttributeCateSetKey(categoryId));
     }
 
     @Override
     public void delAttributeById(long id, long categoryId) {
-        String key = CacheKeys.ProductAttributeHashKey(categoryId);
-        redisService.hDel(key,CacheKeys.Field(id));
         redisService.del(CacheKeys.ProductAttributeKey(id));
+        counterRedisService.sRm(CacheKeys.AttributeCateSetKey(categoryId),""+id);
     }
 
     @Override
@@ -137,5 +175,4 @@ public class ProductAttributeCacheServiceImpl implements ProductAttributeCacheSe
     public void delAttributeCategoryAll() {
         redisService.del(CacheKeys.ProductAttributeCategoryHashKey);
     }
-
 }

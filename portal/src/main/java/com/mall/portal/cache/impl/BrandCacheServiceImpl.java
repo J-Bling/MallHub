@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class BrandCacheServiceImpl implements BrandCacheService {
@@ -21,11 +20,45 @@ public class BrandCacheServiceImpl implements BrandCacheService {
     @Autowired private BrandDao brandDao;
     @Autowired private CounterRedisService counterRedisService;
 
-    @Value("${redis.key.brandZSetKey:brand-zSet-key}")
-    private String brandZSetKey;
-
     @Value("${redis.key.brandHashKey:brand-hash-key}")
     private String brandHashKey;
+
+    @Override
+    public void addBrand(long brandId) {
+        PmsBrand brand = brandMapper.selectByPrimaryKey(brandId);
+        if (brand!=null){
+            redisService.hSet(brandHashKey,""+brandId,brand);
+        }
+    }
+
+    @Override
+    public void addAll(List<Long> ids) {
+        PmsBrandExample example = new PmsBrandExample();
+        example.createCriteria().andIdIn(ids);
+        List<PmsBrand> brandList = brandMapper.selectByExample(example);
+        if (!brandList.isEmpty()){
+            Map<String,PmsBrand> brandMap = new HashMap<>();
+            for (PmsBrand brand : brandList){
+                brandMap.put(""+brand.getId(),brand);
+            }
+            redisService.hSetAll(brandHashKey,brandMap);
+        }
+    }
+
+    @Override
+    public void delBrand(long brandId) {
+        redisService.hDel(brandHashKey,""+brandId);
+    }
+
+    @Override
+    public void updateBrand(long brandId) {
+        this.addBrand(brandId);
+    }
+
+    @Override
+    public void cleanBrand() {
+        redisService.del(brandHashKey);
+    }
 
     @Override
     public PmsBrand getBrand(long brandId) {
@@ -46,26 +79,19 @@ public class BrandCacheServiceImpl implements BrandCacheService {
     }
 
     @Override
-    public List<PmsBrand> getBrands(int offset,int limit) {
-        Set<String> sets = counterRedisService.zRange(brandZSetKey,offset,offset+limit-1);
-        if (sets==null || sets.isEmpty()){
-            List<PmsBrand> brandList = brandMapper.selectByExample(new PmsBrandExample());
-            if (brandList==null || brandList.isEmpty()){
-                return null;
+    public List<PmsBrand> getBrands() {
+        List<PmsBrand> brandList = new ArrayList<>();
+        Map<Object,Object> map = redisService.hGetAll(brandHashKey);
+        if (map==null || map.isEmpty()){
+            brandList = brandMapper.selectByExample(new PmsBrandExample());
+            if (!brandList.isEmpty()){
+                Map<String,PmsBrand> brandMap = new HashMap<>();
+                for (PmsBrand brand : brandList){
+                    brandMap.put(""+brand.getId(),brand);
+                }
+                redisService.hSetAll(brandHashKey,brandMap);
             }
-            Map<String,PmsBrand> pmsBrandMap = new HashMap<>();
-            Map<String,Double> zSetMap = new HashMap<>();
-            for (PmsBrand brand : brandList){
-                pmsBrandMap.put(brand.getId()+"",brand);
-                zSetMap.put(brand.getId()+"",(double) brand.getId());
-            }
-            redisService.hSetAll(brandHashKey,pmsBrandMap);
-            counterRedisService.zAddAll(brandZSetKey,zSetMap);
-            return brandList;
         }
-
-        List<String> strings= new ArrayList<>(sets);
-        List<Object> objectList = redisService.hGetAll(brandHashKey,strings);
-        return objectList.stream().map(o->(PmsBrand)o).collect(Collectors.toList());
+        return brandList;
     }
 }

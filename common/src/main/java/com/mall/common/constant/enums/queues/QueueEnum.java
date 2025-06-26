@@ -13,17 +13,9 @@ public enum QueueEnum {
      */
     QUEUE_TTL_ORDER_CANCEL("mall.order.direct.ttl", "mall.order.cancel.ttl", "mall.order.cancel.ttl"),
     /**
-     * 商品通知队列
+     * 远程调用通知队列
      */
-    QUEUE_PRODUCT_HANDLE("mall.product.direct","mall.product.handle","mall.product.handle"),
-    /**
-     * 活动通知队列
-     */
-    QUEUE_PROMOTION_HANDLE("mall.promotion.direct","mall.promotion.handle","mall.promotion.handle"),
-    /**
-     * 属性通知队列
-     */
-    PRODUCT_ATTRIBUTE_HANDLE("mall.attribute.direct","mall.attribute.queue","mall.attribute.queue");
+    REMOTE_INVOKE_HANDLE("mall.remote.direct","mall.remote.queue","mall.remote.direct");
 
 
     private String exchange;

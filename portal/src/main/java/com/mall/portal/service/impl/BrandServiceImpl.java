@@ -25,7 +25,7 @@ public class BrandServiceImpl implements BrandService {
 
     @Override
     public List<PmsBrand> brandList(int offset, int limit) {
-        return brandCacheService.getBrands(offset,limit);
+        return brandCacheService.getBrands();
     }
 
     @Override

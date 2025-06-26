@@ -104,15 +104,6 @@ public class RedisServiceImpl implements RedisService {
     @Override
     public void hSet(String key, String hashKey, Object value) {
         redisTemplate.opsForHash().put(key, hashKey, value);
-        Long Expired = redisTemplate.getExpire(key);
-        if (Expired > 0) {
-            this.expire(key, expired);
-        }
-    }
-
-    @Override
-    public void hSet(String key, String hashKey, Object value, int x) {
-        redisTemplate.opsForHash().put(key,hashKey,value);
     }
 
     @Override
@@ -141,10 +132,6 @@ public class RedisServiceImpl implements RedisService {
     @Override
     public void hSetAll(String key, Map<String, ?> map) {
         redisTemplate.opsForHash().putAll(key, map);
-        Long Expired = redisTemplate.getExpire(key);
-        if (Expired > 0) {
-            this.expire(key, expired);
-        }
     }
 
     @Override
@@ -175,19 +162,12 @@ public class RedisServiceImpl implements RedisService {
 
     @Override
     public Long sAdd(String key, Object... values) {
-        Long len = redisTemplate.opsForSet().add(key, values);
-        Long Expired = redisTemplate.getExpire(key);
-        if (Expired > 0) {
-            this.expire(key, expired);
-        }
-        return len;
+        return redisTemplate.opsForSet().add(key, values);
     }
 
     @Override
     public Long sAdd(String key, long time, Object... values) {
-        Long count = redisTemplate.opsForSet().add(key, values);
-        expire(key, time);
-        return count;
+        return redisTemplate.opsForSet().add(key, values);
     }
 
     @Override
@@ -222,12 +202,7 @@ public class RedisServiceImpl implements RedisService {
 
     @Override
     public Long lPush(String key, Object value) {
-        Long len = redisTemplate.opsForList().rightPush(key, value);
-        Long Expired = redisTemplate.getExpire(key);
-        if (Expired > 0) {
-            this.expire(key, expired);
-        }
-        return len;
+        return redisTemplate.opsForList().rightPush(key, value);
     }
 
     @Override
@@ -239,28 +214,16 @@ public class RedisServiceImpl implements RedisService {
 
     @Override
     public Long lPushAll(String key, Object... values) {
-        Long len = redisTemplate.opsForList().rightPushAll(key, values);
-        Long Expired = redisTemplate.getExpire(key);
-        if (Expired > 0) {
-            this.expire(key, expired);
-        }
-        return len;
+        return redisTemplate.opsForList().rightPushAll(key, values);
     }
 
     @Override
     public Long lPushAll(String key, Long time, Object... values) {
-        Long count = redisTemplate.opsForList().rightPushAll(key, values);
-        expire(key, time);
-        return count;
+        return redisTemplate.opsForList().rightPushAll(key, values);
     }
 
     @Override
     public Long lRemove(String key, long count, Object value) {
-        Long len = redisTemplate.opsForList().remove(key, count, value);
-        Long Expired = redisTemplate.getExpire(key);
-        if (Expired > 0) {
-            this.expire(key, expired);
-        }
-        return len;
+        return redisTemplate.opsForList().remove(key, count, value);
     }
 }

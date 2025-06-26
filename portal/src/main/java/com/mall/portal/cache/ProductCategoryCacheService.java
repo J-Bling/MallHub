@@ -7,6 +7,9 @@ import java.util.List;
 
 public interface ProductCategoryCacheService extends Cache {
     default String HashField(Long id){return ""+id;}
+    void addCategory(long id);
+    void delCategory(long id);
+    void cleanCache();
     /**
      *获取 单个 商品类型
      */
@@ -15,8 +18,4 @@ public interface ProductCategoryCacheService extends Cache {
      * 获取所有商品类型
      */
     List<PmsProductCategory> getAll();
-    /**
-     * 更新/增加类型
-     */
-    boolean setProductCategoryCache(PmsProductCategory category);
 }

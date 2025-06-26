@@ -22,10 +22,26 @@ public class ProductCategoryCacheServiceImpl implements ProductCategoryCacheServ
     @Autowired private RedisService redisService;
     private final Logger logger = LoggerFactory.getLogger(ProductCategoryCacheServiceImpl.class);
 
-    private int categoryListSize = 0;
-
     @Value("${redis.key.ProductCategoryKey:product-category-key}")
     private String ProductCategoryKey;
+
+    @Override
+    public void addCategory(long id) {
+        PmsProductCategory category = categoryMapper.selectByPrimaryKey(id);
+        if (category!=null){
+            redisService.hSet(ProductCategoryKey,HashField(category.getId()),category);
+        }
+    }
+
+    @Override
+    public void delCategory(long id) {
+        redisService.hDel(ProductCategoryKey,HashField(id));
+    }
+
+    @Override
+    public void cleanCache() {
+        redisService.del(ProductCategoryKey);
+    }
 
     @Override
     public PmsProductCategory get(long id) {
@@ -49,7 +65,7 @@ public class ProductCategoryCacheServiceImpl implements ProductCategoryCacheServ
         List<PmsProductCategory> categoryList = new ArrayList<>();
         try {
             Map<Object, Object> resultMap = redisService.hGetAll(ProductCategoryKey);
-            if (resultMap == null || resultMap.size() < categoryListSize) {
+            if (resultMap == null) {
                 PmsProductCategoryExample example = new PmsProductCategoryExample();
                 categoryList = categoryMapper.selectByExample(example);
                 if (categoryList != null && !categoryList.isEmpty()) {
@@ -59,7 +75,6 @@ public class ProductCategoryCacheServiceImpl implements ProductCategoryCacheServ
                     }
                     redisService.hSetAll(ProductCategoryKey, categoryMap);
                 }
-                categoryListSize = categoryList != null ? categoryList.size() : 0;
                 return categoryList;
             }
             for (Map.Entry<Object, Object> entry : resultMap.entrySet()) {
@@ -69,16 +84,5 @@ public class ProductCategoryCacheServiceImpl implements ProductCategoryCacheServ
             logger.error("获取所有商品类型失败:{}",e.getMessage());
         }
         return categoryList;
-    }
-
-    @Override
-    public boolean setProductCategoryCache(PmsProductCategory category) {
-        try{
-            redisService.hSet(ProductCategoryKey,HashField(category.getId()),category);
-            return true;
-        }catch (Exception e){
-            logger.error("更新/增加商品类型缓存失败:{}",e.getMessage());
-        }
-        return false;
     }
 }
