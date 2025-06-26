@@ -2,7 +2,6 @@ package com.mall.admin.components;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mall.common.constant.enums.queues.QueueEnum;
-import com.mall.common.constant.interfaces.ParamsModel;
 import com.mall.common.domain.MethodInvokeMessage;
 import com.mall.common.domain.ParamItem;
 import io.jsonwebtoken.lang.Collections;
@@ -13,6 +12,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
@@ -30,7 +30,7 @@ public class MethodInvokeSend {
         try {
             if (!Collections.isEmpty(invokeMessageList)) {
                 for (ParamItem item : invokeMessageList) {
-                    if (item.getParamValue() instanceof ParamsModel) {
+                    if (item.getParamValue() instanceof Serializable) {
                         item.setParamValue(objectMapper.writeValueAsString(item.getParamValue()));
                     }
                 }
