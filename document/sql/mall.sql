@@ -686,6 +686,7 @@ CREATE TABLE `pms_album` (
   `pic_count` int DEFAULT NULL,
   `sort` int DEFAULT NULL,
   `description` varchar(1000) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
+  `create_time` datetime DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC COMMENT='相册表';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -710,6 +711,7 @@ CREATE TABLE `pms_album_pic` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `album_id` bigint DEFAULT NULL,
   `pic` varchar(1000) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
+  `create_time` datetime DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC COMMENT='画册图片表';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -896,7 +898,7 @@ CREATE TABLE `pms_product` (
   `delete_status` int DEFAULT NULL COMMENT '删除状态：0->未删除；1->已删除',
   `publish_status` int DEFAULT NULL COMMENT '上架状态：0->下架；1->上架',
   `new_status` int DEFAULT NULL COMMENT '新品状态:0->不是新品；1->新品',
-  `recommand_status` int DEFAULT NULL COMMENT '推荐状态；0->不推荐；1->推荐',
+  `recommend_status` tinyint(1) DEFAULT '1',
   `verify_status` int DEFAULT NULL COMMENT '审核状态：0->未审核；1->审核通过',
   `sort` int DEFAULT NULL COMMENT '排序',
   `sale` int DEFAULT NULL COMMENT '销量',
@@ -1401,7 +1403,6 @@ CREATE TABLE `sms_flash_behavior` (
   `product_id` bigint NOT NULL,
   `promotion_id` bigint NOT NULL,
   `session_id` bigint NOT NULL,
-  `behavior_type` tinyint NOT NULL COMMENT '1-订阅 2-参与 3-下单成功',
   `subscribe_time` datetime DEFAULT NULL,
   `buy_time` datetime DEFAULT NULL,
   `device_info` varchar(200) DEFAULT NULL,
@@ -1457,6 +1458,34 @@ LOCK TABLES `sms_flash_product_relation` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `sms_flash_product_subscribe`
+--
+
+DROP TABLE IF EXISTS `sms_flash_product_subscribe`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sms_flash_product_subscribe` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `member_id` bigint NOT NULL COMMENT '用户ID',
+  `product_id` bigint NOT NULL COMMENT '商品ID',
+  `sku_id` bigint DEFAULT NULL COMMENT 'SKU ID（可选）',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_product_session` (`product_id`),
+  KEY `idx_user_product` (`member_id`,`product_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户商品级订阅表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sms_flash_product_subscribe`
+--
+
+LOCK TABLES `sms_flash_product_subscribe` WRITE;
+/*!40000 ALTER TABLE `sms_flash_product_subscribe` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sms_flash_product_subscribe` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `sms_flash_promotion`
 --
 
@@ -1465,15 +1494,21 @@ DROP TABLE IF EXISTS `sms_flash_promotion`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `sms_flash_promotion` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `title` varchar(200) NOT NULL,
-  `description` text,
+  `title` varchar(200) NOT NULL COMMENT '活动标题',
+  `sub_title` varchar(200) DEFAULT NULL COMMENT '副标题',
+  `description` text COMMENT '活动描述',
+  `cover_url` varchar(512) DEFAULT NULL COMMENT '封面图URL（建议尺寸1200x400）',
+  `mobile_cover_url` varchar(512) DEFAULT NULL COMMENT '移动端封面URL（建议尺寸800x400）',
   `type` tinyint NOT NULL DEFAULT '1' COMMENT '1-平台活动 2-商家活动',
-  `start_date` date NOT NULL,
-  `end_date` date NOT NULL,
-  `status` tinyint NOT NULL DEFAULT '0' COMMENT '0-未开始 1-进行中 2-已结束',
+  `style_config` json DEFAULT NULL COMMENT '样式配置（扩展字段）',
+  `custom_html` text COMMENT '自定义HTML内容',
+  `start_date` date NOT NULL COMMENT '活动开始日期',
+  `end_date` date NOT NULL COMMENT '活动结束日期',
+  `status` tinyint NOT NULL DEFAULT '0' COMMENT '0-未开始 1-进行中 2-已结束 3-已取消',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
+  `update_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `idx_time_range` (`start_date`,`end_date`)
+  KEY `idx_time_status` (`start_date`,`end_date`,`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='秒杀活动主表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1496,14 +1531,18 @@ DROP TABLE IF EXISTS `sms_flash_session`;
 CREATE TABLE `sms_flash_session` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `promotion_id` bigint NOT NULL COMMENT '关联活动ID',
-  `name` varchar(200) NOT NULL,
-  `start_time` datetime NOT NULL COMMENT '场次开始时间',
-  `end_time` datetime NOT NULL COMMENT '场次结束时间',
-  `repeat_type` tinyint NOT NULL DEFAULT '1' COMMENT '1-每日重复 2-指定日期',
-  `status` tinyint NOT NULL DEFAULT '1' COMMENT '0-关闭 1-开启',
+  `name` varchar(200) NOT NULL COMMENT '场次名称',
+  `cover_url` varchar(255) DEFAULT NULL COMMENT '场次封面图URL',
+  `start_time` datetime NOT NULL COMMENT '精确到秒的开始时间',
+  `end_time` datetime NOT NULL COMMENT '精确到秒的结束时间',
+  `repeat_type` tinyint(1) NOT NULL DEFAULT '1' COMMENT '0-不重复 1-每日重复 2-每周重复',
+  `style_config` json DEFAULT NULL COMMENT '场次样式配置',
+  `rules_config` json DEFAULT NULL COMMENT '特殊规则配置',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '0-关闭 1-开启',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `idx_promotion_time` (`promotion_id`,`start_time`)
+  KEY `idx_promotion_time` (`promotion_id`,`start_time`),
+  KEY `idx_time_range` (`start_time`,`end_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='秒杀场次表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1514,6 +1553,34 @@ CREATE TABLE `sms_flash_session` (
 LOCK TABLES `sms_flash_session` WRITE;
 /*!40000 ALTER TABLE `sms_flash_session` DISABLE KEYS */;
 /*!40000 ALTER TABLE `sms_flash_session` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sms_flash_session_subscribe`
+--
+
+DROP TABLE IF EXISTS `sms_flash_session_subscribe`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sms_flash_session_subscribe` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `member_id` bigint NOT NULL COMMENT '用户ID',
+  `session_id` bigint NOT NULL COMMENT '场次ID',
+  `status` tinyint DEFAULT '1' COMMENT '0-已取消 1-生效中',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_session` (`session_id`),
+  KEY `idx_user` (`member_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户场次订阅表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sms_flash_session_subscribe`
+--
+
+LOCK TABLES `sms_flash_session_subscribe` WRITE;
+/*!40000 ALTER TABLE `sms_flash_session_subscribe` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sms_flash_session_subscribe` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1568,7 +1635,7 @@ CREATE TABLE `sms_flash_stock_flow` (
   `current_stock` int NOT NULL COMMENT '变更后库存',
   `order_sn` varchar(200) DEFAULT NULL COMMENT '订单编号',
   `order_id` bigint DEFAULT NULL COMMENT '订单id',
-  `operate_type` tinyint NOT NULL COMMENT '1-预扣减 2-确认 3-回退 4-人工调整',
+  `operate_type` int NOT NULL COMMENT '1-预扣减 2-确认 3-回退 4-人工调整',
   `member_id` bigint NOT NULL,
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -2458,4 +2525,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-06-19 11:54:29
+-- Dump completed on 2025-06-25 22:00:13
