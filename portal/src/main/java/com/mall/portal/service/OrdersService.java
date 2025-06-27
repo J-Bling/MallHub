@@ -1,13 +1,16 @@
 package com.mall.portal.service;
 
-import com.alipay.api.domain.OrderDetail;
 import com.mall.mbg.model.OmsOrder;
 import com.mall.mbg.model.OmsOrderItem;
 import com.mall.portal.domain.model.orders.ConfirmOrders;
+import com.mall.portal.domain.model.orders.OrderDetail;
 import com.mall.portal.domain.model.orders.OrderReturnApplyParam;
 import com.mall.portal.domain.model.orders.OrdersParma;
 import java.util.List;
 
+/**
+ * 订单服务
+ */
 public interface OrdersService {
     /**
      * 根据购物车信息生产订单确认信息

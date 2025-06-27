@@ -8,43 +8,27 @@ public class OmsOrderItem implements Serializable {
 
     private Long orderId;
 
-    private String orderSn;
+    private Long skuId;
 
     private Long productId;
 
-    private String productPic;
-
     private String productName;
-
-    private String productBrand;
-
-    private String productSn;
 
     private BigDecimal productPrice;
 
-    private Integer productQuantity;
+    private Integer quantity;
 
-    private Long productSkuId;
+    private String productSpecs;
 
-    private String productSkuCode;
+    private String productCategory;
 
-    private Long productCategoryId;
+    private String productBrand;
 
-    private String promotionName;
+    private String productPic;
 
-    private BigDecimal promotionAmount;
+    private Byte promotionType;
 
-    private BigDecimal couponAmount;
-
-    private BigDecimal integrationAmount;
-
-    private BigDecimal realAmount;
-
-    private Integer giftIntegration;
-
-    private Integer giftGrowth;
-
-    private String productAttr;
+    private BigDecimal promotionDiscount;
 
     private static final long serialVersionUID = 1L;
 
@@ -64,12 +48,12 @@ public class OmsOrderItem implements Serializable {
         this.orderId = orderId;
     }
 
-    public String getOrderSn() {
-        return orderSn;
+    public Long getSkuId() {
+        return skuId;
     }
 
-    public void setOrderSn(String orderSn) {
-        this.orderSn = orderSn;
+    public void setSkuId(Long skuId) {
+        this.skuId = skuId;
     }
 
     public Long getProductId() {
@@ -80,36 +64,12 @@ public class OmsOrderItem implements Serializable {
         this.productId = productId;
     }
 
-    public String getProductPic() {
-        return productPic;
-    }
-
-    public void setProductPic(String productPic) {
-        this.productPic = productPic;
-    }
-
     public String getProductName() {
         return productName;
     }
 
     public void setProductName(String productName) {
         this.productName = productName;
-    }
-
-    public String getProductBrand() {
-        return productBrand;
-    }
-
-    public void setProductBrand(String productBrand) {
-        this.productBrand = productBrand;
-    }
-
-    public String getProductSn() {
-        return productSn;
-    }
-
-    public void setProductSn(String productSn) {
-        this.productSn = productSn;
     }
 
     public BigDecimal getProductPrice() {
@@ -120,100 +80,60 @@ public class OmsOrderItem implements Serializable {
         this.productPrice = productPrice;
     }
 
-    public Integer getProductQuantity() {
-        return productQuantity;
+    public Integer getQuantity() {
+        return quantity;
     }
 
-    public void setProductQuantity(Integer productQuantity) {
-        this.productQuantity = productQuantity;
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 
-    public Long getProductSkuId() {
-        return productSkuId;
+    public String getProductSpecs() {
+        return productSpecs;
     }
 
-    public void setProductSkuId(Long productSkuId) {
-        this.productSkuId = productSkuId;
+    public void setProductSpecs(String productSpecs) {
+        this.productSpecs = productSpecs;
     }
 
-    public String getProductSkuCode() {
-        return productSkuCode;
+    public String getProductCategory() {
+        return productCategory;
     }
 
-    public void setProductSkuCode(String productSkuCode) {
-        this.productSkuCode = productSkuCode;
+    public void setProductCategory(String productCategory) {
+        this.productCategory = productCategory;
     }
 
-    public Long getProductCategoryId() {
-        return productCategoryId;
+    public String getProductBrand() {
+        return productBrand;
     }
 
-    public void setProductCategoryId(Long productCategoryId) {
-        this.productCategoryId = productCategoryId;
+    public void setProductBrand(String productBrand) {
+        this.productBrand = productBrand;
     }
 
-    public String getPromotionName() {
-        return promotionName;
+    public String getProductPic() {
+        return productPic;
     }
 
-    public void setPromotionName(String promotionName) {
-        this.promotionName = promotionName;
+    public void setProductPic(String productPic) {
+        this.productPic = productPic;
     }
 
-    public BigDecimal getPromotionAmount() {
-        return promotionAmount;
+    public Byte getPromotionType() {
+        return promotionType;
     }
 
-    public void setPromotionAmount(BigDecimal promotionAmount) {
-        this.promotionAmount = promotionAmount;
+    public void setPromotionType(Byte promotionType) {
+        this.promotionType = promotionType;
     }
 
-    public BigDecimal getCouponAmount() {
-        return couponAmount;
+    public BigDecimal getPromotionDiscount() {
+        return promotionDiscount;
     }
 
-    public void setCouponAmount(BigDecimal couponAmount) {
-        this.couponAmount = couponAmount;
-    }
-
-    public BigDecimal getIntegrationAmount() {
-        return integrationAmount;
-    }
-
-    public void setIntegrationAmount(BigDecimal integrationAmount) {
-        this.integrationAmount = integrationAmount;
-    }
-
-    public BigDecimal getRealAmount() {
-        return realAmount;
-    }
-
-    public void setRealAmount(BigDecimal realAmount) {
-        this.realAmount = realAmount;
-    }
-
-    public Integer getGiftIntegration() {
-        return giftIntegration;
-    }
-
-    public void setGiftIntegration(Integer giftIntegration) {
-        this.giftIntegration = giftIntegration;
-    }
-
-    public Integer getGiftGrowth() {
-        return giftGrowth;
-    }
-
-    public void setGiftGrowth(Integer giftGrowth) {
-        this.giftGrowth = giftGrowth;
-    }
-
-    public String getProductAttr() {
-        return productAttr;
-    }
-
-    public void setProductAttr(String productAttr) {
-        this.productAttr = productAttr;
+    public void setPromotionDiscount(BigDecimal promotionDiscount) {
+        this.promotionDiscount = promotionDiscount;
     }
 
     @Override
@@ -224,25 +144,17 @@ public class OmsOrderItem implements Serializable {
         sb.append("Hash = ").append(hashCode());
         sb.append(", id=").append(id);
         sb.append(", orderId=").append(orderId);
-        sb.append(", orderSn=").append(orderSn);
+        sb.append(", skuId=").append(skuId);
         sb.append(", productId=").append(productId);
-        sb.append(", productPic=").append(productPic);
         sb.append(", productName=").append(productName);
-        sb.append(", productBrand=").append(productBrand);
-        sb.append(", productSn=").append(productSn);
         sb.append(", productPrice=").append(productPrice);
-        sb.append(", productQuantity=").append(productQuantity);
-        sb.append(", productSkuId=").append(productSkuId);
-        sb.append(", productSkuCode=").append(productSkuCode);
-        sb.append(", productCategoryId=").append(productCategoryId);
-        sb.append(", promotionName=").append(promotionName);
-        sb.append(", promotionAmount=").append(promotionAmount);
-        sb.append(", couponAmount=").append(couponAmount);
-        sb.append(", integrationAmount=").append(integrationAmount);
-        sb.append(", realAmount=").append(realAmount);
-        sb.append(", giftIntegration=").append(giftIntegration);
-        sb.append(", giftGrowth=").append(giftGrowth);
-        sb.append(", productAttr=").append(productAttr);
+        sb.append(", quantity=").append(quantity);
+        sb.append(", productSpecs=").append(productSpecs);
+        sb.append(", productCategory=").append(productCategory);
+        sb.append(", productBrand=").append(productBrand);
+        sb.append(", productPic=").append(productPic);
+        sb.append(", promotionType=").append(promotionType);
+        sb.append(", promotionDiscount=").append(promotionDiscount);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();
